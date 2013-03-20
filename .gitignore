@@ -1,0 +1,10 @@
+*.d
+.deps/*
+*.o
+*.csv
+*~
+*.rej
+*.orig
+ChangeLog
+uara
+output_csv_test
