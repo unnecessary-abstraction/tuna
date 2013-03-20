@@ -18,7 +18,7 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-UARA_OBJECTS := output.o output_csv.o uara.o
+UARA_OBJECTS := output.o output_csv.o timespec.o uara.o
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o output.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
