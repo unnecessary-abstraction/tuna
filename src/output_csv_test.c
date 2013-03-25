@@ -19,11 +19,15 @@
 *******************************************************************************/
 
 #include <math.h>
+#include "compiler.h"
 #include "output.h"
 #include "output_csv.h"
 
 int main(int argc, char * argv[])
 {
+	__unused argc;
+	__unused argv;
+
 	struct record_type type;
 	struct record rec;
 

@@ -27,4 +27,8 @@
 #define __noreturn __attribute__ ((noreturn))
 #endif
 
+#ifndef __unused
+#define __unused (void)
+#endif
+
 #endif /* !__UARA_COMPILER_H_INCLUDED__ */

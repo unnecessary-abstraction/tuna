@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compiler.h"
 #include "output.h"
 #include "output_csv.h"
 #include "types.h"
@@ -73,11 +74,13 @@ int csv_record_type_init(struct record_type * type)
 
 void csv_record_type_exit(struct record_type * type)
 {
+	__unused type;
 	/* Do nothing. */
 }
 
 int csv_record_init(struct record * rec)
 {
+	__unused rec;
 	return 0;
 }
 

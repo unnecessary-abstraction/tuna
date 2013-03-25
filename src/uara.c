@@ -19,11 +19,15 @@
 *******************************************************************************/
 
 #include "uara.h"
+#include "compiler.h"
 
 uint sample_rate;
 
 int main(int argc, char * argv[])
 {
+	__unused argc;
+	__unused argv;
+
 	sample_rate = 625000;
 	return 0;
 }
