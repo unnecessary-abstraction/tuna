@@ -21,11 +21,7 @@
 #ifndef __UARA_LOG_H_INCLUDED__
 #define __UARA_LOG_H_INCLUDED__
 
-#include <sys/cdefs.h>
-
-#ifndef __noreturn
-#define __noreturn __attribute__ ((noreturn))
-#endif
+#include "compiler.h"
 
 /**
  * Initilize logging subsystem.
