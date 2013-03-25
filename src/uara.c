@@ -21,13 +21,15 @@
 #include "uara.h"
 #include "compiler.h"
 
-uint sample_rate;
+uint input_sample_rate;
+uint output_sample_rate;
 
 int main(int argc, char * argv[])
 {
 	__unused argc;
 	__unused argv;
 
-	sample_rate = 625000;
+	input_sample_rate = 625000;
+	output_sample_rate = input_sample_rate;
 	return 0;
 }

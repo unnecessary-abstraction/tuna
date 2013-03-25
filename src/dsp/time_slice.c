@@ -141,7 +141,7 @@ void process_time_slice(void)
 	struct time_slice output;
 	
 	output.start = state.time_base;
-	timespec_add_ticks(&output.start, state.start);
+	timespec_add_ticks_output(&output.start, state.start);
 	copy_data();
 	x = fft_get_data();
 	process_time_array(&x[state.slice_length/2], &output);
@@ -161,7 +161,7 @@ int time_slice_init(double * buffer, uint buffer_length)
 	state.count = 0;
 	state.start = 0;
 	
-	state.slice_length = sample_rate;
+	state.slice_length = output_sample_rate;
 	
 	record_type_init(&time_slice_type, "time_slice", &csv_driver);
 	

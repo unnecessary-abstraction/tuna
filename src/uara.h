@@ -23,6 +23,7 @@
 
 #include "types.h"
 
-extern uint sample_rate;
+extern uint input_sample_rate;
+extern uint output_sample_rate;
 
 #endif /* !__UARA_H_INCLUDED__ */

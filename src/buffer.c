@@ -121,10 +121,10 @@ int buffer_init(uint buffer_length, uint delay)
 	state.delay = delay;
 	state.samples_processed = 0;
 
-	if (sample_rate > buffer_length/2)
+	if (output_sample_rate > buffer_length/2)
 		state.quantum = buffer_length/2;
 	else
-		state.quantum = sample_rate;
+		state.quantum = output_sample_rate;
 	
 	/* Initialise impulse detection and time slice handling. */
 	impulse_detector_init(state.buffer, buffer_length);
