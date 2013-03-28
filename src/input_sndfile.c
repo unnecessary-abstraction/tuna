@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <sndfile.h>
+#include "buffer.h"
 #include "input_sndfile.h"
 #include "log.h"
 #include "string.h"
@@ -128,9 +129,32 @@ int input_sndfile_init(const char * source)
 
 int input_sndfile_run(void)
 {
-	/* TODO. */
-	/* Return 0 if finished, 1 if running asynchronously. */
-	return 0;
+	uint		frames;
+	int		err;
+	double *	buf;
+	int		r;
+
+	/*
+		Defer to advice from buffering code on how many frames to read
+		and where to put them.
+	*/
+	buf = buffer_advise(&frames);
+
+	while ((r = sf_readf_double(state.sf, buf, frames)) > 0) {
+		/* Got <r> frames. */
+		frames = r;
+		buf = buffer_advise(&frames);
+	}
+
+	/* Error or EOF. */
+	err = sf_error(state.sf);
+	if (err) {
+		error("libsndfile: Error %d: %s", r, sf_error_number(err));
+		fatal("input_sndfile: Unrecoverable error reading frames");
+	} else {
+		msg("input_sndfile: EOF");
+		return 0;
+	}
 }
 
 void init_sndfile_exit(void)
