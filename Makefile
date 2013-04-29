@@ -18,7 +18,8 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-UARA_OBJECTS := output.o output_csv.o timespec.o uara.o
+DSP_OBJECTS := fft.o impulse.o third_octave_levels.o time_slice.o
+UARA_OBJECTS := output.o output_csv.o timespec.o uara.o $(DSP_OBJECTS)
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o output.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
@@ -35,14 +36,14 @@ FIXDEPS := python $(SOURCE_ROOT)scripts/fixdeps.py
 # Paths
 SOURCE_DIR := $(SOURCE_ROOT)src/
 INCLUDE_DIR := $(SOURCE_ROOT)include/
-VPATH := $(SOURCE_DIR)
+VPATH := $(SOURCE_DIR) $(SOURCE_DIR)/dsp
 PREFIX := $(DESTDIR)/usr/local
 BINDIR := $(PREFIX)/bin
 
 # Flags
 CFLAGS := -Wall -Wextra $(EXTRA_CFLAGS)
 LDFLAGS := $(EXTRA_LDFLAGS)
-LDLIBRARIES := 
+LDLIBRARIES := -lfftw3 -lm
 
 # Flags to generate dependencies
 DEPFLAGS := -MD
