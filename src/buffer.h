@@ -23,6 +23,11 @@
 
 #include "types.h"
 
+/*
+	Buffer code assumes single channel operation. A single channel must be
+	extracted from a multi channel input in the input driver.
+*/
+
 int buffer_init(uint buffer_length, uint delay);
 void buffer_exit(void);
 void buffer_samples(double * samples, uint count);

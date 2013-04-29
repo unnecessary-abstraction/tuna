@@ -146,7 +146,6 @@ void buffer_samples(double * samples, uint count)
 	process_samples(count);
 }
 
-/* TODO: Currently assumes single channel operation. */
 double * buffer_advise(uint * count)
 {
 	process_samples(*count);
