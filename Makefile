@@ -59,6 +59,10 @@ endif
 
 all: uara
 
+test: test_cmds
+
+test_cmds: output_csv_test
+
 .deps:
 	$(Q)mkdir -p .deps
 
