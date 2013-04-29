@@ -49,4 +49,6 @@ int main(int argc, char * argv[])
 	record_type_exit(&type);
 	csv_exit();
 	output_exit();
+
+	return 0;
 }
