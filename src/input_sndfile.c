@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <malloc.h>
 #include <sndfile.h>
 #include "buffer.h"
 #include "input_sndfile.h"
@@ -112,6 +113,79 @@ static void close_sndfile(void)
 	state.sf = NULL;
 }
 
+int run_single_channel(void)
+{
+	int		r;
+	uint		frames;
+	double *	buf;
+	
+	/*
+		Defer to advice from buffering code on how many frames to read
+		and where to put them.
+	*/
+	buf = buffer_advise(&frames);
+
+	while ((r = sf_readf_double(state.sf, buf, frames)) > 0) {
+		/* Got r frames. */
+		frames = r;
+		buf = buffer_advise(&frames);
+	}
+
+	return r;
+}
+
+int run_multi_channel(void)
+{
+	int		r;
+	uint		i;
+	uint		channels;
+	uint		selected_channel;
+	uint		frames;
+	uint		max_frames;
+	double *	single_buf;
+	double *	multi_buf;
+
+	channels = state.sf_info.channels;
+	selected_channel = 0;	/* zero-based. TODO: Make configurable. */
+
+	/*
+		Defer to advice from buffering code on how many frames to read
+		and where to put them. We assume that this first call to
+		buffer_advise will give us the buffer quantum value in the
+		variable frames and therefore we shouldn't be asked for more
+		than that number of frames later. If this assumption is wrong
+		the following code should still work it just may not be as
+		efficient.
+	*/
+	single_buf = buffer_advise(&frames);
+	max_frames = frames;
+
+	/* Allocate space for multi-channel data. */
+	multi_buf = (double *)malloc(channels * max_frames * sizeof(double));
+
+	if (!multi_buf)
+		fatal("input_sndfile: Failed to allocate buffer for multi-channel input");
+	
+	/*
+		Read into multi-channel buffer and strip out just the channel we
+		want into the single-channel buffer.
+	*/
+	while ((r = sf_readf_double(state.sf, multi_buf, frames)) > 0) {
+		/* Got r frames. */
+		frames = r;
+		for (i = 0; i < frames; i++)
+			single_buf[i] = multi_buf[i*channels + selected_channel];		
+
+		single_buf = buffer_advise(&frames);
+
+		/* Reduce frames if it is larger than our buffer size. */
+		if (frames > max_frames)
+			frames = max_frames;
+	}
+
+	return r;
+}
+
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
@@ -129,22 +203,13 @@ int input_sndfile_init(const char * source)
 
 int input_sndfile_run(void)
 {
-	uint		frames;
 	int		err;
-	double *	buf;
 	int		r;
 
-	/*
-		Defer to advice from buffering code on how many frames to read
-		and where to put them.
-	*/
-	buf = buffer_advise(&frames);
-
-	while ((r = sf_readf_double(state.sf, buf, frames)) > 0) {
-		/* Got <r> frames. */
-		frames = r;
-		buf = buffer_advise(&frames);
-	}
+	if (state.sf_info.channels > 1)
+		r = run_multi_channel();
+	else
+		r = run_single_channel();
 
 	/* Error or EOF. */
 	err = sf_error(state.sf);
