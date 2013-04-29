@@ -19,8 +19,8 @@
 ################################################################################
 
 DSP_OBJECTS := fft.o impulse.o third_octave_levels.o time_slice.o
-UARA_OBJECTS := buffer.o log.o output.o output_csv.o timespec.o uara.o \
-	$(DSP_OBJECTS)
+UARA_OBJECTS := buffer.o input_sndfile.o log.o output.o output_csv.o \
+	timespec.o uara.o $(DSP_OBJECTS)
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o output.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
@@ -44,7 +44,7 @@ BINDIR := $(PREFIX)/bin
 # Flags
 CFLAGS := -Wall -Wextra $(EXTRA_CFLAGS)
 LDFLAGS := $(EXTRA_LDFLAGS)
-LDLIBRARIES := -lfftw3 -lm
+LDLIBRARIES := -lfftw3 -lm -lsndfile
 
 # Flags to generate dependencies
 DEPFLAGS := -MD
