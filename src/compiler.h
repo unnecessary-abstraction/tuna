@@ -22,6 +22,7 @@
 #define __UARA_COMPILER_H_INCLUDED__
 
 #include <sys/cdefs.h>
+#include <stddef.h>
 
 #ifndef __noreturn
 #define __noreturn __attribute__ ((noreturn))
@@ -30,5 +31,16 @@
 #ifndef __unused
 #define __unused (void)
 #endif
+
+/* container_of macro taken from Linux Kernel. */
+#define container_of(ptr, type, member) ({				\
+                const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+                (type *)( (char *)__mptr - offsetof(type,member) );	\
+	})
+
+#define ptr_offset(ptr, d) ({						\
+		char * __cptr = (char *)(ptr);				\
+		__cptr + d;						\
+	})
 
 #endif /* !__UARA_COMPILER_H_INCLUDED__ */
