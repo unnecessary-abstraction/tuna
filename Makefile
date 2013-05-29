@@ -19,7 +19,7 @@
 ################################################################################
 
 #DSP_OBJECTS := fft.o impulse.o third_octave_levels.o time_slice.o
-UARA_OBJECTS := analysis.o buffer.o input_sndfile.o log.o output_csv.o \
+UARA_OBJECTS := analysis.o buffer.o bufq.o input_sndfile.o log.o output_csv.o \
 	timespec.o uara.o $(DSP_OBJECTS)
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o timespec.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
