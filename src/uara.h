@@ -21,9 +21,25 @@
 #ifndef __UARA_H_INCLUDED__
 #define __UARA_H_INCLUDED__
 
+#include <time.h>
+
 #include "types.h"
 
 extern uint input_sample_rate;
 extern uint output_sample_rate;
+
+typedef double sample_t;
+
+struct producer {
+	int (*run)(struct producer * producer);
+	void (*exit)(struct producer * producer);
+};
+
+struct consumer {
+	int (*write)(struct consumer * consumer, sample_t * buf, uint count);
+	int (*start)(struct consumer * consumer, uint sample_rate, struct timespec * ts);
+	int (*resync)(struct consumer * consumer, struct timespec * ts);
+	void (*exit)(struct consumer * consumer);
+};
 
 #endif /* !__UARA_H_INCLUDED__ */
