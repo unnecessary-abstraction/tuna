@@ -22,6 +22,7 @@
 #define __UARA_TIMESPEC_H_INCLUDED__
 
 #include <time.h>
+
 #include "types.h"
 
 void timespec_add_ns(struct timespec * ts, uint ns);

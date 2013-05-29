@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <time.h>
+
 #include "timespec.h"
 #include "types.h"
 #include "uara.h"
@@ -27,11 +28,11 @@
 
 void timespec_add_ns(struct timespec * ts, uint ns)
 {
-    ts->tv_nsec += ns;
-    if (ts->tv_nsec >= NS) {
-        ts->tv_sec += ts->tv_nsec / NS;
-        ts->tv_nsec = ts->tv_nsec % NS;
-    }
+	ts->tv_nsec += ns;
+	if (ts->tv_nsec >= NS) {
+		ts->tv_sec += ts->tv_nsec / NS;
+		ts->tv_nsec = ts->tv_nsec % NS;
+	}
 }
 
 void timespec_add_ticks_input(struct timespec * ts, uint ticks)
