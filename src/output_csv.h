@@ -21,18 +21,8 @@
 #ifndef __UARA_OUTPUT_CSV_H_INCLUDED__
 #define __UARA_OUTPUT_CSV_H_INCLUDED__
 
-#include "output.h"
-#include "types.h"
+#include "uara.h"
 
-int csv_init(void);
-void csv_exit(void);
-int csv_record_type_init(struct record_type * type);
-void csv_record_type_exit(struct record_type * type);
-int csv_record_init(struct record * rec);
-void csv_record_exit(struct record * rec);
-int csv_output_uint(struct record * rec, uint value);
-int csv_output_double(struct record * rec, double value);
-
-extern struct output_driver csv_driver;
+struct consumer * output_csv_init(const char * fname);
 
 #endif /* !__UARA_OUTPUT_CSV_H_INCLUDED__ */

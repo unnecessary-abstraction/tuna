@@ -21,88 +21,105 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "compiler.h"
-#include "output.h"
-#include "output_csv.h"
-#include "types.h"
+#include <time.h>
 
-/* TODO: Error handling. */
+#include "compiler.h"
+#include "log.h"
+#include "output_csv.h"
+#include "timespec.h"
+#include "types.h"
+#include "uara.h"
 
 /*******************************************************************************
-	Public data
+	Private declarations and functions
 *******************************************************************************/
 
-struct output_driver csv_driver = {
-	csv_record_type_init,
-	csv_record_type_exit,
-	csv_record_init,
-	csv_record_exit,
-	csv_output_uint,
-	csv_output_double
+struct csv {
+	struct consumer		consumer;
+	
+	FILE *			f;
+	uint			sample_rate;
+	struct timespec		last_ts;
+	uint			offset;
 };
+
+void output_csv_exit(struct consumer * consumer)
+{
+	struct csv * c = container_of(consumer, struct csv, consumer);
+	fputc('\n', c->f);
+	fclose(c->f);
+
+	free(c);
+}
+
+int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
+{
+	uint i;
+	struct csv * c = container_of(consumer, struct csv, consumer);
+
+	for (i = 0; i < count; i++) {
+		if ((++c->offset) % c->sample_rate)
+			fprintf(c->f, "%f, ", buf[i]);
+		else
+			fprintf(c->f, "%f\n", buf[i]);
+	}
+	
+	return 0;
+}
+
+int output_csv_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
+{
+	struct csv * c = container_of(consumer, struct csv, consumer);
+
+	c->sample_rate = sample_rate;
+	c->last_ts = *ts;
+	c->offset = 0;
+
+	fprintf(c->f, "START ");
+	timespec_fprint(ts, c->f);
+	fprintf(c->f, "\n");
+	
+	return 0;
+}
+
+int output_csv_resync(struct consumer * consumer, struct timespec * ts)
+{
+	struct csv * c = container_of(consumer, struct csv, consumer);
+
+	c->last_ts = *ts;
+	c->offset = 0;
+
+	fprintf(c->f, "RESYNC ");
+	timespec_fprint(ts, c->f);
+	fprintf(c->f, "\n");
+	
+	return 0;
+}
 
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
 
-int csv_init(void)
+struct consumer * output_csv_init(const char * fname)
 {
-	return 0;
-}
+	struct csv * c = (struct csv *)malloc(sizeof(struct csv));
+	if (!c) {
+		error("output_csv: Failed to allocate memory");
+		return NULL;
+	}
 
-void csv_exit(void)
-{
-	/* Do nothing. */
-}
-
-int csv_record_type_init(struct record_type * type)
-{
-	char * fname;
-	const char * suffix = ".csv";
-	FILE * f;
+	memset(c, 0, sizeof(struct csv));
 	
-	/* Inefficient, but only happens during startup. */
-	fname = malloc(strlen(type->name) + strlen(suffix));
-	strcpy(fname, type->name);
-	strcat(fname, suffix);
-	f = fopen(fname, "w");
-	
-	type->driver_private = (void *)f;
-	
-	return 0;
-}
+	c->f = fopen(fname, "w");
+	if (!c->f) {
+		error("output_csv: Failed to open file %s", fname);
+		return NULL;
+	}
 
-void csv_record_type_exit(struct record_type * type)
-{
-	__unused type;
-	/* Do nothing. */
-}
+	c->consumer.write = output_csv_write;
+	c->consumer.start = output_csv_start;
+	c->consumer.resync = output_csv_resync;
+	c->consumer.exit = output_csv_exit;
 
-int csv_record_init(struct record * rec)
-{
-	__unused rec;
-	return 0;
-}
-
-void csv_record_exit(struct record * rec)
-{
-	/* Just write a newline. */
-	FILE * f = (FILE *)rec->type->driver_private;
-	fputc('\n', f);
-}
-
-int csv_output_uint(struct record * rec, uint value)
-{
-	FILE * f = (FILE *)rec->type->driver_private;
-	fprintf(f, "%u, ", value);
-	
-	return 0;
-}
-
-int csv_output_double(struct record * rec, double value)
-{
-	FILE * f = (FILE *)rec->type->driver_private;
-	fprintf(f, "%f, ", value);
-	
-	return 0;
+	return &c->consumer;
 }

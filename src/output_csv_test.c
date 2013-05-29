@@ -20,35 +20,52 @@
 
 #include <math.h>
 #include "compiler.h"
-#include "output.h"
 #include "output_csv.h"
 
 int main(int argc, char * argv[])
 {
+	uint len;
+	sample_t buf[4];
+	int r;
+
 	__unused argc;
 	__unused argv;
 
-	struct record_type type;
-	struct record rec;
+	struct consumer * csv = output_csv_init("test.csv");
 
-	output_init();
-	csv_init();
-	record_type_init(&type, "test", &csv_driver);
+	/* Get current time. */
+	struct timespec ts;
+	r = clock_gettime(CLOCK_REALTIME, &ts);
+	if (r < 0)
+		return -1;
 	
-	record_init(&rec, &type);
-	output_uint(&rec, 1);
-	output_uint(&rec, 2);
-	output_double(&rec, M_PI);
-	record_exit(&rec);
-	
-	record_init(&rec, &type);
-	output_double(&rec, 3);
-	output_double(&rec, 3.1);
-	record_exit(&rec);
-	
-	record_type_exit(&type);
-	csv_exit();
-	output_exit();
+	/* Set 3 samples per line. */
+	csv->start(csv, 3, &ts);
 
+	/* Write 3 values */
+	len = 3;
+	buf[0] = 1;
+	buf[1] = 2;
+	buf[2] = 3;
+	buf[3] = 4;
+	csv->write(csv, buf, len);
+	
+	/* Write 2 values. */
+	len = 2;
+	buf[0] = 11;
+	buf[1] = 12;
+	buf[2] = 13;
+	buf[3] = 14;
+	csv->write(csv, buf, len);
+
+	/* Write 4 values - first should finish a line, next 3 should fill their own line. */
+	len = 4;
+	buf[0] = 21;
+	buf[1] = 22;
+	buf[2] = 23;
+	buf[3] = 24;
+	csv->write(csv, buf, len);
+
+	csv->exit(csv);
 	return 0;
 }
