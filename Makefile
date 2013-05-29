@@ -81,15 +81,15 @@ output_csv_test: $(OUTPUT_CSV_TEST_OBJECTS)
 	$(Q)$(LD) $(LDFLAGS) -o $@ $(OUTPUT_CSV_TEST_OBJECTS) $(LDLIBRARIES)
 
 clean-intermediates:
-	@echo RM $(ALL_OBJECTS) $(ALL_DEPS) *.d
+	@echo CLEAN INTERMEDIATES
 	$(Q)$(RM) $(ALL_OBJECTS) $(ALL_DEPS) *.d
 
 clean: clean-intermediates
-	@echo RM $(ALL_TARGETS)
+	@echo CLEAN
 	$(Q)$(RM) $(ALL_TARGETS)
 
 dev-clean: clean
-	@echo RM ChangeLog
+	@echo DEVCLEAN
 	$(Q)$(RM) ChangeLog
 
 install: uara
