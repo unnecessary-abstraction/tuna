@@ -42,8 +42,8 @@ PREFIX := $(DESTDIR)/usr/local
 BINDIR := $(PREFIX)/bin
 
 # Flags
-CFLAGS := -Wall -Wextra $(EXTRA_CFLAGS)
-LDFLAGS := $(EXTRA_LDFLAGS)
+CFLAGS := -Wall -Wextra -pthread $(EXTRA_CFLAGS)
+LDFLAGS := -pthread $(EXTRA_LDFLAGS)
 LDLIBRARIES := -lfftw3 -lm -lsndfile -lrt
 
 # Flags to generate dependencies
