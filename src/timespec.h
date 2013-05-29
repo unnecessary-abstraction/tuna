@@ -21,11 +21,13 @@
 #ifndef __UARA_TIMESPEC_H_INCLUDED__
 #define __UARA_TIMESPEC_H_INCLUDED__
 
+#include <stdio.h>
 #include <time.h>
 
 #include "types.h"
 
 void timespec_add_ns(struct timespec * ts, uint ns);
 void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate);
+int timespec_fprint(struct timespec * ts, FILE * f);
 
 #endif /* !__UARA_TIMESPEC_H_INCLUDED__ */

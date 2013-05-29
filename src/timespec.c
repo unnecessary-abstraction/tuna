@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <stdio.h>
 #include <time.h>
 
 #include "timespec.h"
@@ -42,3 +43,12 @@ void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate)
 	timespec_add_ns(ts, ns);
 }
 
+int timespec_fprint(struct timespec * ts, FILE * f)
+{
+	struct tm *	local;
+	char		buf[40];
+
+	local = localtime(&ts->tv_sec);
+	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %z", local);
+	return fprintf(f, "%s (+%.9ld ns)", buf, ts->tv_nsec);
+}
