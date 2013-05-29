@@ -159,7 +159,7 @@ static void process_attack(void)
 	struct impulse output;
 	
 	output.start = state.time_base;
-	timespec_add_ticks_output(&output.start, state.start);
+	timespec_add_ticks(&output.start, state.start, output_sample_rate);
 	output.center = rebase(state.peak_positive_offset);
 	output.length = 0;
 	output.peak_positive = state.peak_positive;
@@ -178,7 +178,7 @@ static void process_impulse(void)
 	struct impulse output;
 	
 	output.start = state.time_base;
-	timespec_add_ticks_output(&output.start, state.start);
+	timespec_add_ticks(&output.start, state.start, output_sample_rate);
 	output.center = rebase(state.peak_positive_offset);
 	output.length = rebase(state.end);
 	output.peak_positive = state.peak_positive;

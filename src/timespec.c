@@ -35,16 +35,10 @@ void timespec_add_ns(struct timespec * ts, uint ns)
 	}
 }
 
-void timespec_add_ticks_input(struct timespec * ts, uint ticks)
+void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate)
 {
 	uint64 tmp = ticks * NS;
-	uint ns = tmp / input_sample_rate;
+	uint ns = tmp / sample_rate;
 	timespec_add_ns(ts, ns);
 }
 
-void timespec_add_ticks_output(struct timespec * ts, uint ticks)
-{
-	uint64 tmp = ticks * NS;
-	uint ns = tmp / output_sample_rate;
-	timespec_add_ns(ts, ns);
-}

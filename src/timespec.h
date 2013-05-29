@@ -26,7 +26,6 @@
 #include "types.h"
 
 void timespec_add_ns(struct timespec * ts, uint ns);
-void timespec_add_ticks_input(struct timespec * ts, uint ticks);
-void timespec_add_ticks_output(struct timespec * ts, uint ticks);
+void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate);
 
 #endif /* !__UARA_TIMESPEC_H_INCLUDED__ */

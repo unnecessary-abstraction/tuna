@@ -141,7 +141,7 @@ void process_time_slice(void)
 	struct time_slice output;
 	
 	output.start = state.time_base;
-	timespec_add_ticks_output(&output.start, state.start);
+	timespec_add_ticks(&output.start, state.start, output_sample_rate);
 	copy_data();
 	x = fft_get_data();
 	process_time_array(&x[state.slice_length/2], &output);
