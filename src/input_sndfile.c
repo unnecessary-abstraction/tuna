@@ -30,18 +30,17 @@
 	Private declarations
 *******************************************************************************/
 
-struct input_sndfile_state {
-	const char *	source;
-	SNDFILE *	sf;
-	SF_INFO		sf_info;
-	const char *	sf_name;
+struct input_sndfile {
+	struct producer		producer;
+	struct consumer *	consumer;
+
+	const char *		source;
+	SNDFILE *		sf;
+	SF_INFO			sf_info;
+	const char *		sf_name;
+
+	uint			buf_size;
 };
-
-static struct input_sndfile_state state;
-
-static const char * sample_type(int format);
-static int open_sndfile(const char * sf_name);
-static void close_sndfile(void);
 
 /*******************************************************************************
 	Private functions
@@ -72,147 +71,118 @@ static const char * sample_type(int format)
 	}
 }
 
-static int open_sndfile(const char * sf_name)
+static int open_sndfile(struct input_sndfile * snd, const char * sf_name)
 {
 	int r;
 
 	/* Store filename to be opened. */
-	state.sf_name = sf_name;
+	snd->sf_name = sf_name;
 
-	memset(&state.sf_info, 0, sizeof(state.sf_info));
-	state.sf = sf_open(sf_name, SFM_READ, &state.sf_info);
-	if (!state.sf) {
+	memset(&snd->sf_info, 0, sizeof(snd->sf_info));
+	snd->sf = sf_open(sf_name, SFM_READ, &snd->sf_info);
+	if (!snd->sf) {
 		r = sf_error(NULL);
 		error("libsndfile: Error %d: %s", r, sf_strerror(NULL));
 		error("input_sndfile: Failed to open file %s", sf_name);
 		return -r;	/* libsndfile error values are positive. */
 	}
 
-	/* Store sample rate. */
-	input_sample_rate = state.sf_info.samplerate;
-	output_sample_rate = input_sample_rate;		/* Currently no resampling. */
-
 	/* Print some info to the log. */
 	msg("input_sndfile: Opened file %s, %u channels sampled at %u Hz, sample type %s",
-		sf_name, state.sf_info.channels, input_sample_rate,
-		sample_type(state.sf_info.format));
+		sf_name, snd->sf_info.channels, snd->sf_info.samplerate,
+		sample_type(snd->sf_info.format));
 
 	return 0;
 }
 
-static void close_sndfile(void)
+static void close_sndfile(struct input_sndfile * snd)
 {
 	int r;
 
-	r = sf_close(state.sf);
+	r = sf_close(snd->sf);
 	if (r != 0) {
 		error("libsndfile: Error %d: %s", r, sf_error_number(r));
-		fatal("input_sndfile: Could not close file %s", state.sf_name);
+		fatal("input_sndfile: Could not close file %s", snd->sf_name);
 	}
 
-	state.sf = NULL;
+	snd->sf = NULL;
 }
 
-int run_single_channel(void)
+int run_single_channel(struct input_sndfile * snd)
 {
 	int		r;
 	uint		frames;
-	double *	buf;
-	
-	/*
-		Defer to advice from buffering code on how many frames to read
-		and where to put them.
-	*/
-	buf = buffer_advise(&frames);
+	struct timespec ts;
+	sample_t *	buf;
 
-	while ((r = sf_readf_double(state.sf, buf, frames)) > 0) {
+	memset(&ts, 0, sizeof(struct timespec));
+	snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+
+	while (1) {
+		buf = buffer_acquire(&frames);
+		r = sf_readf_double(snd->sf, buf, frames);
+		if (r <= 0)
+			return r;
+
 		/* Got r frames. */
-		frames = r;
-		buf = buffer_advise(&frames);
+		frames = (uint)r;
+		
+		snd->consumer->write(snd->consumer, buf, frames);
 	}
-
-	return r;
 }
 
-int run_multi_channel(void)
+int run_multi_channel(struct input_sndfile * snd)
 {
 	int		r;
+	uint		frames;
 	uint		i;
 	uint		channels;
 	uint		selected_channel;
-	uint		frames;
-	uint		max_frames;
-	double *	single_buf;
-	double *	multi_buf;
+	struct timespec ts;
+	sample_t *	buf;
 
-	channels = state.sf_info.channels;
+	channels = snd->sf_info.channels;
 	selected_channel = 0;	/* zero-based. TODO: Make configurable. */
 
-	/*
-		Defer to advice from buffering code on how many frames to read
-		and where to put them. We assume that this first call to
-		buffer_advise will give us the buffer quantum value in the
-		variable frames and therefore we shouldn't be asked for more
-		than that number of frames later. If this assumption is wrong
-		the following code should still work it just may not be as
-		efficient.
-	*/
-	single_buf = buffer_advise(&frames);
-	max_frames = frames;
-
-	/* Allocate space for multi-channel data. */
-	multi_buf = (double *)malloc(channels * max_frames * sizeof(double));
-
-	if (!multi_buf)
-		fatal("input_sndfile: Failed to allocate buffer for multi-channel input");
+	memset(&ts, 0, sizeof(struct timespec));
+	snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
 	
 	/*
 		Read into multi-channel buffer and strip out just the channel we
-		want into the single-channel buffer.
+		want into the front of the buffer.
 	*/
-	while ((r = sf_readf_double(state.sf, multi_buf, frames)) > 0) {
+	while (1) {
+		buf = buffer_acquire(&frames);
+		/* Divide frames down by the number of channels. */
+		frames /= channels;
+
+		r = sf_readf_double(snd->sf, buf, frames);
+		if (r <= 0)
+			return r;
+
 		/* Got r frames. */
-		frames = r;
+		frames = (uint)r;
+
 		for (i = 0; i < frames; i++)
-			single_buf[i] = multi_buf[i*channels + selected_channel];		
+			buf[i] = buf[i*channels + selected_channel];
 
-		single_buf = buffer_advise(&frames);
-
-		/* Reduce frames if it is larger than our buffer size. */
-		if (frames > max_frames)
-			frames = max_frames;
+		snd->consumer->write(snd->consumer, buf, frames);
 	}
-
-	return r;
 }
 
-/*******************************************************************************
-	Public functions
-*******************************************************************************/
-
-int input_sndfile_init(const char * source)
+int input_sndfile_run(struct producer * producer)
 {
-	/*
-		Currently, source must be one filename. Open this file and set
-		variables.
-	*/
-	state.source = source;
+	int			err;
+	int			r;
+	struct input_sndfile *	snd = container_of(producer, struct input_sndfile, producer);
 
-	return open_sndfile(source);
-}
-
-int input_sndfile_run(void)
-{
-	int		err;
-	int		r;
-
-	if (state.sf_info.channels > 1)
-		r = run_multi_channel();
+	if (snd->sf_info.channels > 1)
+		r = run_multi_channel(snd);
 	else
-		r = run_single_channel();
+		r = run_single_channel(snd);
 
 	/* Error or EOF. */
-	err = sf_error(state.sf);
+	err = sf_error(snd->sf);
 	if (err) {
 		error("libsndfile: Error %d: %s", r, sf_error_number(err));
 		fatal("input_sndfile: Unrecoverable error reading frames");
@@ -222,9 +192,46 @@ int input_sndfile_run(void)
 	}
 }
 
-void init_sndfile_exit(void)
+void input_sndfile_exit(struct producer * producer)
 {
+	struct input_sndfile * snd = container_of(producer, struct input_sndfile, producer);
+
 	/* Close input wavefile if open. */
-	if (state.sf)
-		close_sndfile();
+	if (snd->sf)
+		close_sndfile(snd);
+
+	free(snd);
+}
+
+/*******************************************************************************
+	Public functions
+*******************************************************************************/
+
+struct producer * input_sndfile_init(const char * source, struct consumer * c)
+{
+	int r;
+
+	struct input_sndfile * snd = (struct input_sndfile *)malloc(sizeof(struct input_sndfile));
+	if (!snd) {
+		error("input_sndfile_init: Failed to allocate memory");
+		return NULL;
+	}
+
+	/*
+		Currently, source must be one filename. Open this file and set
+		variables.
+	*/
+	snd->source = source;
+	snd->consumer = c;
+
+	r = open_sndfile(snd, source);
+	if (r) {
+		/* Error message already printed. */
+		return NULL;
+	}
+
+	snd->producer.run = input_sndfile_run;
+	snd->producer.exit = input_sndfile_exit;
+
+	return &snd->producer;
 }

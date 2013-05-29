@@ -19,145 +19,46 @@
 *******************************************************************************/
 
 #include <malloc.h>
-#include <string.h>
+
 #include "buffer.h"
-#include "dsp/impulse.h"
-#include "dsp/time_slice.h"
+#include "compiler.h"
 #include "types.h"
 #include "uara.h"
 
-/*******************************************************************************
-	Private declarations
-*******************************************************************************/
-
-struct buffer_state {
-	double *	buffer;
-	uint		buffer_length;
-	uint		offset;
-
-	uint		quantum;
-	uint		delay;
-	uint		samples_processed;
+struct buffer_head {
+	uint		refs;
 };
 
-static struct buffer_state state;
-
-void process_samples(uint count);
-void dispatch_samples(uint start, uint count);
-
-/*******************************************************************************
-	Private functions
-*******************************************************************************/
-
-/*
-	This function assumes that <state.offset> + <count> is not greater than
-	<state.buffer_length>.
-*/
-void process_samples(uint count)
+sample_t * buffer_acquire(uint * frames)
 {
-	uint process_offset;
+	uint count = 1<<16;
+	size_t sz = sizeof(struct buffer_head) + count * sizeof(sample_t);
 
-	/*
-		As the consumers of this buffered data are not strictly causal
-		functions, we process data with a delay. Therefore nothing is
-		processed until at least <state.delay> samples are read. As this
-		delay must be less than the buffer size we know we won't loop
-		round the buffer until after we've began processing samples so
-		we can simply use <state.offset> as the number of unprocessed
-		samples available during this initial buffer filling.
-	*/
-	if (!state.samples_processed) {
-		if (state.offset > state.delay)
-			/*
-				We have some samples to process but it may not
-				be the full count.
-			*/
-			dispatch_samples(0, state.offset - state.delay);
-	} else {
-		process_offset = state.offset - state.delay;
-		if (process_offset >= state.buffer_length) {
-			/* We have wrap-around. */
-			process_offset += state.buffer_length;
-			dispatch_samples(process_offset,
-					 state.buffer_length - process_offset);
-			dispatch_samples(0, state.offset - process_offset);
-		} else
-			dispatch_samples(process_offset, count);
-	}
+	struct buffer_head * h = (struct buffer_head *)malloc(sz);
+	if (!h)
+		return NULL;
 
-	state.offset += count;
-	if (state.offset == state.buffer_length)
-		state.offset = 0;
+	h->refs = 1;
+	sample_t * p = (sample_t *)ptr_offset(h, sizeof(struct buffer_head));
+
+	if (frames)
+		*frames = count;
+	return p;
 }
 
-/*
-	This function assumes that <start> + <count> is not greater than
-	<state.buffer_length>.
-*/
-void dispatch_samples(uint start, uint count)
+void buffer_addref(sample_t * p)
 {
-	/* TODO: Pass onwards as a block rather than one sample at a time. */
-	uint i;
-	for (i = 0; i < count; i++) {
-		impulse_detector_sample(start + i);
-		time_slice_sample(start + i);
-	}
+	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
+
+	h->refs++;
 }
 
-/*******************************************************************************
-	Public functions
-*******************************************************************************/
-
-int buffer_init(uint buffer_length, uint delay)
+void buffer_release(sample_t * p)
 {
-	state.buffer = (double *)malloc(buffer_length * sizeof(double));
-	if (!state.buffer)
-		return -1;
-	
-	memset(state.buffer, 0, buffer_length * sizeof(double));
-	
-	state.offset = 0;
-	state.buffer_length = buffer_length;
-	state.delay = delay;
-	state.samples_processed = 0;
+	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
 
-	if (output_sample_rate > buffer_length/2)
-		state.quantum = buffer_length/2;
-	else
-		state.quantum = output_sample_rate;
-	
-	/* Initialise impulse detection and time slice handling. */
-	impulse_detector_init(state.buffer, buffer_length);
-	time_slice_init(state.buffer, buffer_length);
-	
-	return 0;
-}
+	h->refs--;
 
-void buffer_exit(void)
-{
-	impulse_detector_exit();
-	time_slice_exit();
-}
-
-void buffer_samples(double * samples, uint count)
-{
-	memcpy(&state.buffer[state.offset], samples, count * sizeof(double));
-
-	process_samples(count);
-}
-
-double * buffer_advise(uint * count)
-{
-	process_samples(*count);
-
-	/*
-		Request state.quantum samples unless this would run past the end
-		of the buffer.
-	*/
-	if (state.offset + state.quantum >= state.buffer_length)
-		*count = state.buffer_length - state.offset;
-	else
-		*count = state.quantum;
-
-	return &state.buffer[state.offset];
+	if (!h->refs)
+		free(h);
 }

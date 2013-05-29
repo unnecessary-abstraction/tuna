@@ -22,15 +22,10 @@
 #define __UARA_BUFFER_H_INCLUDED__
 
 #include "types.h"
+#include "uara.h"
 
-/*
-	Buffer code assumes single channel operation. A single channel must be
-	extracted from a multi channel input in the input driver.
-*/
-
-int buffer_init(uint buffer_length, uint delay);
-void buffer_exit(void);
-void buffer_samples(double * samples, uint count);
-double * buffer_advise(uint * count);
+sample_t * buffer_acquire(uint * frames);
+void buffer_addref(sample_t * p);
+void buffer_release(sample_t * p);
 
 #endif /* !__UARA_BUFFER_H_INCLUDED__ */
