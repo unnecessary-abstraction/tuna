@@ -97,7 +97,8 @@ install: uara
 	$(Q)$(INSTALL) -D uara $(BINDIR)/uara
 
 ChangeLog:
-	hg log --style changelog > ChangeLog
+	@echo GIT LOG > Changelog
+	$(Q)git log > ChangeLog
 
 .PHONY: dev-clean clean clean-intermediates all install
 
