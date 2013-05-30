@@ -29,6 +29,7 @@
 #include <sys/cdefs.h>
 
 #include "log.h"
+#include "timespec.h"
 
 /*******************************************************************************
 	Private variables and functions.
@@ -44,16 +45,6 @@ static const char * messages[LOG_MAX_LEVEL + 1] = {
 	"MESSAGE",
 	"(Bad Log Level)"
 };
-
-static char * ascnow()
-{
-	time_t t;
-	struct tm * local;
-
-	t = time(NULL);
-	local = localtime(&t);
-	return asctime(local);
-}
 
 static int __log_printf(int level, const char * s, va_list va)
 {
@@ -89,6 +80,8 @@ static int __log_printf(int level, const char * s, va_list va)
 
 int log_init(const char * output_file, const char * app_name)
 {
+	int r;
+
 	if (!app_name)
 		app = strdup("(null)");
 	else
@@ -106,15 +99,42 @@ int log_init(const char * output_file, const char * app_name)
 		}
 	}
 
-	fprintf(file, "%s started at %s\n", app, ascnow());
+	/* Get current time. */
+	struct timespec ts;
+	r = clock_gettime(CLOCK_REALTIME, &ts);
+	if (r < 0)
+		return r;
+
+	r = fprintf(file, "%s started at ", app);
+	if (r < 0)
+		return r;
+
+	r = timespec_fprint(&ts, file);
+	if (r < 0)
+		return r;
+
+	r = fprintf(file, "\n");
+	if (r < 0)
+		return r;
 
 	return 0;
 }
 
 void log_exit()
 {
+	int r;
+
 	assert(file);
-	fprintf(file, "%s finished at %s\n", app, ascnow());
+
+	/* Get current time. */
+	struct timespec ts;
+	r = clock_gettime(CLOCK_REALTIME, &ts);
+	if (r < 0)
+		memset(&ts, 0, sizeof(ts));
+
+	fprintf(file, "%s finished at ", app);
+	timespec_fprint(&ts, file);
+	fprintf(file, "\n");
 
 	fclose(file);
 	file = NULL;
