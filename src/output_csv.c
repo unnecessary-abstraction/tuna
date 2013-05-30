@@ -37,6 +37,7 @@
 struct csv {
 	struct consumer		consumer;
 	
+	const char *		fname;
 	FILE *			f;
 	uint			sample_rate;
 	struct timespec		last_ts;
@@ -45,23 +46,40 @@ struct csv {
 
 void output_csv_exit(struct consumer * consumer)
 {
+	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
-	fputc('\n', c->f);
-	fclose(c->f);
+
+	r = fputc('\n', c->f);
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return;
+	}
+
+	r = fclose(c->f);
+	if (r < 0) {
+		error("output_csv: Failed to close output file %s", c->fname);
+		return;
+	}
 
 	free(c);
 }
 
 int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
 {
+	int r;
 	uint i;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
 	for (i = 0; i < count; i++) {
 		if ((++c->offset) % c->sample_rate)
-			fprintf(c->f, "%f, ", buf[i]);
+			r = fprintf(c->f, "%f, ", buf[i]);
 		else
-			fprintf(c->f, "%f\n", buf[i]);
+			r = fprintf(c->f, "%f\n", buf[i]);
+
+		if (r < 0) {
+			error("output_csv: Failed to write to output file %s", c->fname);
+			return r;
+		}
 	}
 	
 	return 0;
@@ -69,29 +87,59 @@ int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int output_csv_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
+	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
 	c->sample_rate = sample_rate;
 	c->last_ts = *ts;
 	c->offset = 0;
 
-	fprintf(c->f, "START ");
-	timespec_fprint(ts, c->f);
-	fprintf(c->f, "\n");
-	
+	r = fprintf(c->f, "START ");
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
+
+	r = timespec_fprint(ts, c->f);
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
+
+	r = fprintf(c->f, "\n");
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
+
 	return 0;
 }
 
 int output_csv_resync(struct consumer * consumer, struct timespec * ts)
 {
+	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
 	c->last_ts = *ts;
 	c->offset = 0;
 
-	fprintf(c->f, "RESYNC ");
-	timespec_fprint(ts, c->f);
-	fprintf(c->f, "\n");
+	r = fprintf(c->f, "RESYNC ");
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
+
+	r = timespec_fprint(ts, c->f);
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
+
+	r = fprintf(c->f, "\n");
+	if (r < 0) {
+		error("output_csv: Failed to write to output file %s", c->fname);
+		return r;
+	}
 	
 	return 0;
 }
@@ -110,6 +158,7 @@ struct consumer * output_csv_init(const char * fname)
 
 	memset(c, 0, sizeof(struct csv));
 	
+	c->fname = fname;
 	c->f = fopen(fname, "w");
 	if (!c->f) {
 		error("output_csv: Failed to open file %s", fname);
