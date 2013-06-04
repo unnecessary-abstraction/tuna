@@ -23,6 +23,7 @@
 
 #include <sys/cdefs.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef __noreturn
 #define __noreturn __attribute__ ((noreturn))
@@ -41,6 +42,12 @@
 #define ptr_offset(ptr, d) ({						\
 		char * __cptr = (char *)(ptr);				\
 		__cptr + d;						\
+	})
+
+#define ptr_truncate(ptr, round) ({					\
+		uintptr_t __iptr = (uintptr_t)(ptr);			\
+		uintptr_t __ir = (uintptr_t)(round);			\
+		(void *)(__iptr & ~(__ir-1));				\
 	})
 
 #endif /* !__UARA_COMPILER_H_INCLUDED__ */
