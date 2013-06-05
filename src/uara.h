@@ -25,9 +25,6 @@
 
 #include "types.h"
 
-extern uint input_sample_rate;
-extern uint output_sample_rate;
-
 typedef double sample_t;
 
 struct producer {
