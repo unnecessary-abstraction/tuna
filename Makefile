@@ -63,11 +63,9 @@ test: test_cmds
 
 test_cmds: output_csv_test
 
-.deps:
-	$(Q)mkdir -p .deps
-
-%.o: %.c .deps
+%.o: %.c
 	@echo CC $@
+	$(Q)mkdir -p .deps
 	$(Q)$(CC) $(CFLAGS) $(DEPFLAGS) -I $(INCLUDE_DIR) -I $(SOURCE_DIR) -o $@ -c $<
 	$(Q)$(FIXDEPS) $*.d .deps/$*.P
 	$(Q)$(RM) $*.d
