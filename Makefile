@@ -37,7 +37,7 @@ FIXDEPS := python $(SOURCE_ROOT)scripts/fixdeps.py
 # Paths
 SOURCE_DIR := $(SOURCE_ROOT)src
 INCLUDE_DIR := $(SOURCE_ROOT)include
-VPATH := $(SOURCE_DIR) $(SOURCE_DIR)/dsp
+VPATH := $(SOURCE_DIR)
 PREFIX := $(DESTDIR)/usr/local
 BINDIR := $(PREFIX)/bin
 
