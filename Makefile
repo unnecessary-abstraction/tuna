@@ -18,9 +18,8 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-#DSP_OBJECTS := fft.o impulse.o third_octave_levels.o time_slice.o
 UARA_OBJECTS := analysis.o buffer.o bufq.o input_sndfile.o log.o output_csv.o \
-	slab.o timespec.o uara.o $(DSP_OBJECTS)
+	slab.o timespec.o uara.o
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o timespec.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
