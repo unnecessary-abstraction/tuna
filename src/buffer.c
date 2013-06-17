@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <malloc.h>
 
 #include "buffer.h"
@@ -29,20 +30,27 @@ struct buffer_head {
 	uint		refs;
 };
 
+/* Acquire a buffer of at least (*frames) samples. The actual number of samples
+ * which can be stored in the buffer is written back to (*frames).
+ *
+ * Buffers currently aren't cached so we will allocate exactly the number of
+ * frames requested.
+ */
 sample_t * buffer_acquire(uint * frames)
 {
-	uint count = 1<<16;
-	size_t sz = sizeof(struct buffer_head) + count * sizeof(sample_t);
+	size_t sz;
+	struct buffer_head * h;
 
-	struct buffer_head * h = (struct buffer_head *)malloc(sz);
+	assert(frames);
+	sz = sizeof(struct buffer_head) + (*frames) * sizeof(sample_t);
+
+	h = (struct buffer_head *)malloc(sz);
 	if (!h)
 		return NULL;
 
 	h->refs = 1;
 	sample_t * p = (sample_t *)ptr_offset(h, sizeof(struct buffer_head));
 
-	if (frames)
-		*frames = count;
 	return p;
 }
 

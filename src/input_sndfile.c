@@ -119,6 +119,7 @@ int run_single_channel(struct input_sndfile * snd)
 	snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
 
 	while (1) {
+		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		r = sf_readf_double(snd->sf, buf, frames);
 		if (r <= 0)
