@@ -28,9 +28,7 @@
 
 int main(int argc, char * argv[])
 {
-	__unused argc;
-	__unused argv;
-
+	int r;
 	struct producer * in;
 	struct consumer * bufq;
 	struct consumer * analysis;
@@ -43,22 +41,62 @@ int main(int argc, char * argv[])
 	const char * sink_impulse = "impulse.csv";
 	const char * log_file = "uara.log";
 	const char * app_name = "uara";
+
+	__unused argc;
+	__unused argv;
 	
-	log_init(log_file, app_name);
+	r = log_init(log_file, app_name);
+	if (r < 0)
+		goto err_log;
 
 	out_time_slice = output_csv_init(sink_time_slice);
+	if (!out_time_slice) {
+		error("uara: Failed to initialise output_csv module for time slice results");
+		r = -1;
+		goto err_time_slice;
+	}
+
 	out_impulse = output_csv_init(sink_impulse);
+	if (!out_impulse) {
+		error("uara: Failed to initialise output_csv module for impulse results");
+		r = -1;
+		goto err_impulse;
+	}
+
 	analysis = analysis_init(out_time_slice, out_impulse);
+	if (!analysis) {
+		error("uara: Failed to initialise analysis module");
+		r = -1;
+		goto err_analysis;
+	}
+
 	bufq = bufq_init(analysis);
+	if (!bufq) {
+		error("uara: Failed to initialise bufq module");
+		r = -1;
+		goto err_bufq;
+	}
+
 	in = input_sndfile_init(source, bufq);
+	if (!in) {
+		error("uara: Failed to initialise input_sndfile module");
+		r = -1;
+		goto err_in;
+	}
 
-	in->run(in);
+	r = in->run(in);
 
-	out_time_slice->exit(out_time_slice);
-	out_impulse->exit(out_impulse);
-	analysis->exit(analysis);
-	bufq->exit(bufq);
 	in->exit(in);
-
-	return 0;
+err_in:
+	bufq->exit(bufq);
+err_bufq:
+	analysis->exit(analysis);
+err_analysis:
+	out_impulse->exit(out_impulse);
+err_impulse:
+	out_time_slice->exit(out_time_slice);
+err_time_slice:
+	log_exit();
+err_log:
+	return r;
 }
