@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <errno.h>
 #include <malloc.h>
 #include <sndfile.h>
 #include "buffer.h"
@@ -116,19 +117,35 @@ int run_single_channel(struct input_sndfile * snd)
 	sample_t *	buf;
 
 	memset(&ts, 0, sizeof(struct timespec));
-	snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	r = snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	if (r < 0) {
+		error("input_sndfile: consumer->start failed");
+		return r;
+	}
 
 	while (1) {
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
+		if (!buf) {
+			error("input_sndfile: Failed to acquire buffer");
+			return -ENOMEM;
+		}
+
 		r = sf_readf_double(snd->sf, buf, frames);
-		if (r <= 0)
+		if (r <= 0) {
+			error("libsndfile: Error %d: %s", r, sf_error_number(r));
+			error("input_sndfile: Failed to read samples");
 			return r;
+		}
 
 		/* Got r frames. */
 		frames = (uint)r;
 		
-		snd->consumer->write(snd->consumer, buf, frames);
+		r = snd->consumer->write(snd->consumer, buf, frames);
+		if (r < 0) {
+			error("input_sndfile: consumer->write failed");
+			return r;
+		}
 	}
 }
 
@@ -146,20 +163,33 @@ int run_multi_channel(struct input_sndfile * snd)
 	selected_channel = 0;	/* zero-based. TODO: Make configurable. */
 
 	memset(&ts, 0, sizeof(struct timespec));
-	snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	r = snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	if (r < 0) {
+		error("input_sndfile: consumer->start failed");
+		return r;
+	}
 	
 	/*
 		Read into multi-channel buffer and strip out just the channel we
 		want into the front of the buffer.
 	*/
 	while (1) {
+		frames = 1<<16;
 		buf = buffer_acquire(&frames);
+		if (!buf) {
+			error("input_sndfile: Failed to acquire buffer");
+			return -ENOMEM;
+		}
+
 		/* Divide frames down by the number of channels. */
 		frames /= channels;
 
 		r = sf_readf_double(snd->sf, buf, frames);
-		if (r <= 0)
+		if (r <= 0) {
+			error("libsndfile: Error %d: %s", r, sf_error_number(r));
+			error("input_sndfile: Failed to read samples");
 			return r;
+		}
 
 		/* Got r frames. */
 		frames = (uint)r;
@@ -167,13 +197,16 @@ int run_multi_channel(struct input_sndfile * snd)
 		for (i = 0; i < frames; i++)
 			buf[i] = buf[i*channels + selected_channel];
 
-		snd->consumer->write(snd->consumer, buf, frames);
+		r = snd->consumer->write(snd->consumer, buf, frames);
+		if (r < 0) {
+			error("input_sndfile: consumer->write failed");
+			return r;
+		}
 	}
 }
 
 int input_sndfile_run(struct producer * producer)
 {
-	int			err;
 	int			r;
 	struct input_sndfile *	snd = container_of(producer, struct input_sndfile, producer);
 
@@ -183,14 +216,12 @@ int input_sndfile_run(struct producer * producer)
 		r = run_single_channel(snd);
 
 	/* Error or EOF. */
-	err = sf_error(snd->sf);
-	if (err) {
-		error("libsndfile: Error %d: %s", r, sf_error_number(err));
-		fatal("input_sndfile: Unrecoverable error reading frames");
-	} else {
+	if (r < 0)
+		error("input_sndfile: Unrecoverable error reading frames");
+	else
 		msg("input_sndfile: EOF");
-		return 0;
-	}
+	
+	return r;
 }
 
 void input_sndfile_exit(struct producer * producer)
@@ -214,7 +245,7 @@ struct producer * input_sndfile_init(const char * source, struct consumer * c)
 
 	struct input_sndfile * snd = (struct input_sndfile *)malloc(sizeof(struct input_sndfile));
 	if (!snd) {
-		error("input_sndfile_init: Failed to allocate memory");
+		error("input_sndfile: Failed to allocate memory");
 		return NULL;
 	}
 
@@ -226,10 +257,9 @@ struct producer * input_sndfile_init(const char * source, struct consumer * c)
 	snd->consumer = c;
 
 	r = open_sndfile(snd, source);
-	if (r) {
+	if (r)
 		/* Error message already printed. */
 		return NULL;
-	}
 
 	snd->producer.run = input_sndfile_run;
 	snd->producer.exit = input_sndfile_exit;
