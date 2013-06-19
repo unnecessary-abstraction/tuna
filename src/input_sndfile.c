@@ -135,6 +135,7 @@ int run_single_channel(struct input_sndfile * snd)
 		if (r <= 0) {
 			error("libsndfile: Error %d: %s", r, sf_error_number(r));
 			error("input_sndfile: Failed to read samples");
+			buffer_release(buf);
 			return r;
 		}
 
@@ -144,8 +145,11 @@ int run_single_channel(struct input_sndfile * snd)
 		r = snd->consumer->write(snd->consumer, buf, frames);
 		if (r < 0) {
 			error("input_sndfile: consumer->write failed");
+			buffer_release(buf);
 			return r;
 		}
+
+		buffer_release(buf);
 	}
 }
 
@@ -188,6 +192,7 @@ int run_multi_channel(struct input_sndfile * snd)
 		if (r <= 0) {
 			error("libsndfile: Error %d: %s", r, sf_error_number(r));
 			error("input_sndfile: Failed to read samples");
+			buffer_release(buf);
 			return r;
 		}
 
@@ -200,8 +205,11 @@ int run_multi_channel(struct input_sndfile * snd)
 		r = snd->consumer->write(snd->consumer, buf, frames);
 		if (r < 0) {
 			error("input_sndfile: consumer->write failed");
+			buffer_release(buf);
 			return r;
 		}
+
+		buffer_release(buf);
 	}
 }
 
