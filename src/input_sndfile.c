@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <sndfile.h>
+
 #include "buffer.h"
 #include "input_sndfile.h"
 #include "log.h"
