@@ -20,7 +20,7 @@
 
 UARA_OBJECTS := analysis.o buffer.o bufq.o fft.o input_sndfile.o log.o \
 	null.o output_csv.o slab.o time_slice.o timespec.o tol.o uara.o \
-	window.o
+	window.o zero.o
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o timespec.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
