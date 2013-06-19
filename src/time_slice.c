@@ -396,7 +396,7 @@ struct consumer * time_slice_init(struct consumer * out, struct fft * f)
 
 	struct time_slice * t = (struct time_slice *)malloc(sizeof(struct time_slice));
 	if (!t) {
-		error("time_slice_init: Failed to allocate memory");
+		error("time_slice: Failed to allocate memory");
 		return NULL;
 	}
 

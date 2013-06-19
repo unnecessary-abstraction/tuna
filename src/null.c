@@ -74,7 +74,7 @@ struct consumer * null_init()
 {
 	struct consumer * c = (struct consumer *)malloc(sizeof(struct consumer));
 	if (!c) {
-		error("null_init: Failed to allocate memory");
+		error("null: Failed to allocate memory");
 		return NULL;
 	}
 

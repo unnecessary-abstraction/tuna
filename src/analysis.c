@@ -95,7 +95,7 @@ struct consumer * analysis_init(struct consumer * out_time_slice, struct consume
 
 	struct analysis * a = (struct analysis *)malloc(sizeof(struct analysis));
 	if (!a) {
-		error("analysis_init: Failed to allocate memory");
+		error("analysis: Failed to allocate memory");
 		return NULL;
 	}
 

@@ -297,7 +297,7 @@ struct consumer * bufq_init(struct consumer * target)
 	int r;
 	struct bufq * b = (struct bufq *)malloc(sizeof(struct bufq));
 	if (!b) {
-		error("bufq_init: Failed to allocate memory");
+		error("bufq: Failed to allocate memory");
 		goto err_malloc;
 	}
 
