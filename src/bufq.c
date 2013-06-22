@@ -23,6 +23,7 @@
 #include <pthread.h>
 
 #include "compiler.h"
+#include "list.h"
 #include "log.h"
 #include "uara.h"
 
@@ -36,7 +37,6 @@
 #define BUFQ_RESYNC	3
 
 struct bufq_entry {
-	struct bufq_entry *		next;
 	uint				event;
 
 	union {
@@ -46,6 +46,8 @@ struct bufq_entry {
 		};
 		struct timespec		ts;
 	};
+
+	struct list_entry		l;
 };
 
 struct bufq {
@@ -59,11 +61,10 @@ struct bufq {
 	pthread_t		thread;
 
 	/* The queue: push at tail, pop from head. */
-	struct bufq_entry *	head;
-	struct bufq_entry *	tail;
+	struct list		queue;
 
 	/* Free entries: push at head, pop at head. */
-	struct bufq_entry *	freestack;
+	struct list		freestack;
 
 	/* This structure needs to be accessed in a thread safe manner. */
 	pthread_mutex_t		mutex;
@@ -76,6 +77,35 @@ struct bufq {
 	Private functions
 *******************************************************************************/
 
+static struct bufq_entry * alloc_entry(struct bufq * b)
+{
+	assert(b);
+
+	struct bufq_entry * e;
+	struct list_entry * l;
+
+	l = list_pop(&b->freestack);
+	if (l)
+		e = container_of(l, struct bufq_entry, l);
+	else {
+		e = (struct bufq_entry *)malloc(sizeof(struct bufq_entry));
+	}
+
+	return e;
+}
+
+static void free_entry(struct bufq * b, struct bufq_entry * e)
+{
+	assert(b);
+	assert(e);
+
+	pthread_mutex_lock(&b->mutex);
+
+	list_push(&b->freestack, &e->l);
+
+	pthread_mutex_unlock(&b->mutex);
+}
+
 static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint count)
 {
 	assert(b);
@@ -85,24 +115,17 @@ static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint coun
 
 	pthread_mutex_lock(&b->mutex);
 
-	if (b->freestack) {
-		e = b->freestack;
-		b->freestack = e->next;
-	} else {
-		e = (struct bufq_entry *)malloc(sizeof(struct bufq_entry));
-		if (!e) {
-			error("bufq: Failed to allocate memory");
-			return -1;
-		}
+	e = alloc_entry(b);
+	if (!e) {
+		error("bufq: Failed to allocate memory");
+		return -1;
 	}
 
-	e->next = NULL;
 	e->event = event;
 	e->buf = buf;
 	e->count = count;
 
-	b->tail->next = e;
-	b->tail = e;
+	list_enqueue(&b->queue, &e->l);
 
 	/* Signal that there is data in the queue. */
 	pthread_cond_signal(&b->cond);
@@ -121,23 +144,16 @@ static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
 
 	pthread_mutex_lock(&b->mutex);
 
-	if (b->freestack) {
-		e = b->freestack;
-		b->freestack = e->next;
-	} else {
-		e = (struct bufq_entry *)malloc(sizeof(struct bufq_entry));
-		if (!e) {
-			error("bufq: Failed to allocate memory");
-			return -1;
-		}
+	e = alloc_entry(b);
+	if (!e) {
+		error("bufq: Failed to allocate memory");
+		return -1;
 	}
 
-	e->next = NULL;
 	e->event = event;
 	e->ts = *ts;
 
-	b->tail->next = e;
-	b->tail = e;
+	list_enqueue(&b->queue, &e->l);
 
 	/* Signal that there is data in the queue. */
 	pthread_cond_signal(&b->cond);
@@ -152,11 +168,12 @@ static struct bufq_entry * dequeue(struct bufq * b)
 	assert(b);
 
 	struct bufq_entry * e;
+	struct list_entry * l;
 
 	pthread_mutex_lock(&b->mutex);
 
-	e = b->head;
-	if (!e) {
+	l = list_dequeue(&b->queue);
+	if (!l) {
 		/* No data available - wait until data is added to the queue. */
 		pthread_cond_wait(&b->cond, &b->mutex);
 
@@ -165,31 +182,18 @@ static struct bufq_entry * dequeue(struct bufq * b)
 			pthread_exit(NULL);
 
 		/* Now we should have data or have been signalled to exit. */
-		e = b->head;
-		if (!e) {
+		l = list_dequeue(&b->queue);
+		if (!l) {
 			error("bufq: Signal raised incorrectly");
 			return NULL;
 		}
 	}
 
-	b->head = e->next;
-
 	pthread_mutex_unlock(&b->mutex);
+
+	e = container_of(l, struct bufq_entry, l);
 
 	return e;
-}
-
-static void free_entry(struct bufq * b, struct bufq_entry * e)
-{
-	assert(b);
-	assert(e);
-
-	pthread_mutex_lock(&b->mutex);
-
-	e->next = b->freestack;
-	b->freestack = e;
-
-	pthread_mutex_unlock(&b->mutex);
 }
 
 static void * consumer_thread(void * param)
@@ -250,6 +254,8 @@ void bufq_exit(struct consumer * consumer)
 	pthread_cond_signal(&b->cond);
 	pthread_join(b->thread, NULL);
 
+	list_exit(&b->freestack);
+	list_exit(&b->queue);
 	pthread_cond_destroy(&b->cond);
 	pthread_mutex_destroy(&b->mutex);
 	free(b);
@@ -302,11 +308,11 @@ struct consumer * bufq_init(struct consumer * target)
 	}
 
 	b->target = target;
-	b->head = NULL;
-	b->tail = NULL;
-	b->freestack = NULL;
 	b->exit = 0;
 	b->sample_rate = 0;
+
+	list_init(&b->queue);
+	list_init(&b->freestack);
 
 	r = pthread_mutex_init(&b->mutex, NULL);
 	if (r != 0) {
