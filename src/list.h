@@ -66,7 +66,7 @@ static inline bool list_is_tail(struct list_entry * e)
 }
 
 /*******************************************************************************
-	Low level functionality: next, prev, head and tail
+	Element access: next, prev, head and tail
 *******************************************************************************/
 
 static inline struct list_entry * list_next(struct list_entry * e)
