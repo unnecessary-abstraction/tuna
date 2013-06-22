@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <pthread.h>
 
+#include "buffer.h"
 #include "compiler.h"
 #include "list.h"
 #include "log.h"
@@ -229,6 +230,7 @@ static void * consumer_thread(void * param)
 		switch (e->event) {
 			case BUFQ_BUFFER:
 				b->target->write(b->target, e->buf, e->count);
+				buffer_release(e->buf);
 				break;
 
 			case BUFQ_START:
@@ -272,6 +274,7 @@ int bufq_write(struct consumer * consumer, sample_t * buf, uint count)
 
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
+	buffer_addref(buf);
 	return enqueue_buffer(b, BUFQ_BUFFER, buf, count);
 }
 
