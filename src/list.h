@@ -46,6 +46,26 @@ struct list {
 };
 
 /*******************************************************************************
+	Element conditionals: is_head, is_tail
+*******************************************************************************/
+
+static inline bool list_is_head(struct list_entry * e)
+{
+	assert(e);
+	assert(e->prev);
+
+	return !e->prev->prev;
+}
+
+static inline bool list_is_tail(struct list_entry * e)
+{
+	assert(e);
+	assert(e->next);
+
+	return !e->next->next;
+}
+
+/*******************************************************************************
 	Low level functionality: next, prev, head and tail
 *******************************************************************************/
 
@@ -54,8 +74,7 @@ static inline struct list_entry * list_next(struct list_entry * e)
 	assert(e);
 	assert(e->next);
 
-	if (!e->next->next)
-		/* We got the end. */
+	if (list_is_tail(e))
 		return NULL;
 
 	return e->next;
@@ -66,8 +85,7 @@ static inline struct list_entry * list_prev(struct list_entry * e)
 	assert(e);
 	assert(e->prev);
 
-	if (!e->prev->prev)
-		/* We got the start. */
+	if (list_is_head(e))
 		return NULL;
 
 	return e->prev;
@@ -83,6 +101,17 @@ static inline struct list_entry * list_tail(struct list * li)
 {
 	assert(li);
 	return list_prev(&li->tail);
+}
+
+/*******************************************************************************
+	Whole list conditionals: is_empty
+*******************************************************************************/
+
+static inline bool list_is_empty(struct list * s)
+{
+	assert(s);
+
+	return !list_head(s);
 }
 
 /*******************************************************************************
@@ -107,33 +136,6 @@ static inline int list_init(struct list * li)
 static inline void list_exit(struct list * li)
 {
 	assert(li);
-}
-
-/*******************************************************************************
-	Conditionals: is_head, is_tail, is_empty
-*******************************************************************************/
-
-static inline bool list_is_head(struct list_entry * e)
-{
-	assert(e);
-	assert(e->prev);
-
-	return !e->prev->prev;
-}
-
-static inline bool list_is_tail(struct list_entry * e)
-{
-	assert(e);
-	assert(e->next);
-
-	return !e->next->next;
-}
-
-static inline bool list_is_empty(struct list * s)
-{
-	assert(s);
-
-	return !list_head(s);
 }
 
 /*******************************************************************************
