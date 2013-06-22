@@ -84,12 +84,16 @@ static struct bufq_entry * alloc_entry(struct bufq * b)
 	struct bufq_entry * e;
 	struct list_entry * l;
 
+	pthread_mutex_lock(&b->mutex);
+
 	l = list_pop(&b->freestack);
 	if (l)
 		e = container_of(l, struct bufq_entry, l);
 	else {
 		e = (struct bufq_entry *)malloc(sizeof(struct bufq_entry));
 	}
+
+	pthread_mutex_unlock(&b->mutex);
 
 	return e;
 }
@@ -301,6 +305,7 @@ struct consumer * bufq_init(struct consumer * target)
 	assert(target);
 
 	int r;
+	pthread_mutexattr_t attr;
 	struct bufq * b = (struct bufq *)malloc(sizeof(struct bufq));
 	if (!b) {
 		error("bufq: Failed to allocate memory");
@@ -314,7 +319,17 @@ struct consumer * bufq_init(struct consumer * target)
 	list_init(&b->queue);
 	list_init(&b->freestack);
 
-	r = pthread_mutex_init(&b->mutex, NULL);
+	/* Create a recursive mutex. */
+	r = pthread_mutexattr_init(&attr);
+	if (r != 0) {
+		error("bufq: Failed to create mutexattr");
+		goto err_mutexattr;
+	}
+
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+
+	r = pthread_mutex_init(&b->mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
 	if (r != 0) {
 		error("bufq: Failed to create mutex");
 		goto err_mutex;
@@ -346,6 +361,7 @@ err_thread:
 err_cond:
 	pthread_mutex_destroy(&b->mutex);
 err_mutex:
+err_mutexattr:
 	free(b);
 err_malloc:
 	return NULL;
