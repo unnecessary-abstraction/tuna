@@ -33,7 +33,7 @@
 *******************************************************************************/
 
 #define BUFQ_NULL	0
-#define BUFQ_BUFFER	1
+#define BUFQ_WRITE	1
 #define BUFQ_START	2
 #define BUFQ_RESYNC	3
 
@@ -228,7 +228,7 @@ static void * consumer_thread(void * param)
 		}
 
 		switch (e->event) {
-			case BUFQ_BUFFER:
+			case BUFQ_WRITE:
 				b->target->write(b->target, e->buf, e->count);
 				buffer_release(e->buf);
 				break;
@@ -275,7 +275,7 @@ int bufq_write(struct consumer * consumer, sample_t * buf, uint count)
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
 	buffer_addref(buf);
-	return enqueue_buffer(b, BUFQ_BUFFER, buf, count);
+	return enqueue_buffer(b, BUFQ_WRITE, buf, count);
 }
 
 int bufq_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
