@@ -44,15 +44,21 @@ int fft_init(struct fft * fft)
 	memset(fft, 0, sizeof(*fft));
 
 	/* Create a recursive mutex. */
-	pthread_mutexattr_init(&attr);
+	r = pthread_mutexattr_init(&attr);
+	if (r != 0) {
+		error("fft: Failed to create mutexattr");
+		return r;
+	}
+
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+
 	r = pthread_mutex_init(&fft->mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
 	if (r != 0) {
 		error("fft: Failed to create mutex");
 		return r;
 	}
 	
-	pthread_mutexattr_destroy(&attr);
 	return 0;
 }
 
