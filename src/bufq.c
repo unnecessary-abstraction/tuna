@@ -182,11 +182,10 @@ static struct bufq_entry * dequeue(struct bufq * b)
 		/* No data available - wait until data is added to the queue. */
 		pthread_cond_wait(&b->cond, &b->mutex);
 
-		/* Maybe we were signalled to exit. */
+		/* Now we should have data or have been signalled to exit. */
 		if (b->exit)
 			pthread_exit(NULL);
 
-		/* Now we should have data or have been signalled to exit. */
 		l = list_dequeue(&b->queue);
 		if (!l) {
 			error("bufq: Signal raised incorrectly");
