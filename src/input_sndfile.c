@@ -109,7 +109,7 @@ static void close_sndfile(struct input_sndfile * snd)
 
 	r = sf_close(snd->sf);
 	if (r != 0) {
-		error("libsndfile: Error %d: %s", r, sf_error_number(r));
+		error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));
 		fatal("input_sndfile: Could not close file %s", snd->sf_name);
 	}
 
@@ -142,10 +142,11 @@ int run_single_channel(struct input_sndfile * snd)
 
 		r = sf_readf_double(snd->sf, buf, frames);
 		if (r <= 0) {
-			error("libsndfile: Error %d: %s", r, sf_error_number(r));
+			r = sf_error(snd->sf);
+			error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));
 			error("input_sndfile: Failed to read samples");
 			buffer_release(buf);
-			return r;
+			return -r;	/* libsndfile error values are positive. */
 		}
 
 		/* Got r frames. */
@@ -201,10 +202,11 @@ int run_multi_channel(struct input_sndfile * snd)
 
 		r = sf_readf_double(snd->sf, buf, frames);
 		if (r <= 0) {
-			error("libsndfile: Error %d: %s", r, sf_error_number(r));
+			r = sf_error(snd->sf);
+			error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));
 			error("input_sndfile: Failed to read samples");
 			buffer_release(buf);
-			return r;
+			return -r;	/* libsndfile error values are positive. */
 		}
 
 		/* Got r frames. */
