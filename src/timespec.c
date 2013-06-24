@@ -48,6 +48,19 @@ void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate)
 	timespec_add_ns(ts, ns);
 }
 
+int timespec_snprint(struct timespec * ts, char * s, size_t n)
+{
+	assert(ts);
+	assert(s);
+
+	struct tm *	local;
+	char		buf[40];
+
+	local = localtime(&ts->tv_sec);
+	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %z", local);
+	return snprintf(s, n, "%s (+%.9ld ns)", buf, ts->tv_nsec);
+}
+
 int timespec_fprint(struct timespec * ts, FILE * f)
 {
 	assert(ts);
