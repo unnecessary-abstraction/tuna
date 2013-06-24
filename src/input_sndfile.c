@@ -41,8 +41,6 @@ struct input_sndfile {
 	SNDFILE *		sf;
 	SF_INFO			sf_info;
 	const char *		sf_name;
-
-	uint			buf_size;
 };
 
 /*******************************************************************************
