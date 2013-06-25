@@ -18,9 +18,9 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-UARA_OBJECTS := analysis.o buffer.o bufq.o fft.o input_sndfile.o log.o \
-	null.o output_csv.o output_sndfile.o slab.o time_slice.o timespec.o \
-	tol.o uara.o window.o zero.o
+UARA_OBJECTS := analysis.o buffer.o bufq.o fft.o input_alsa.o input_sndfile.o \
+	log.o null.o output_csv.o output_sndfile.o slab.o time_slice.o \
+	timespec.o tol.o uara.o window.o zero.o
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o timespec.o
 ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
@@ -44,7 +44,7 @@ BINDIR := $(PREFIX)/bin
 # Flags
 CFLAGS := -Wall -Wextra -pthread $(EXTRA_CFLAGS)
 LDFLAGS := -pthread $(EXTRA_LDFLAGS)
-LDLIBRARIES := -lfftw3 -lm -lsndfile -lrt
+LDLIBRARIES := -lfftw3 -lm -lsndfile -lrt -lasound
 
 # Flags to generate dependencies
 DEPFLAGS := -MD
