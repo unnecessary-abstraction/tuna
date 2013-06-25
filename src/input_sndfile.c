@@ -22,13 +22,13 @@
 #include <errno.h>
 #include <malloc.h>
 #include <sndfile.h>
+#include <string.h>
 
 #include "buffer.h"
 #include "consumer.h"
 #include "input_sndfile.h"
 #include "log.h"
 #include "producer.h"
-#include "string.h"
 
 /*******************************************************************************
 	Private declarations
