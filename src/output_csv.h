@@ -21,7 +21,7 @@
 #ifndef __UARA_OUTPUT_CSV_H_INCLUDED__
 #define __UARA_OUTPUT_CSV_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
 
 struct consumer * output_csv_init(const char * fname);
 

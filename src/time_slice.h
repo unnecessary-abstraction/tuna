@@ -21,8 +21,8 @@
 #ifndef __UARA_TIME_SLICE_H_INCLUDED__
 #define __UARA_TIME_SLICE_H_INCLUDED__
 
+#include "consumer.h"
 #include "fft.h"
-#include "uara.h"
 
 struct consumer * time_slice_init(struct consumer * out, struct fft * f);
 

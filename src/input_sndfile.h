@@ -21,7 +21,8 @@
 #ifndef __UARA_INPUT_SNDFILE_H_INCLUDED__
 #define __UARA_INPUT_SNDFILE_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
+#include "producer.h"
 
 struct producer * input_sndfile_init(const char * source, struct consumer * c);
 

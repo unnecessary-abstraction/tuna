@@ -21,7 +21,7 @@
 #ifndef __UARA_BUFQ_H_INCLUDED__
 #define __UARA_BUFQ_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
 
 struct consumer * bufq_init(struct consumer * target);
 

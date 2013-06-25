@@ -24,7 +24,6 @@
 #include "buffer.h"
 #include "compiler.h"
 #include "types.h"
-#include "uara.h"
 
 struct buffer_head {
 	uint		refs;

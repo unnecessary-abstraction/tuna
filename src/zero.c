@@ -24,9 +24,10 @@
 
 #include "buffer.h"
 #include "compiler.h"
+#include "consumer.h"
 #include "log.h"
+#include "producer.h"
 #include "types.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations and functions

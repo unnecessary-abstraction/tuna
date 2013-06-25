@@ -1,5 +1,5 @@
 /*******************************************************************************
-	uara.h: Common declarations needed everywhere.
+	consumer.h: Consumer type.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 
@@ -18,19 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_H_INCLUDED__
-#define __UARA_H_INCLUDED__
+#ifndef __UARA_CONSUMER_H_INCLUDED__
+#define __UARA_CONSUMER_H_INCLUDED__
 
 #include <time.h>
 
 #include "types.h"
-
-typedef double sample_t;
-
-struct producer {
-	int (*run)(struct producer * producer);
-	void (*exit)(struct producer * producer);
-};
 
 struct consumer {
 	int (*write)(struct consumer * consumer, sample_t * buf, uint count);
@@ -39,4 +32,4 @@ struct consumer {
 	void (*exit)(struct consumer * consumer);
 };
 
-#endif /* !__UARA_H_INCLUDED__ */
+#endif /* !__UARA_CONSUMER_H_INCLUDED__ */

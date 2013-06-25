@@ -21,7 +21,7 @@
 #ifndef __UARA_NULL_H_INCLUDED__
 #define __UARA_NULL_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
 
 struct consumer * null_init();
 

@@ -24,11 +24,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "consumer.h"
 #include "log.h"
 #include "output_sndfile.h"
 #include "timespec.h"
 #include "types.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations and functions

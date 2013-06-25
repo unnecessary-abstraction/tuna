@@ -22,10 +22,10 @@
 #include <malloc.h>
 
 #include "compiler.h"
+#include "consumer.h"
 #include "log.h"
 #include "null.h"
 #include "types.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations and functions

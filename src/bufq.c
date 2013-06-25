@@ -24,9 +24,9 @@
 
 #include "buffer.h"
 #include "compiler.h"
+#include "consumer.h"
 #include "list.h"
 #include "log.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations

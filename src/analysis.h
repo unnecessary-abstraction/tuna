@@ -21,7 +21,7 @@
 #ifndef __UARA_ANALYSIS_H_INCLUDED__
 #define __UARA_ANALYSIS_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
 
 struct consumer * analysis_init(struct consumer * out_time_slice, struct consumer * out_impulse);
 

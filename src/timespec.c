@@ -24,7 +24,6 @@
 
 #include "timespec.h"
 #include "types.h"
-#include "uara.h"
 
 #define NS 1000000000
 

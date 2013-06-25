@@ -25,13 +25,13 @@
 
 #include "buffer.h"
 #include "compiler.h"
+#include "consumer.h"
 #include "list.h"
 #include "log.h"
 #include "slab.h"
 #include "time_slice.h"
 #include "tol.h"
 #include "types.h"
-#include "uara.h"
 #include "window.h"
 
 /*******************************************************************************

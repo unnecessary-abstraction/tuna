@@ -1,8 +1,8 @@
 /*******************************************************************************
-	buffer.h: Sample buffering.
+	producer.h: Producer type.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
-	
+
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation; either version 2 of the License, or
@@ -18,13 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_BUFFER_H_INCLUDED__
-#define __UARA_BUFFER_H_INCLUDED__
+#ifndef __UARA_PRODUCER_H_INCLUDED__
+#define __UARA_PRODUCER_H_INCLUDED__
 
-#include "types.h"
+struct producer {
+	int (*run)(struct producer * producer);
+	void (*exit)(struct producer * producer);
+};
 
-sample_t * buffer_acquire(uint * frames);
-void buffer_addref(sample_t * p);
-void buffer_release(sample_t * p);
-
-#endif /* !__UARA_BUFFER_H_INCLUDED__ */
+#endif /* !__UARA_PRODUCER_H_INCLUDED__ */

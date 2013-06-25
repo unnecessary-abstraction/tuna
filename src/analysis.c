@@ -24,10 +24,10 @@
 #include <time.h>
 
 #include "analysis.h"
+#include "consumer.h"
 #include "compiler.h"
 #include "log.h"
 #include "types.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations and functions

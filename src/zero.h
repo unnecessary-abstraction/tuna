@@ -21,7 +21,8 @@
 #ifndef __UARA_ZERO_H_INCLUDED__
 #define __UARA_ZERO_H_INCLUDED__
 
-#include "uara.h"
+#include "consumer.h"
+#include "producer.h"
 
 struct producer * zero_init(uint sample_rate, struct consumer * c);
 

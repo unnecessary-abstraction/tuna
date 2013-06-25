@@ -21,8 +21,8 @@
 #ifndef __UARA_OUTPUT_SNDFILE_H_INCLUDED__
 #define __UARA_OUTPUT_SNDFILE_H_INCLUDED__
 
+#include "consumer.h"
 #include "types.h"
-#include "uara.h"
 
 struct consumer * output_sndfile_init(const char * prefix, const char * suffix, int format, uint max_samples_per_file);
 

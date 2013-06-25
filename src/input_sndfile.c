@@ -24,10 +24,11 @@
 #include <sndfile.h>
 
 #include "buffer.h"
+#include "consumer.h"
 #include "input_sndfile.h"
 #include "log.h"
+#include "producer.h"
 #include "string.h"
-#include "uara.h"
 
 /*******************************************************************************
 	Private declarations

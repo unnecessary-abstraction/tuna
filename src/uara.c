@@ -21,10 +21,11 @@
 #include "analysis.h"
 #include "bufq.h"
 #include "compiler.h"
+#include "consumer.h"
 #include "input_sndfile.h"
 #include "log.h"
 #include "output_csv.h"
-#include "uara.h"
+#include "producer.h"
 
 int main(int argc, char * argv[])
 {
