@@ -18,11 +18,11 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_ANALYSIS_H_INCLUDED__
-#define __UARA_ANALYSIS_H_INCLUDED__
+#ifndef __TUNA_ANALYSIS_H_INCLUDED__
+#define __TUNA_ANALYSIS_H_INCLUDED__
 
 #include "consumer.h"
 
 struct consumer * analysis_init(struct consumer * out_time_slice, struct consumer * out_impulse);
 
-#endif /* !__UARA_ANALYSIS_H_INCLUDED__ */
+#endif /* !__TUNA_ANALYSIS_H_INCLUDED__ */

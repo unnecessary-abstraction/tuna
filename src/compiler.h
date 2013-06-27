@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_COMPILER_H_INCLUDED__
-#define __UARA_COMPILER_H_INCLUDED__
+#ifndef __TUNA_COMPILER_H_INCLUDED__
+#define __TUNA_COMPILER_H_INCLUDED__
 
 #include <sys/cdefs.h>
 #include <stddef.h>
@@ -50,4 +50,4 @@
 		(void *)(__iptr & ~(__ir-1));				\
 	})
 
-#endif /* !__UARA_COMPILER_H_INCLUDED__ */
+#endif /* !__TUNA_COMPILER_H_INCLUDED__ */

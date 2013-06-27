@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_CONSUMER_H_INCLUDED__
-#define __UARA_CONSUMER_H_INCLUDED__
+#ifndef __TUNA_CONSUMER_H_INCLUDED__
+#define __TUNA_CONSUMER_H_INCLUDED__
 
 #include <time.h>
 
@@ -32,4 +32,4 @@ struct consumer {
 	void (*exit)(struct consumer * consumer);
 };
 
-#endif /* !__UARA_CONSUMER_H_INCLUDED__ */
+#endif /* !__TUNA_CONSUMER_H_INCLUDED__ */

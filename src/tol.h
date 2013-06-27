@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_TOL_H_INCLUDED__
-#define __UARA_TOL_H_INCLUDED__
+#ifndef __TUNA_TOL_H_INCLUDED__
+#define __TUNA_TOL_H_INCLUDED__
 
 #include "types.h"
 
@@ -50,4 +50,4 @@ void tol_calculate(struct tol * t, double * data, struct tol_results * r);
 int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double overlap, uint phi_L);
 void tol_exit(struct tol * t);
 
-#endif /* !__UARA_TOL_H_INCLUDED__ */
+#endif /* !__TUNA_TOL_H_INCLUDED__ */

@@ -18,12 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_INPUT_SNDFILE_H_INCLUDED__
-#define __UARA_INPUT_SNDFILE_H_INCLUDED__
+#ifndef __TUNA_INPUT_SNDFILE_H_INCLUDED__
+#define __TUNA_INPUT_SNDFILE_H_INCLUDED__
 
 #include "consumer.h"
 #include "producer.h"
 
 struct producer * input_sndfile_init(const char * source, struct consumer * c);
 
-#endif /* !__UARA_INPUT_SNDFILE_H_INCLUDED__ */
+#endif /* !__TUNA_INPUT_SNDFILE_H_INCLUDED__ */

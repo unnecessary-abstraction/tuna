@@ -1,5 +1,5 @@
 /*******************************************************************************
-	uara.c: Main program entry point.
+	tuna.c: Main program entry point.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
@@ -40,8 +40,8 @@ int main(int argc, char * argv[])
 	const char * source = "input.wav";
 	const char * sink_time_slice = "time_slice.csv";
 	const char * sink_impulse = "impulse.csv";
-	const char * log_file = "uara.log";
-	const char * app_name = "uara";
+	const char * log_file = "tuna.log";
+	const char * app_name = "tuna";
 
 	__unused argc;
 	__unused argv;
@@ -52,35 +52,35 @@ int main(int argc, char * argv[])
 
 	out_time_slice = output_csv_init(sink_time_slice);
 	if (!out_time_slice) {
-		error("uara: Failed to initialise output_csv module for time slice results");
+		error("tuna: Failed to initialise output_csv module for time slice results");
 		r = -1;
 		goto err_time_slice;
 	}
 
 	out_impulse = output_csv_init(sink_impulse);
 	if (!out_impulse) {
-		error("uara: Failed to initialise output_csv module for impulse results");
+		error("tuna: Failed to initialise output_csv module for impulse results");
 		r = -1;
 		goto err_impulse;
 	}
 
 	analysis = analysis_init(out_time_slice, out_impulse);
 	if (!analysis) {
-		error("uara: Failed to initialise analysis module");
+		error("tuna: Failed to initialise analysis module");
 		r = -1;
 		goto err_analysis;
 	}
 
 	bufq = bufq_init(analysis);
 	if (!bufq) {
-		error("uara: Failed to initialise bufq module");
+		error("tuna: Failed to initialise bufq module");
 		r = -1;
 		goto err_bufq;
 	}
 
 	in = input_sndfile_init(source, bufq);
 	if (!in) {
-		error("uara: Failed to initialise input_sndfile module");
+		error("tuna: Failed to initialise input_sndfile module");
 		r = -1;
 		goto err_in;
 	}

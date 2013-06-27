@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_LIST_H_INCLUDED__
-#define __UARA_LIST_H_INCLUDED__
+#ifndef __TUNA_LIST_H_INCLUDED__
+#define __TUNA_LIST_H_INCLUDED__
 
 #include <assert.h>
 #include <stdbool.h>
@@ -227,4 +227,4 @@ static inline struct list_entry * list_dequeue(struct list * li)
 	return list_pop(li);
 }
 
-#endif /* !__UARA_LIST_H_INCLUDED__ */
+#endif /* !__TUNA_LIST_H_INCLUDED__ */

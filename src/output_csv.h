@@ -18,11 +18,11 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_OUTPUT_CSV_H_INCLUDED__
-#define __UARA_OUTPUT_CSV_H_INCLUDED__
+#ifndef __TUNA_OUTPUT_CSV_H_INCLUDED__
+#define __TUNA_OUTPUT_CSV_H_INCLUDED__
 
 #include "consumer.h"
 
 struct consumer * output_csv_init(const char * fname);
 
-#endif /* !__UARA_OUTPUT_CSV_H_INCLUDED__ */
+#endif /* !__TUNA_OUTPUT_CSV_H_INCLUDED__ */

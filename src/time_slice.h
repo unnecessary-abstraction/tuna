@@ -18,12 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_TIME_SLICE_H_INCLUDED__
-#define __UARA_TIME_SLICE_H_INCLUDED__
+#ifndef __TUNA_TIME_SLICE_H_INCLUDED__
+#define __TUNA_TIME_SLICE_H_INCLUDED__
 
 #include "consumer.h"
 #include "fft.h"
 
 struct consumer * time_slice_init(struct consumer * out, struct fft * f);
 
-#endif /* !__UARA_TIME_SLICE_H_INCLUDED__ */
+#endif /* !__TUNA_TIME_SLICE_H_INCLUDED__ */

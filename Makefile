@@ -1,5 +1,5 @@
 ################################################################################
-#	Makefile for UARA.
+#	Makefile for TUNA.
 #
 #	Copyright (C) 2013 Paul Barker, Loughborough University
 #
@@ -18,14 +18,14 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-UARA_OBJECTS := analysis.o buffer.o bufq.o fft.o input_alsa.o input_sndfile.o \
+TUNA_OBJECTS := analysis.o buffer.o bufq.o fft.o input_alsa.o input_sndfile.o \
 	log.o null.o output_csv.o output_sndfile.o slab.o time_slice.o \
-	timespec.o tol.o uara.o window.o zero.o
+	timespec.o tol.o tuna.o window.o zero.o
 OUTPUT_CSV_TEST_OBJECTS := output_csv_test.o output_csv.o timespec.o
-ALL_OBJECTS := $(UARA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
+ALL_OBJECTS := $(TUNA_OBJECTS) $(OUTPUT_CSV_TEST_OBJECTS)
 ALL_SOURCES := $(ALL_OBJECTS:%.o=%.c)
 ALL_DEPS := $(ALL_SOURCES:%.c=.deps/%.P)
-ALL_TARGETS := uara output_csv_test
+ALL_TARGETS := tuna output_csv_test
 
 # Programs used
 CC := $(CROSS_COMPILE)gcc
@@ -57,7 +57,7 @@ else
   Q :=
 endif
 
-all: uara
+all: tuna
 
 test: test_cmds
 
@@ -70,9 +70,9 @@ test_cmds: output_csv_test
 	$(Q)$(FIXDEPS) $*.d .deps/$*.P
 	$(Q)$(RM) $*.d
 
-uara: $(UARA_OBJECTS)
+tuna: $(TUNA_OBJECTS)
 	@echo LD $@
-	$(Q)$(LD) $(LDFLAGS) -o $@ $(UARA_OBJECTS) $(LDLIBRARIES)
+	$(Q)$(LD) $(LDFLAGS) -o $@ $(TUNA_OBJECTS) $(LDLIBRARIES)
 
 output_csv_test: $(OUTPUT_CSV_TEST_OBJECTS)
 	@echo LD $@
@@ -90,9 +90,9 @@ dev-clean: clean
 	@echo DEVCLEAN
 	$(Q)$(RM) ChangeLog
 
-install: uara
-	@echo INSTALL uara
-	$(Q)$(INSTALL) -D uara $(BINDIR)/uara
+install: tuna
+	@echo INSTALL tuna
+	$(Q)$(INSTALL) -D tuna $(BINDIR)/tuna
 
 ChangeLog:
 	@echo GIT LOG > Changelog

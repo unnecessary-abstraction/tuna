@@ -18,11 +18,11 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_NULL_H_INCLUDED__
-#define __UARA_NULL_H_INCLUDED__
+#ifndef __TUNA_NULL_H_INCLUDED__
+#define __TUNA_NULL_H_INCLUDED__
 
 #include "consumer.h"
 
 struct consumer * null_init();
 
-#endif /* !__UARA_NULL_H_INCLUDED__ */
+#endif /* !__TUNA_NULL_H_INCLUDED__ */

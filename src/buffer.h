@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_BUFFER_H_INCLUDED__
-#define __UARA_BUFFER_H_INCLUDED__
+#ifndef __TUNA_BUFFER_H_INCLUDED__
+#define __TUNA_BUFFER_H_INCLUDED__
 
 #include "types.h"
 
@@ -27,4 +27,4 @@ sample_t * buffer_acquire(uint * frames);
 void buffer_addref(sample_t * p);
 void buffer_release(sample_t * p);
 
-#endif /* !__UARA_BUFFER_H_INCLUDED__ */
+#endif /* !__TUNA_BUFFER_H_INCLUDED__ */

@@ -18,12 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_PRODUCER_H_INCLUDED__
-#define __UARA_PRODUCER_H_INCLUDED__
+#ifndef __TUNA_PRODUCER_H_INCLUDED__
+#define __TUNA_PRODUCER_H_INCLUDED__
 
 struct producer {
 	int (*run)(struct producer * producer);
 	void (*exit)(struct producer * producer);
 };
 
-#endif /* !__UARA_PRODUCER_H_INCLUDED__ */
+#endif /* !__TUNA_PRODUCER_H_INCLUDED__ */

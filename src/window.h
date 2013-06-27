@@ -18,11 +18,11 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_WINDOW_H_INCLUDED__
-#define __UARA_WINDOW_H_INCLUDED__
+#ifndef __TUNA_WINDOW_H_INCLUDED__
+#define __TUNA_WINDOW_H_INCLUDED__
 
 #include "types.h"
 
 void window_init_sine(double * window, uint length);
 
-#endif /* !__UARA_WINDOW_H_INCLUDED__ */
+#endif /* !__TUNA_WINDOW_H_INCLUDED__ */

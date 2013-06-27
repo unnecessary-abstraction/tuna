@@ -18,12 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_OUTPUT_SNDFILE_H_INCLUDED__
-#define __UARA_OUTPUT_SNDFILE_H_INCLUDED__
+#ifndef __TUNA_OUTPUT_SNDFILE_H_INCLUDED__
+#define __TUNA_OUTPUT_SNDFILE_H_INCLUDED__
 
 #include "consumer.h"
 #include "types.h"
 
 struct consumer * output_sndfile_init(const char * prefix, const char * suffix, int format, uint max_samples_per_file);
 
-#endif /* !__UARA_OUTPUT_SNDFILE_H_INCLUDED__ */
+#endif /* !__TUNA_OUTPUT_SNDFILE_H_INCLUDED__ */

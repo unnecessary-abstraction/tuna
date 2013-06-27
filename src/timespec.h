@@ -1,5 +1,5 @@
 /*******************************************************************************
-	timespec.h: Basic types used by UARA.
+	timespec.h: Basic types used by TUNA.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_TIMESPEC_H_INCLUDED__
-#define __UARA_TIMESPEC_H_INCLUDED__
+#ifndef __TUNA_TIMESPEC_H_INCLUDED__
+#define __TUNA_TIMESPEC_H_INCLUDED__
 
 #include <stdio.h>
 #include <time.h>
@@ -31,4 +31,4 @@ void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate);
 int timespec_snprint(struct timespec * ts, char * s, size_t n);
 int timespec_fprint(struct timespec * ts, FILE * f);
 
-#endif /* !__UARA_TIMESPEC_H_INCLUDED__ */
+#endif /* !__TUNA_TIMESPEC_H_INCLUDED__ */

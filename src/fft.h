@@ -18,8 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __UARA_FFT_H_INCLUDED__
-#define __UARA_FFT_H_INCLUDED__
+#ifndef __TUNA_FFT_H_INCLUDED__
+#define __TUNA_FFT_H_INCLUDED__
 
 #include <fftw3.h>
 #include <complex.h>
@@ -45,4 +45,4 @@ double * fft_open(struct fft * fft);
 void fft_close(struct fft * fft);
 int fft_transform(struct fft * fft);
 
-#endif /* !__UARA_FFT_H_INCLUDED__ */
+#endif /* !__TUNA_FFT_H_INCLUDED__ */
