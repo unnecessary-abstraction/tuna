@@ -1,5 +1,5 @@
 ################################################################################
-#	Makefile for TUNA.
+#	rules.mk for libtuna.
 #
 #	Copyright (C) 2013 Paul Barker, Loughborough University
 #
@@ -18,17 +18,45 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Include `config.mk`, then `devconfig.mk` if present.
-# Therefore, settings in `devconfig.mk` override those in `config.mk`.
-include config.mk
--include devconfig.mk
+# Push directory stack
+sp := $(sp).x
+dirstack_$(sp) := $(d)
+d := $(dir)
 
-# Support for high or low verbosity
-ifeq ($(VERBOSITY),0)
-  Q := @
-else
-  Q :=
-endif
+# Targets and intermediates in this directory
+OBJS_$(d) := $(d)/analysis.o \
+	$(d)/buffer.o \
+	$(d)/bufq.o \
+	$(d)/fft.o \
+	$(d)/input_alsa.o \
+	$(d)/input_sndfile.o \
+	$(d)/log.o \
+	$(d)/null.o \
+	$(d)/output_csv.o \
+	$(d)/output_sndfile.o \
+	$(d)/slab.o \
+	$(d)/time_slice.o \
+	$(d)/timespec.o \
+	$(d)/tol.o \
+	$(d)/window.o \
+	$(d)/zero.o
 
-# Include top-level rules
-include $(SRCDIR)/rules.mk
+DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
+
+TGTS_$(d) := $(d)/libtuna.a
+
+TARGETS_LIB += $(TGTS_$(d))
+
+INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
+
+# Rules for this directory
+$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk $(OBJS_$(d))
+
+$(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+
+# Include dependencies
+-include $(DEPS_$(d))
+
+# Pop directory stack
+d := $(dirstack_$(sp))
+sp := $(basename $(sp))

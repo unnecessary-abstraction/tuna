@@ -1,5 +1,4 @@
 *.d
-.deps/*
 *.o
 *.csv
 *~
@@ -10,3 +9,5 @@ tuna
 output_csv_test
 *.log
 *.swp
+*.a
+devconfig.mk
