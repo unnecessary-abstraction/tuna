@@ -210,7 +210,7 @@ static int start(struct input_alsa * a)
 	 */
 	r = snd_pcm_htimestamp(a->capture, &avail, (snd_htimestamp_t *) &ts);
 	if (r < 0) {
-		error("input_alsa: Unable to get initial timestamp");
+		error("input_alsa: Unable to get initial timestamp: %s", snd_strerror(r));
 		return r;
 	}
 
@@ -222,7 +222,7 @@ static int start(struct input_alsa * a)
 
 	r = snd_pcm_start(a->capture);
 	if (r < 0) {
-		error("input_alsa: Could not start capture");
+		error("input_alsa: Could not start capture: %s", snd_strerror(r));
 		return r;
 	}
 
@@ -233,8 +233,57 @@ static int handle_error(struct input_alsa * a, int err)
 {
 	assert(a);
 
-	/* TODO */
-	return err;
+	int r;
+	struct timespec ts;
+
+	/* Unused but snd_pcm_htimestamp doesn't say whether the second argument
+	 * can be null or not.
+	 */
+	snd_pcm_uframes_t	avail;
+
+	msg("input_alsa: Attempting to recover from error");
+
+	/* See if ALSA layer can deal with the error. */
+	r = snd_pcm_recover(a->capture, err, 0);
+
+	if (r < 0) {
+		/* Deep recovery: Close and re-open the ALSA input device. */
+		error("input_alsa: Standard recovery failed: %s", snd_strerror(r));
+		msg("input_alsa: Attempting deep recovery");
+
+		r = snd_pcm_close(a->capture);
+		if (r < 0) {
+			error("input_alsa: Error closing device: %s", snd_strerror(r));
+			return r;
+		}
+
+		r = prep(a);
+		if (r < 0) {
+			error("input_alsa: Failed to re-initialise input");
+			return r;
+		}
+
+		r = snd_pcm_start(a->capture);
+		if (r < 0) {
+			error("input_alsa: Could not re-start capture: %s", snd_strerror(r));
+			return r;
+		}
+	}
+
+	/* Resync the consumer. */
+	r = snd_pcm_htimestamp(a->capture, &avail, (snd_htimestamp_t *) &ts);
+	if (r < 0) {
+		error("input_alsa: Unable to get timestamp for resync: %s", snd_strerror(r));
+		return r;
+	}
+	
+	r = a->consumer->resync(a->consumer, &ts);
+	if (r < 0) {
+		error("input_alsa: consumer->resync failed");
+		return r;
+	}
+
+	return r;
 }
 
 int input_alsa_run(struct producer * producer)
@@ -258,7 +307,7 @@ int input_alsa_run(struct producer * producer)
 		r = snd_pcm_wait(a->capture, -1);
 		if (r < 0) {
 			/* TODO: Handle errors like xrun and suspend. */
-			fatal("input_alsa: snd_pcm_wait failed");
+			fatal("input_alsa: snd_pcm_wait failed: %s", snd_strerror(r));
 		}
 
 		avail = snd_pcm_avail_update(a->capture);
@@ -273,22 +322,24 @@ int input_alsa_run(struct producer * producer)
 		r = (int)sf;
 
 		if (r < 0) {
-			error("Read error: %s", snd_strerror(r));
+			error("input_alsa: Read error: %s", snd_strerror(r));
 			
 			r = handle_error(a, r);
-			if (r < 0)
+			if (r < 0) {
 				/* failed to handle error, message has already been printed */
+				buffer_release(buf);
 				return r;
-		}
-
-		/* Got sf frames. */
-		frames = (uint)sf;
-		
-		r = a->consumer->write(a->consumer, buf, frames);
-		if (r < 0) {
-			error("input_alsa: consumer->write failed");
-			buffer_release(buf);
-			return r;
+			}
+		} else {
+			/* Got sf frames. */
+			frames = (uint)sf;
+			
+			r = a->consumer->write(a->consumer, buf, frames);
+			if (r < 0) {
+				error("input_alsa: consumer->write failed");
+				buffer_release(buf);
+				return r;
+			}
 		}
 
 		buffer_release(buf);
