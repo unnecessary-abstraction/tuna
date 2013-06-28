@@ -18,6 +18,13 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
+# The build system for this project was written after reading "Recursive Make
+# Considered Harmful" by Peter Miller [1] and follows the implementation notes
+# linked to on that page [2], with a few tweaks of my own.
+#
+# [1]: http://miller.emu.id.au/pmiller/books/rmch/
+# [2]: http://evbergen.home.xs4all.nl/nonrecursive-make.html
+
 # Include `config.mk`, then `devconfig.mk` if present.
 # Therefore, settings in `devconfig.mk` override those in `config.mk`.
 include config.mk
