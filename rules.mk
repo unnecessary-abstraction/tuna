@@ -64,7 +64,7 @@ targets: $(TARGETS_ALL)
 # Linker rule
 %: %.o
 	@echo LD $@
-	$(Q)$(LD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -o $@ $(filter %.o,$^) $(LDLIBRARIES_ALL) $(LDLIBRARIES_TGT) $(LDLIBRARIES)
+	$(Q)$(LD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -o $@ $(filter %.o,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
 
 # Archiver rule
 %.a:
