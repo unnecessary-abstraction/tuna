@@ -49,10 +49,18 @@ TARGETS_LIB += $(TGTS_$(d))
 
 INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
 
+INSTALL_DEPS += install-$(d)
+
 # Rules for this directory
 $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk $(OBJS_$(d))
 
 $(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+
+.PHONY: install-$(d)
+install-$(d): $(TGTS_$(d))
+	@echo INSTALL $^
+	$(Q)$(INSTALL) -m 0755 -d $(LIBDIR)
+	$(Q)$(INSTALL) -m 0644 $^ $(LIBDIR)
 
 # Include dependencies
 -include $(DEPS_$(d))

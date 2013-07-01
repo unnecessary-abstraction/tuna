@@ -30,6 +30,7 @@ TARGETS_BIN :=
 TARGETS_LIB :=
 TARGETS_TEST :=
 INTERMEDIATES :=
+INSTALL_DEPS :=
 
 # Set VPATH incase we're building outside the source tree
 VPATH := $(SRCDIR)
@@ -81,6 +82,9 @@ clean-intermediates:
 	@echo CLEAN INTERMEDIATES
 	$(Q)$(RM) $(INTERMEDIATES)
 
+# Install rules
+.PHONY: install 
+install: $(INSTALL_DEPS)
 
 # Ensure everything is rebuilt if top-level rules or config change
 TOPLEVEL_DEPS := $(SRCDIR)/rules.mk $(SRCDIR)/Makefile config.mk devconfig.mk

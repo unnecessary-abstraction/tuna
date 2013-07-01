@@ -36,6 +36,8 @@ TARGETS_BIN += $(TGTS_$(d))
 
 INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
 
+INSTALL_DEPS += install-$(d)
+
 # Rules for this directory
 $(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
 $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
@@ -43,6 +45,12 @@ $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
 $(d)/tuna: $(OBJS_tuna)
 
 $(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+
+.PHONY: install-$(d)
+install-$(d): $(TGTS_$(d))
+	@echo INSTALL $^
+	$(Q)$(INSTALL) -m 0755 -d $(BINDIR)
+	$(Q)$(INSTALL) -m 0755 $^ $(BINDIR)
 
 # Include dependencies
 -include $(DEPS_$(d))
