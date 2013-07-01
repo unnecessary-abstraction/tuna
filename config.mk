@@ -25,9 +25,9 @@ PREFIX := /usr/local
 
 # If DESTDIR and PREFIX don't provide enough control, the individial target
 # directories can be overridden here.
-BINDIR := $(DESTDIR)$(PREFIX)/bin
-LIBDIR := $(DESTDIR)$(PREFIX)/lib
-INCLUDEDIR := $(DESTDIR)$(PREFIX)/include
+BINDIR = $(DESTDIR)$(PREFIX)/bin
+LIBDIR = $(DESTDIR)$(PREFIX)/lib
+INCLUDEDIR = $(DESTDIR)$(PREFIX)/include
 
 # Common flags to use throughout the build
 CFLAGS := -Wall -Wextra
