@@ -49,6 +49,9 @@ include $(SRCDIR)/$(dir)/rules.mk
 dir := test
 include $(SRCDIR)/$(dir)/rules.mk
 
+dir := include
+include $(SRCDIR)/$(dir)/rules.mk
+
 # Combined list of targets
 TARGETS_ALL := $(TARGETS_BIN) $(TARGETS_LIB) $(TARGETS_TEST)
 
