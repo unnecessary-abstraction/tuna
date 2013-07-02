@@ -55,6 +55,9 @@ install-$(d): $(TGTS_$(d))
 # Include dependencies
 -include $(DEPS_$(d))
 
+# Make everything depend on this rules file
+$(OBJS_$(d)): $(d)/rules.mk
+
 # Pop directory stack
 d := $(dirstack_$(sp))
 sp := $(basename $(sp))
