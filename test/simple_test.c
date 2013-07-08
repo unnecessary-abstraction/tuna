@@ -1,5 +1,5 @@
 /*******************************************************************************
-	tuna.c: Main program entry point.
+	simple_test.c: A simple pipeline test.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
