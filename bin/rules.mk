@@ -1,5 +1,5 @@
 ################################################################################
-#	rules.mk for TUNA commands.
+#	rules.mk for TUNA binaries.
 #
 #	Copyright (C) 2013 Paul Barker, Loughborough University
 #

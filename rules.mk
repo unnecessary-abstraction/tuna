@@ -40,7 +40,7 @@ VPATH := $(SRCDIR)
 all: targets
 
 # Pull in subdirectories
-dir := cmd
+dir := bin
 include $(SRCDIR)/$(dir)/rules.mk
 
 dir := libtuna
