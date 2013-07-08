@@ -30,6 +30,12 @@
 int main(int argc, char * argv[])
 {
 	int r;
+
+	/* Pipeline:
+	 *
+	 * input_sndfile -> bufq -> analysis -> output_csv (impulse)
+	 * 				     -> output_csv (time slice)
+	 */
 	struct producer * in;
 	struct consumer * bufq;
 	struct consumer * analysis;
