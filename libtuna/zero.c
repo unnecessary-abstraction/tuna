@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <assert.h>
+#include <errno.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -44,6 +45,7 @@ int zero_run(struct producer * producer)
 {
 	assert(producer);
 
+	int		r;
 	uint		frames;
 	struct timespec ts;
 	sample_t *	buf;
@@ -51,19 +53,28 @@ int zero_run(struct producer * producer)
 	struct zero * z = container_of(producer, struct zero, producer);
 
 	memset(&ts, 0, sizeof(struct timespec));
-	z->consumer->start(z->consumer, z->sample_rate, &ts);
+
+	r = z->consumer->start(z->consumer, z->sample_rate, &ts);
+	if (r < 0) {
+		error("zero: consumer->start failed");
+		return r;
+	}
 
 	while (1) {
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
 			error("zero: Failed to acquire buffer");
-			return -1;
+			return -ENOMEM;
 		}
 
 		memset(buf, 0, sizeof(*buf));
 		
-		z->consumer->write(z->consumer, buf, frames);
+		r = z->consumer->write(z->consumer, buf, frames);
+		if (r < 0) {
+			error("zero: consumer->write failed");
+			return r;
+		}
 
 		buffer_release(buf);
 	}
