@@ -210,7 +210,8 @@ static inline void list_push(struct list * li, struct list_entry * e)
 static inline struct list_entry * list_pop(struct list * li)
 {
 	struct list_entry * e = list_head(li);
-	list_remove(e);
+	if (e)
+		list_remove(e);
 	return e;
 }
 
