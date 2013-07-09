@@ -87,6 +87,11 @@ static void close_sndfile(struct output_sndfile * snd)
 
 	int r;
 
+	if (!snd->sf) {
+		warn("output_sndfile: Skipping close_sndfile()");
+		return;
+	}
+
 	r = sf_close(snd->sf);
 	if (r != 0) {
 		error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));
