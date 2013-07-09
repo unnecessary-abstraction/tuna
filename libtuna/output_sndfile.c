@@ -141,6 +141,8 @@ int output_sndfile_write(struct consumer * consumer, sample_t * buf, uint count)
 			 * or it has written all the samples with was asked to
 			 * we know that r=remaining here.
 			 */
+		} else {
+			r = 0;
 		}
 
 		close_sndfile(snd);
