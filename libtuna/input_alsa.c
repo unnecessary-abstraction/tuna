@@ -368,7 +368,8 @@ void input_alsa_exit(struct producer * producer)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_alsa_init(struct consumer * c)
+struct producer * input_alsa_init(struct consumer * c, const char * device_name,
+		uint sample_rate)
 {
 	assert(c);
 
@@ -381,6 +382,11 @@ struct producer * input_alsa_init(struct consumer * c)
 	}
 
 	a->consumer = c;
+	a->device_name = device_name;
+	a->sample_rate = sample_rate;
+	a->channels = 2;
+	a->format = SND_PCM_FORMAT_S16_LE;
+	a->period_size = 4096;			/* ~93 ms at 44.1kHz */
 
 	r = prep(a);
 	if (r < 0) {

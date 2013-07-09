@@ -24,6 +24,7 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_alsa_init(struct consumer * c);
+struct producer * input_alsa_init(struct consumer * c, const char * device_name,
+		uint sample_rate);
 
 #endif /* !__TUNA_INPUT_ALSA_H_INCLUDED__ */
