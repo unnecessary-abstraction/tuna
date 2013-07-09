@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 struct list_entry {
 	struct list_entry * next;
