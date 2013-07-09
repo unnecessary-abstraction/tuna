@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +47,8 @@ struct csv {
 
 void output_csv_exit(struct consumer * consumer)
 {
+	assert(consumer);
+
 	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
@@ -66,6 +69,9 @@ void output_csv_exit(struct consumer * consumer)
 
 int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
 {
+	assert(consumer);
+	assert(buf);
+
 	int r;
 	uint i;
 	struct csv * c = container_of(consumer, struct csv, consumer);
@@ -87,6 +93,9 @@ int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int output_csv_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
@@ -117,6 +126,9 @@ int output_csv_start(struct consumer * consumer, uint sample_rate, struct timesp
 
 int output_csv_resync(struct consumer * consumer, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	int r;
 	struct csv * c = container_of(consumer, struct csv, consumer);
 
@@ -150,6 +162,8 @@ int output_csv_resync(struct consumer * consumer, struct timespec * ts)
 
 struct consumer * output_csv_init(const char * fname)
 {
+	assert(fname);
+
 	struct csv * c = (struct csv *)malloc(sizeof(struct csv));
 	if (!c) {
 		error("output_csv: Failed to allocate memory");

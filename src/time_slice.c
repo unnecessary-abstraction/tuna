@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <errno.h>
 #include <malloc.h>
 #include <string.h>
@@ -98,11 +99,16 @@ static inline uint min(uint a, uint b)
 
 static inline uint values_per_slice(struct time_slice * t)
 {
+	assert(t);
+
 	return 6 + t->n_tol;
 }
 
 static void write_results(struct time_slice * t, struct time_slice_results * r)
 {
+	assert(t);
+	assert(r);
+
 	uint i;
 	uint frames;
 
@@ -134,6 +140,11 @@ static void write_results(struct time_slice * t, struct time_slice_results * r)
 
 static void process_buffer(struct time_slice * t, struct held_buffer * h, double * fft_data, struct time_slice_results * r)
 {
+	assert(t);
+	assert(h);
+	assert(fft_data);
+	assert(r);
+
 	/* We split processing into quarters as we need overlapped windowed
 	 * analysis in the frequency domain and non-overlapped non-windowed
 	 * analysis in the time domain.
@@ -214,6 +225,8 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, double
 
 static void process_time_slice(struct time_slice * t)
 {
+	assert(t);
+
 	struct held_buffer * h;
 	struct list_entry * e;
 	struct time_slice_results r;
@@ -263,6 +276,8 @@ static void process_time_slice(struct time_slice * t)
 
 static void release_all(struct time_slice * t)
 {
+	assert(t);
+
 	struct held_buffer * h;
 	struct list_entry * e;
 
@@ -275,6 +290,9 @@ static void release_all(struct time_slice * t)
 
 static void hold(struct time_slice * t, sample_t * buf, uint count)
 {
+	assert(t);
+	assert(buf);
+
 	struct held_buffer * h = (struct held_buffer *)slab_alloc(&t->held_buffer_allocator);
 
 	h->base = buf;
@@ -286,6 +304,8 @@ static void hold(struct time_slice * t, sample_t * buf, uint count)
 
 void time_slice_exit(struct consumer * consumer)
 {
+	assert(consumer);
+
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
 	release_all(t);
@@ -297,6 +317,9 @@ void time_slice_exit(struct consumer * consumer)
 
 int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 {
+	assert(consumer);
+	assert(buf);
+
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 	
 	t->available += count;
@@ -312,6 +335,9 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int time_slice_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	int r;
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
@@ -346,6 +372,9 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 
 int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
 	/* We're going to have to dump old data. */
@@ -362,6 +391,9 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 
 struct consumer * time_slice_init(struct consumer * out, struct fft * f)
 {
+	assert(out);
+	assert(f);
+
 	struct time_slice * t = (struct time_slice *)malloc(sizeof(struct time_slice));
 	if (!t) {
 		error("time_slice_init: Failed to allocate memory");

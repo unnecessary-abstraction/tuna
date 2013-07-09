@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <complex.h>
 #include <fftw3.h>
 #include <malloc.h>
@@ -35,6 +36,8 @@
 
 int fft_init(struct fft * fft)
 {
+	assert(fft);
+
 	int r;
 	pthread_mutexattr_t attr;
 
@@ -55,11 +58,15 @@ int fft_init(struct fft * fft)
 
 void fft_exit(struct fft * fft)
 {
+	assert(fft);
+
 	pthread_mutex_destroy(&fft->mutex);
 }
 
 int fft_set_length(struct fft * fft, uint length)
 {
+	assert(fft);
+
 	/* This can be called multiple times if different uses are sharing the
 	 * same fft buffer. We need to reallocate if the new length is longer
 	 * than the old length.
@@ -85,17 +92,23 @@ int fft_set_length(struct fft * fft, uint length)
 
 double * fft_open(struct fft * fft)
 {
+	assert(fft);
+
 	pthread_mutex_lock(&fft->mutex);
 	return fft->data;
 }
 
 void fft_close(struct fft * fft)
 {
+	assert(fft);
+
 	pthread_mutex_unlock(&fft->mutex);
 }
 
 int fft_transform(struct fft * fft)
 {
+	assert(fft);
+
 	uint i;
 	double re, im;
 

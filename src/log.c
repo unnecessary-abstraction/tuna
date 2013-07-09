@@ -218,6 +218,8 @@ void __noreturn fatal(const char * s, ...)
 void log_sync()
 {
 	int f;
+	assert(file);
+
 	f = fileno(file);
 
 	fflush(file);

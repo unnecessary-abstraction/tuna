@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 #include <time.h>
@@ -41,6 +42,7 @@ struct analysis {
 
 void analysis_exit(struct consumer * consumer)
 {
+	assert(consumer);
 	struct analysis * a = container_of(consumer, struct analysis, consumer);
 
 	free(a);
@@ -48,9 +50,10 @@ void analysis_exit(struct consumer * consumer)
 
 int analysis_write(struct consumer * consumer, sample_t * buf, uint count)
 {
+	assert(consumer);
+	assert(buf);
+
 	/* TODO */
-	__unused consumer;
-	__unused buf;
 	__unused count;
 
 	return 0;
@@ -58,16 +61,20 @@ int analysis_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int analysis_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	/* TODO */
-	__unused consumer;
 	__unused sample_rate;
-	__unused ts;
 
 	return 0;
 }
 
 int analysis_resync(struct consumer * consumer, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	/* Pass through the resync. */
 	struct analysis * a = container_of(consumer, struct analysis, consumer);
 
@@ -83,6 +90,9 @@ int analysis_resync(struct consumer * consumer, struct timespec * ts)
 
 struct consumer * analysis_init(struct consumer * out_time_slice, struct consumer * out_impulse)
 {
+	assert(out_time_slice);
+	assert(out_impulse);
+
 	struct analysis * a = (struct analysis *)malloc(sizeof(struct analysis));
 	if (!a) {
 		error("analysis_init: Failed to allocate memory");

@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <malloc.h>
 #include <pthread.h>
 
@@ -77,6 +78,9 @@ struct bufq {
 
 static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint count)
 {
+	assert(b);
+	assert(buf);
+
 	struct bufq_entry * e;
 
 	pthread_mutex_lock(&b->mutex);
@@ -110,6 +114,9 @@ static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint coun
 
 static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
 {
+	assert(b);
+	assert(ts);
+
 	struct bufq_entry * e;
 
 	pthread_mutex_lock(&b->mutex);
@@ -142,6 +149,8 @@ static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
 
 static struct bufq_entry * dequeue(struct bufq * b)
 {
+	assert(b);
+
 	struct bufq_entry * e;
 
 	pthread_mutex_lock(&b->mutex);
@@ -172,6 +181,9 @@ static struct bufq_entry * dequeue(struct bufq * b)
 
 static void free_entry(struct bufq * b, struct bufq_entry * e)
 {
+	assert(b);
+	assert(e);
+
 	pthread_mutex_lock(&b->mutex);
 
 	e->next = b->freestack;
@@ -229,6 +241,8 @@ static void * consumer_thread(void * param)
 
 void bufq_exit(struct consumer * consumer)
 {
+	assert(consumer);
+
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
 	/* Signal consumer thread to terminate. */
@@ -243,6 +257,9 @@ void bufq_exit(struct consumer * consumer)
 
 int bufq_write(struct consumer * consumer, sample_t * buf, uint count)
 {
+	assert(consumer);
+	assert(buf);
+
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
 	return enqueue_buffer(b, BUFQ_BUFFER, buf, count);
@@ -250,6 +267,9 @@ int bufq_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int bufq_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
 	b->sample_rate = sample_rate;
@@ -258,6 +278,9 @@ int bufq_start(struct consumer * consumer, uint sample_rate, struct timespec * t
 
 int bufq_resync(struct consumer * consumer, struct timespec * ts)
 {
+	assert(consumer);
+	assert(ts);
+
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
 	return enqueue_timespec(b, BUFQ_RESYNC, ts);
@@ -269,6 +292,8 @@ int bufq_resync(struct consumer * consumer, struct timespec * ts)
 
 struct consumer * bufq_init(struct consumer * target)
 {
+	assert(target);
+
 	int r;
 	struct bufq * b = (struct bufq *)malloc(sizeof(struct bufq));
 	if (!b) {

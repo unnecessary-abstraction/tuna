@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <malloc.h>
 
 #include "compiler.h"
@@ -32,13 +33,16 @@
 
 void null_exit(struct consumer * consumer)
 {
+	assert(consumer);
+
 	free(consumer);
 }
 
 int null_write(struct consumer * consumer, sample_t * buf, uint count)
 {
-	__unused consumer;
-	__unused buf;
+	assert(consumer);
+	assert(buf);
+
 	__unused count;
 	
 	return 0;
@@ -46,17 +50,18 @@ int null_write(struct consumer * consumer, sample_t * buf, uint count)
 
 int null_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
-	__unused consumer;
+	assert(consumer);
+	assert(ts);
+
 	__unused sample_rate;
-	__unused ts;
 
 	return 0;
 }
 
 int null_resync(struct consumer * consumer, struct timespec * ts)
 {
-	__unused consumer;
-	__unused ts;
+	assert(consumer);
+	assert(ts);
 
 	return 0;
 }

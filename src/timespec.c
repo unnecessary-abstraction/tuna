@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -29,6 +30,8 @@
 
 void timespec_add_ns(struct timespec * ts, uint ns)
 {
+	assert(ts);
+
 	ts->tv_nsec += ns;
 	if (ts->tv_nsec >= NS) {
 		ts->tv_sec += ts->tv_nsec / NS;
@@ -38,6 +41,8 @@ void timespec_add_ns(struct timespec * ts, uint ns)
 
 void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate)
 {
+	assert(ts);
+
 	uint64 tmp = ticks * NS;
 	uint ns = tmp / sample_rate;
 	timespec_add_ns(ts, ns);
@@ -45,6 +50,9 @@ void timespec_add_ticks(struct timespec * ts, uint ticks, uint sample_rate)
 
 int timespec_fprint(struct timespec * ts, FILE * f)
 {
+	assert(ts);
+	assert(f);
+
 	struct tm *	local;
 	char		buf[40];
 

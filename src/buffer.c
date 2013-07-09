@@ -56,6 +56,7 @@ sample_t * buffer_acquire(uint * frames)
 
 void buffer_addref(sample_t * p)
 {
+	assert(p);
 	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
 
 	h->refs++;
@@ -63,6 +64,7 @@ void buffer_addref(sample_t * p)
 
 void buffer_release(sample_t * p)
 {
+	assert(p);
 	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
 
 	h->refs--;

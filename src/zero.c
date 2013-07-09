@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -40,6 +41,8 @@ struct zero {
 
 int zero_run(struct producer * producer)
 {
+	assert(producer);
+
 	uint		frames;
 	struct timespec ts;
 	sample_t *	buf;
@@ -67,6 +70,8 @@ int zero_run(struct producer * producer)
 
 void zero_exit(struct producer * producer)
 {
+	assert(producer);
+
 	struct zero * z = container_of(producer, struct zero, producer);
 
 	free(z);
@@ -78,6 +83,8 @@ void zero_exit(struct producer * producer)
 
 struct producer * zero_init(uint sample_rate, struct consumer * c)
 {
+	assert(c);
+
 	struct zero * z = (struct zero *)malloc(sizeof(struct zero));
 	if (!z) {
 		error("zero: Failed to allocate memory");

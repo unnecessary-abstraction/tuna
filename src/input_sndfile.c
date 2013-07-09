@@ -18,6 +18,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <assert.h>
 #include <errno.h>
 #include <malloc.h>
 #include <sndfile.h>
@@ -75,6 +76,9 @@ static const char * sample_type(int format)
 
 static int open_sndfile(struct input_sndfile * snd, const char * sf_name)
 {
+	assert(snd);
+	assert(sf_name);
+
 	int r;
 
 	/* Store filename to be opened. */
@@ -99,6 +103,8 @@ static int open_sndfile(struct input_sndfile * snd, const char * sf_name)
 
 static void close_sndfile(struct input_sndfile * snd)
 {
+	assert(snd);
+
 	int r;
 
 	r = sf_close(snd->sf);
@@ -112,6 +118,8 @@ static void close_sndfile(struct input_sndfile * snd)
 
 int run_single_channel(struct input_sndfile * snd)
 {
+	assert(snd);
+
 	int		r;
 	uint		frames;
 	struct timespec ts;
@@ -156,6 +164,8 @@ int run_single_channel(struct input_sndfile * snd)
 
 int run_multi_channel(struct input_sndfile * snd)
 {
+	assert(snd);
+
 	int		r;
 	uint		frames;
 	uint		i;
@@ -216,6 +226,8 @@ int run_multi_channel(struct input_sndfile * snd)
 
 int input_sndfile_run(struct producer * producer)
 {
+	assert(producer);
+
 	int			r;
 	struct input_sndfile *	snd = container_of(producer, struct input_sndfile, producer);
 
@@ -235,6 +247,8 @@ int input_sndfile_run(struct producer * producer)
 
 void input_sndfile_exit(struct producer * producer)
 {
+	assert(producer);
+
 	struct input_sndfile * snd = container_of(producer, struct input_sndfile, producer);
 
 	/* Close input wavefile if open. */
@@ -250,6 +264,9 @@ void input_sndfile_exit(struct producer * producer)
 
 struct producer * input_sndfile_init(const char * source, struct consumer * c)
 {
+	assert(source);
+	assert(c);
+
 	int r;
 
 	struct input_sndfile * snd = (struct input_sndfile *)malloc(sizeof(struct input_sndfile));

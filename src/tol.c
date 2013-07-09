@@ -85,6 +85,8 @@ static const double freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
 /* Unweighted power sum. */
 static inline double psum(double *x, uint N)
 {
+	assert(x);
+
 	double sum;
 	uint i;
 
@@ -101,6 +103,10 @@ static inline double psum(double *x, uint N)
 /* Weighting coefficients are interleaved to speed up memory loads. */
 static inline void wpsum2(double *x, double *w, uint N, double *e)
 {
+	assert(x);
+	assert(w);
+	assert(e);
+
 	double sum0, sum1;
 	double x_sq;
 	uint i;
@@ -136,6 +142,10 @@ static inline double phi(double p, uint l)
 
 void tol_calculate(struct tol * t, double * data, struct tol_results * r)
 {
+	assert(t);
+	assert(data);
+	assert(r);
+
 	uint i, j;
 	
 	j = 0;
@@ -156,6 +166,8 @@ void tol_calculate(struct tol * t, double * data, struct tol_results * r)
 
 int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double overlap, uint phi_L)
 {
+	assert(t);
+
 	uint i, j;
 	double p, tmp, sin_tmp, cos_tmp;
 	double delta, cur_freq, offset;
@@ -210,6 +222,8 @@ int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double over
 
 void tol_exit(struct tol * t)
 {
+	assert(t);
+
 	uint i;
 
 	for (i = 0; i < t->n_tol; i++) {
