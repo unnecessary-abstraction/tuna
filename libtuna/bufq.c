@@ -62,6 +62,13 @@ struct bufq {
 	int			exit;
 	pthread_t		thread;
 
+	/* Rather than messing with the (void *) return type of a thread, we
+	 * just store the consumer thread's exit value here. This will be zero
+	 * if the thread is still running, 1 for clean termination and <0 on
+	 * error.
+	 */
+	int			thread_exit_status;
+
 	/* The queue: push at tail, pop from head. */
 	struct list		queue;
 
@@ -184,8 +191,10 @@ static struct bufq_entry * dequeue(struct bufq * b)
 		pthread_cond_wait(&b->cond, &b->mutex);
 
 		/* Now we should have data or have been signalled to exit. */
-		if (b->exit)
+		if (b->exit) {
+			b->thread_exit_status = 1;
 			pthread_exit(NULL);
+		}
 
 		l = list_dequeue(&b->queue);
 		if (!l) {
@@ -203,14 +212,17 @@ static struct bufq_entry * dequeue(struct bufq * b)
 
 static void * consumer_thread(void * param)
 {
+	int r;
 	struct bufq * b = (struct bufq *)param;
 	struct bufq_entry * e;
 	uint err_count = 0;
 
 	while (1) {
 		/* Check for termination signal. */
-		if (b->exit)
-			pthread_exit(NULL);
+		if (b->exit) {
+			b->thread_exit_status = 1;
+			return NULL;
+		}
 
 		e = dequeue(b);
 
@@ -218,7 +230,8 @@ static void * consumer_thread(void * param)
 			err_count++;
 			if (err_count > 5) {
 				error("bufq: Too much consecutive missing data");
-				pthread_exit(NULL);
+				b->thread_exit_status = -EIO;
+				return NULL;
 			} else {
 				error("bufq: Ignoring missing data");
 				continue;
@@ -229,16 +242,31 @@ static void * consumer_thread(void * param)
 
 		switch (e->event) {
 			case BUFQ_WRITE:
-				b->target->write(b->target, e->buf, e->count);
+				r = b->target->write(b->target, e->buf, e->count);
+				if (r < 0) {
+					error("bufq: target->write failed");
+					b->thread_exit_status = r;
+					return NULL;
+				}
 				buffer_release(e->buf);
 				break;
 
 			case BUFQ_START:
-				b->target->start(b->target, b->sample_rate, &e->ts);
+				r = b->target->start(b->target, b->sample_rate, &e->ts);
+				if (r < 0) {
+					error("bufq: target->start failed");
+					b->thread_exit_status = r;
+					return NULL;
+				}
 				break;
 
 			case BUFQ_RESYNC:
-				b->target->resync(b->target, &e->ts);
+				r = b->target->resync(b->target, &e->ts);
+				if (r < 0) {
+					error("bufq: target->resync failed");
+					b->thread_exit_status = r;
+					return NULL;
+				}
 				break;
 
 			default:
@@ -344,6 +372,7 @@ struct consumer * bufq_init(struct consumer * target)
 		goto err_cond;
 	}
 
+	b->thread_exit_status = 0;
 	r = pthread_create(&b->thread, NULL, consumer_thread, b);
 	if (r != 0) {
 		error("bufq: Failed to start consumer thread");
