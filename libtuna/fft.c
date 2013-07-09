@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <complex.h>
+#include <errno.h>
 #include <fftw3.h>
 #include <malloc.h>
 #include <math.h>
@@ -82,6 +83,10 @@ int fft_set_length(struct fft * fft, uint length)
 
 		fft->length = length;
 		fft->data = (double *)realloc(fft->data, (length + 4) * sizeof(double));
+		if (!fft->data) {
+			error("fft: Failed to allocate memory");
+			return -ENOMEM;
+		}
 
 		/* Ignore errors in reading or writing fftw wisdom as it is only
 		 * a time saving mechanism.
