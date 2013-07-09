@@ -11,3 +11,4 @@ output_csv_test
 *.swp
 *.a
 devconfig.mk
+.ycm*
