@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <assert.h>
+#include <errno.h>
 #include <malloc.h>
 #include <pthread.h>
 
@@ -123,7 +124,7 @@ static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint coun
 	e = alloc_entry(b);
 	if (!e) {
 		error("bufq: Failed to allocate memory");
-		return -1;
+		return -ENOMEM;
 	}
 
 	e->event = event;
@@ -152,7 +153,7 @@ static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
 	e = alloc_entry(b);
 	if (!e) {
 		error("bufq: Failed to allocate memory");
-		return -1;
+		return -ENOMEM;
 	}
 
 	e->event = event;
