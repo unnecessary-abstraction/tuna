@@ -42,12 +42,33 @@ On Arch Linux, this software can be installed via the command:
 The command for other Linux distros is left as an excersize for the reader.
 
 Once the dependencies are met, the software can be build and installed via 
-invocation of `make` in the root directory of the project:
+invocation of `configure` followed by `make` in the root directory of the 
+project:
 
+	./configure
 	make
 	make install
 
-That's all there is to it.
+That's all there is to it for installation with default settings. However, 
+several settings can be overridden by providing arguments to the configure 
+script. For example, to install in an alternative directory `~/tuna`, the 
+configure call would be:
+
+	./configure --prefix=~/tuna
+
+Other settings will be documented soon...
+
+It is also possible to build the sources out of tree:
+
+	mkdir ../tuna-build
+	cd tuna-build
+	../tuna/configure
+	make
+	make install
+
+The configure script should be able to find the source tree based on the path 
+used to execute it. However the search is fairly naive and could easily get 
+lost. I hope to improve this soon.
 
 [GPL-local]: COPYING
 [GPL-online]:http://www.gnu.org/licenses/gpl-2.0.html
