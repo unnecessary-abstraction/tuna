@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "compiler.h"
 #include "consumer.h"
+#include "input_zero.h"
 #include "log.h"
 #include "producer.h"
 #include "types.h"
