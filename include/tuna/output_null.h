@@ -1,5 +1,5 @@
 /*******************************************************************************
-	null.h: Consumer equivalent of /dev/null.
+	output_null.h: Consumer equivalent of /dev/null.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 
@@ -18,11 +18,11 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __TUNA_NULL_H_INCLUDED__
-#define __TUNA_NULL_H_INCLUDED__
+#ifndef __TUNA_OUTPUT_NULL_H_INCLUDED__
+#define __TUNA_OUTPUT_NULL_H_INCLUDED__
 
 #include "consumer.h"
 
-struct consumer * null_init();
+struct consumer * output_null_init();
 
-#endif /* !__TUNA_NULL_H_INCLUDED__ */
+#endif /* !__TUNA_OUTPUT_NULL_H_INCLUDED__ */

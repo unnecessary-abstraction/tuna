@@ -1,5 +1,5 @@
 /*******************************************************************************
-	null.c: Consumer equivalent of /dev/null.
+	output_null.c: Consumer equivalent of /dev/null.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 
@@ -24,21 +24,21 @@
 #include "compiler.h"
 #include "consumer.h"
 #include "log.h"
-#include "null.h"
+#include "output_null.h"
 #include "types.h"
 
 /*******************************************************************************
 	Private declarations and functions
 *******************************************************************************/
 
-void null_exit(struct consumer * consumer)
+void output_null_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
 	free(consumer);
 }
 
-int null_write(struct consumer * consumer, sample_t * buf, uint count)
+int output_null_write(struct consumer * consumer, sample_t * buf, uint count)
 {
 	assert(consumer);
 	assert(buf);
@@ -48,7 +48,7 @@ int null_write(struct consumer * consumer, sample_t * buf, uint count)
 	return 0;
 }
 
-int null_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
+int output_null_start(struct consumer * consumer, uint sample_rate, struct timespec * ts)
 {
 	assert(consumer);
 	assert(ts);
@@ -58,7 +58,7 @@ int null_start(struct consumer * consumer, uint sample_rate, struct timespec * t
 	return 0;
 }
 
-int null_resync(struct consumer * consumer, struct timespec * ts)
+int output_null_resync(struct consumer * consumer, struct timespec * ts)
 {
 	assert(consumer);
 	assert(ts);
@@ -70,18 +70,18 @@ int null_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-struct consumer * null_init()
+struct consumer * output_null_init()
 {
 	struct consumer * c = (struct consumer *)malloc(sizeof(struct consumer));
 	if (!c) {
-		error("null: Failed to allocate memory");
+		error("output_null: Failed to allocate memory");
 		return NULL;
 	}
 
-	c->write = null_write;
-	c->start = null_start;
-	c->resync = null_resync;
-	c->exit = null_exit;
+	c->write = output_null_write;
+	c->start = output_null_start;
+	c->resync = output_null_resync;
+	c->exit = output_null_exit;
 
 	return c;
 }
