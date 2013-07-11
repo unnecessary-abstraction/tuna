@@ -10,5 +10,5 @@ output_csv_test
 *.log
 *.swp
 *.a
-devconfig.mk
 .ycm*
+__pycache__
