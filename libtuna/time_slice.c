@@ -315,7 +315,6 @@ void time_slice_exit(struct consumer * consumer)
 	list_exit(&t->held_buffers);
 	slab_exit(&t->held_buffer_allocator);
 	tol_exit(&t->tol);
-	t->out->exit(t->out);
 }
 
 int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
