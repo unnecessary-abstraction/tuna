@@ -1,5 +1,5 @@
 /*******************************************************************************
-	zero.h: /dev/zero as a producer.
+	input_zero.h: /dev/zero as a producer.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 
@@ -18,12 +18,12 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#ifndef __TUNA_ZERO_H_INCLUDED__
-#define __TUNA_ZERO_H_INCLUDED__
+#ifndef __TUNA_INPUT_ZERO_H_INCLUDED__
+#define __TUNA_INPUT_ZERO_H_INCLUDED__
 
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * zero_init(uint sample_rate, struct consumer * c);
+struct producer * input_zero_init(uint sample_rate, struct consumer * c);
 
-#endif /* !__TUNA_ZERO_H_INCLUDED__ */
+#endif /* !__TUNA_INPUT_ZERO_H_INCLUDED__ */

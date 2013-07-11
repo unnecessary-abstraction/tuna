@@ -1,5 +1,5 @@
 /*******************************************************************************
-	zero.c: /dev/zero as a producer.
+	input_zero.c: /dev/zero as a producer.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 
@@ -34,14 +34,14 @@
 	Private declarations and functions
 *******************************************************************************/
 
-struct zero {
+struct input_zero {
 	struct producer		producer;
 	struct consumer *	consumer;
 
 	uint			sample_rate;
 };
 
-int zero_run(struct producer * producer)
+int input_zero_run(struct producer * producer)
 {
 	assert(producer);
 
@@ -50,13 +50,13 @@ int zero_run(struct producer * producer)
 	struct timespec ts;
 	sample_t *	buf;
 
-	struct zero * z = container_of(producer, struct zero, producer);
+	struct input_zero * z = container_of(producer, struct input_zero, producer);
 
 	memset(&ts, 0, sizeof(struct timespec));
 
 	r = z->consumer->start(z->consumer, z->sample_rate, &ts);
 	if (r < 0) {
-		error("zero: consumer->start failed");
+		error("input_zero: consumer->start failed");
 		return r;
 	}
 
@@ -64,7 +64,7 @@ int zero_run(struct producer * producer)
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
-			error("zero: Failed to acquire buffer");
+			error("input_zero: Failed to acquire buffer");
 			return -ENOMEM;
 		}
 
@@ -72,7 +72,7 @@ int zero_run(struct producer * producer)
 		
 		r = z->consumer->write(z->consumer, buf, frames);
 		if (r < 0) {
-			error("zero: consumer->write failed");
+			error("input_zero: consumer->write failed");
 			return r;
 		}
 
@@ -80,11 +80,11 @@ int zero_run(struct producer * producer)
 	}
 }
 
-void zero_exit(struct producer * producer)
+void input_zero_exit(struct producer * producer)
 {
 	assert(producer);
 
-	struct zero * z = container_of(producer, struct zero, producer);
+	struct input_zero * z = container_of(producer, struct input_zero, producer);
 
 	free(z);
 }
@@ -93,21 +93,21 @@ void zero_exit(struct producer * producer)
 	Public functions
 *******************************************************************************/
 
-struct producer * zero_init(uint sample_rate, struct consumer * c)
+struct producer * input_zero_init(uint sample_rate, struct consumer * c)
 {
 	assert(c);
 
-	struct zero * z = (struct zero *)malloc(sizeof(struct zero));
+	struct input_zero * z = (struct input_zero *)malloc(sizeof(struct input_zero));
 	if (!z) {
-		error("zero: Failed to allocate memory");
+		error("input_zero: Failed to allocate memory");
 		return NULL;
 	}
 
 	z->sample_rate = sample_rate;
 	z->consumer = c;
 
-	z->producer.run = zero_run;
-	z->producer.exit = zero_exit;
+	z->producer.run = input_zero_run;
+	z->producer.exit = input_zero_exit;
 
 	return &z->producer;
 }

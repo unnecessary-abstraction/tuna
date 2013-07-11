@@ -29,6 +29,7 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/fft.o \
 	$(d)/input_alsa.o \
 	$(d)/input_sndfile.o \
+	$(d)/input_zero.o \
 	$(d)/log.o \
 	$(d)/null.o \
 	$(d)/output_csv.o \
@@ -38,7 +39,6 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/timespec.o \
 	$(d)/tol.o \
 	$(d)/window.o \
-	$(d)/zero.o
 
 DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
 
