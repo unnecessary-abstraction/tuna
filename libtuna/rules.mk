@@ -24,8 +24,7 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 # Targets and intermediates in this directory
-OBJS_$(d) := $(d)/analysis.o \
-	$(d)/buffer.o \
+OBJS_$(d) := $(d)/buffer.o \
 	$(d)/bufq.o \
 	$(d)/fft.o \
 	$(d)/input_alsa.o \
