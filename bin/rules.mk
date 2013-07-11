@@ -49,8 +49,8 @@ $(d)/tuna-alsa-rec: $(OBJS_tuna-alsa-rec)
 .PHONY: install-$(d)
 install-$(d): $(TGTS_$(d))
 	@echo INSTALL $^
-	$(Q)$(INSTALL) -m 0755 -d $(BINDIR)
-	$(Q)$(INSTALL) -m 0755 $^ $(BINDIR)
+	$(Q)$(INSTALL) -m 0755 -d $(bindir)
+	$(Q)$(INSTALL) -m 0755 $^ $(bindir)
 
 # Include dependencies
 -include $(DEPS_$(d))

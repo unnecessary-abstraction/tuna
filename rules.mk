@@ -19,11 +19,11 @@
 ################################################################################
 
 # Required flags which cannot be configured by the user
-CFLAGS_ALL := -pthread -I$(SRCDIR)/include -I$(SRCDIR)/include/tuna
-LDFLAGS_ALL := -pthread
+CFLAGS_ALL := -I$(SRCDIR)/include -I$(SRCDIR)/include/tuna
+LDFLAGS_ALL := 
 
 # Required libraries
-LDLIBRARIES_ALL := -lfftw3 -lm -lsndfile -lrt -lasound
+LDLIBRARIES_ALL := 
 
 # Initialise empty variables which each directory's `rules.mk` will append to.
 TARGETS_BIN :=
@@ -63,7 +63,7 @@ targets: $(TARGETS_ALL)
 	@echo CC $@
 	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(DEPFLAGS) -o $@ -c $<
 	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
-	$(Q)$(MV) $*.d.tmp $*.d
+	$(Q)mv $*.d.tmp $*.d
 
 # Linker rule
 %: %.o
@@ -79,18 +79,18 @@ targets: $(TARGETS_ALL)
 .PHONY: clean clean-intermediates
 clean: clean-intermediates
 	@echo CLEAN
-	$(Q)$(RM) $(TARGETS_ALL)
+	$(Q)rm -rf $(TARGETS_ALL)
 
 clean-intermediates:
 	@echo CLEAN INTERMEDIATES
-	$(Q)$(RM) $(INTERMEDIATES)
+	$(Q)rm -rf $(INTERMEDIATES)
 
 # Install rules
 .PHONY: install 
 install: $(INSTALL_DEPS)
 
 # Ensure everything is rebuilt if top-level rules or config change
-TOPLEVEL_DEPS := $(SRCDIR)/rules.mk $(SRCDIR)/Makefile config.mk devconfig.mk
+TOPLEVEL_DEPS := $(SRCDIR)/rules.mk $(SRCDIR)/Makefile unconfig.mk
 
 $(INTERMEDIATES): $(TOPLEVEL_DEPS)
 
@@ -99,7 +99,3 @@ $(TARGETS_BIN): $(TOPLEVEL_DEPS)
 $(TARGETS_LIB): $(TOPLEVEL_DEPS)
 
 $(TARGETS_TEST): $(TOPLEVEL_DEPS)
-
-# Create an empty devconfig.mk if one doesn't exist so that the previous rule doesn't bork
-devconfig.mk:
-	$(Q)touch devconfig.mk

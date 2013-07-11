@@ -25,10 +25,8 @@
 # [1]: http://miller.emu.id.au/pmiller/books/rmch/
 # [2]: http://evbergen.home.xs4all.nl/nonrecursive-make.html
 
-# Include `config.mk`, then `devconfig.mk` if present.
-# Therefore, settings in `devconfig.mk` override those in `config.mk`.
-include config.mk
--include devconfig.mk
+# Include `unconfig.mk`, created by our configure script
+include unconfig.mk
 
 # Support for high or low verbosity
 ifeq ($(VERBOSITY),0)
