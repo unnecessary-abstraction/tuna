@@ -31,6 +31,8 @@
 int main(int argc, char * argv[])
 {
 	int r;
+	int log_valid = 0;
+	int fft_valid = 0;
 
 	/* Pipeline:
 	 *
@@ -53,13 +55,15 @@ int main(int argc, char * argv[])
 	
 	r = log_init(log_file, app_name);
 	if (r < 0)
-		return r;
+		goto cleanup;
+	log_valid = 1;
 
 	r = fft_init(&fft);
 	if (r < 0) {
 		error("tuna-analyse: Failed to initialize fft module");
-		return r;
+		goto cleanup;
 	}
+	fft_valid = 1;
 
 	out = output_csv_init(sink);
 	if (!out) {
@@ -100,7 +104,9 @@ cleanup:
 		time_slice->exit(time_slice);
 	if (out)
 		out->exit(out);
-	fft_exit(&fft);
-	log_exit();
+	if (fft_valid)
+		fft_exit(&fft);
+	if (log_valid)
+		log_exit();
 	return r;
 }
