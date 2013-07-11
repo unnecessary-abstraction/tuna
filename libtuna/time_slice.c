@@ -62,18 +62,21 @@ struct held_buffer {
 struct time_slice {
 	struct consumer		consumer;
 
-	uint			sample_rate;
+	/* The following fields are initialised in time_slice_init(). */
 	struct list		held_buffers;
 	struct slab		held_buffer_allocator;
-
 	struct consumer *	out;
 	struct fft *		fft;
+
+	/* The following fields are initialised in time_slice_start(). */
 	struct tol		tol;
 	double *		window;
-	
+	uint			sample_rate;
 	uint			slice_period;
 	uint			available;
 	uint			n_tol;
+
+	/* The following field is used within process_time_slice(). */
 	uint			index;
 };
 
