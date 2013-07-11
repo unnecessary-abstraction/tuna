@@ -1,0 +1,59 @@
+#! /usr/bin/python3
+################################################################################
+#	Configure script for TUNA.
+#
+#	Copyright (C) 2013 Paul Barker, Loughborough University
+#
+#	This program is free software; you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation; either version 2 of the License, or
+#	(at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program; if not, write to the Free Software
+#	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+################################################################################
+
+import os
+from unconfig import *
+
+# Describe ourself
+name = "tuna"
+version = "0.1-pre1"
+
+# Main configuration
+init(name, version)
+parse_cmdline()
+require(configure_cc())
+require(configure_ld("gcc"))
+require(configure_ar())
+require(configure_pkg("fftw3"))
+require(configure_pkg("sndfile"))
+require(configure_pkg("alsa"))
+configure_install_dirs()
+
+var_append("CFLAGS", "-Wall -Wextra -pthread")
+var_append("LDFLAGS", "-pthread")
+var_append("LDLIBRARIES", "-lm -lrt")
+var_set("VERBOSITY", "0")
+var_set("DEPFLAGS", "-MD")
+var_set("PYTHON", "python")
+var_set("INSTALL", "install")
+
+finalize()
+find_srcdir()
+link_makefile()
+write_config_makefile()
+
+# Create empty directory tree
+srcdir = var_get("SRCDIR")
+if srcdir != ".":
+	os.makedirs("include/tuna", exist_ok=True)
+	os.makedirs("bin", exist_ok=True)
+	os.makedirs("libtuna", exist_ok=True)
+	os.makedirs("test", exist_ok=True)
