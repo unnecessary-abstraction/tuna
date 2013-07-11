@@ -25,12 +25,13 @@ d := $(dir)
 
 # Targets and intermediates in this directory
 OBJS_tuna-alsa-rec := $(d)/tuna-alsa-rec.o
+OBJS_tuna-analyse := $(d)/tuna-analyse.o
 
-OBJS_$(d) := $(OBJS_tuna-alsa-rec)
+OBJS_$(d) := $(OBJS_tuna-alsa-rec) $(OBJS_tuna-analyse)
 
 DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
 
-TGTS_$(d) := $(d)/tuna-alsa-rec
+TGTS_$(d) := $(d)/tuna-alsa-rec $(d)/tuna-analyse
 
 TARGETS_BIN += $(TGTS_$(d))
 
@@ -45,6 +46,8 @@ $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
 $(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
 
 $(d)/tuna-alsa-rec: $(OBJS_tuna-alsa-rec)
+
+$(d)/tuna-analyse: $(OBJS_tuna-analyse)
 
 .PHONY: install-$(d)
 install-$(d): $(TGTS_$(d))

@@ -25,13 +25,12 @@ d := $(dir)
 
 # Targets and intermediates in this directory
 OBJS_output_csv_test := $(d)/output_csv_test.o
-OBJS_simple_test := $(d)/simple_test.o
 
-OBJS_$(d) := $(OBJS_output_csv_test) $(OBJS_simple_test)
+OBJS_$(d) := $(OBJS_output_csv_test) 
 
 DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
 
-TGTS_$(d) := $(d)/output_csv_test $(d)/simple_test
+TGTS_$(d) := $(d)/output_csv_test 
 
 TARGETS_TEST += $(TGTS_$(d))
 
@@ -42,8 +41,6 @@ $(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
 $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
 
 $(d)/output_csv_test: $(OBJS_output_csv_test)
-
-$(d)/simple_test: $(OBJS_simple_test)
 
 $(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
 

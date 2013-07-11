@@ -1,5 +1,5 @@
 /*******************************************************************************
-	simple_test.c: A simple pipeline test.
+	tuna-analyse.c: A simple analysis pipeline.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
@@ -45,8 +45,8 @@ int main(int argc, char * argv[])
 	/* These need to be configurable. */
 	const char * source = "input.wav";
 	const char * sink = "time_slice.csv";
-	const char * log_file = "tuna.log";
-	const char * app_name = "tuna";
+	const char * log_file = "tuna-analyse.log";
+	const char * app_name = "tuna-analyse";
 
 	__unused argc;
 	__unused argv;
@@ -57,34 +57,34 @@ int main(int argc, char * argv[])
 
 	r = fft_init(&fft);
 	if (r < 0) {
-		error("simple_test: Failed to initialize fft module");
+		error("tuna-analyse: Failed to initialize fft module");
 		return r;
 	}
 
 	out = output_csv_init(sink);
 	if (!out) {
-		error("simple_test: Failed to initialise output_csv module");
+		error("tuna-analyse: Failed to initialise output_csv module");
 		r = -1;
 		goto cleanup;
 	}
 
 	time_slice = time_slice_init(out, &fft);
 	if (!time_slice) {
-		error("simple_test: Failed to initialise time_slice module");
+		error("tuna-analyse: Failed to initialise time_slice module");
 		r = -1;
 		goto cleanup;
 	}
 
 	bufq = bufq_init(time_slice);
 	if (!bufq) {
-		error("simple_test: Failed to initialise bufq module");
+		error("tuna-analyse: Failed to initialise bufq module");
 		r = -1;
 		goto cleanup;
 	}
 
 	in = input_sndfile_init(source, bufq);
 	if (!in) {
-		error("simple_test: Failed to initialise input_sndfile module");
+		error("tuna-analyse: Failed to initialise input_sndfile module");
 		r = -1;
 		goto cleanup;
 	}
