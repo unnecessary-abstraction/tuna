@@ -18,14 +18,15 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#include "analysis.h"
 #include "bufq.h"
 #include "compiler.h"
 #include "consumer.h"
+#include "fft.h"
 #include "input_sndfile.h"
 #include "log.h"
 #include "output_csv.h"
 #include "producer.h"
+#include "time_slice.h"
 
 int main(int argc, char * argv[])
 {
@@ -33,19 +34,17 @@ int main(int argc, char * argv[])
 
 	/* Pipeline:
 	 *
-	 * input_sndfile -> bufq -> analysis -> output_csv (impulse)
-	 * 				     -> output_csv (time slice)
+	 * input_sndfile -> bufq -> time_slice -> output_csv
 	 */
-	struct producer * in;
-	struct consumer * bufq;
-	struct consumer * analysis;
-	struct consumer * out_impulse;
-	struct consumer * out_time_slice;
+	struct producer * in = NULL;
+	struct consumer * bufq = NULL;
+	struct consumer * time_slice = NULL;
+	struct consumer * out = NULL;
+	struct fft fft;
 
 	/* These need to be configurable. */
 	const char * source = "input.wav";
-	const char * sink_time_slice = "time_slice.csv";
-	const char * sink_impulse = "impulse.csv";
+	const char * sink = "time_slice.csv";
 	const char * log_file = "tuna.log";
 	const char * app_name = "tuna";
 
@@ -54,56 +53,54 @@ int main(int argc, char * argv[])
 	
 	r = log_init(log_file, app_name);
 	if (r < 0)
-		goto err_log;
+		return r;
 
-	out_time_slice = output_csv_init(sink_time_slice);
-	if (!out_time_slice) {
-		error("tuna: Failed to initialise output_csv module for time slice results");
-		r = -1;
-		goto err_time_slice;
+	r = fft_init(&fft);
+	if (r < 0) {
+		error("simple_test: Failed to initialize fft module");
+		return r;
 	}
 
-	out_impulse = output_csv_init(sink_impulse);
-	if (!out_impulse) {
-		error("tuna: Failed to initialise output_csv module for impulse results");
+	out = output_csv_init(sink);
+	if (!out) {
+		error("simple_test: Failed to initialise output_csv module");
 		r = -1;
-		goto err_impulse;
+		goto cleanup;
 	}
 
-	analysis = analysis_init(out_time_slice, out_impulse);
-	if (!analysis) {
-		error("tuna: Failed to initialise analysis module");
+	time_slice = time_slice_init(out, &fft);
+	if (!time_slice) {
+		error("simple_test: Failed to initialise time_slice module");
 		r = -1;
-		goto err_analysis;
+		goto cleanup;
 	}
 
-	bufq = bufq_init(analysis);
+	bufq = bufq_init(time_slice);
 	if (!bufq) {
-		error("tuna: Failed to initialise bufq module");
+		error("simple_test: Failed to initialise bufq module");
 		r = -1;
-		goto err_bufq;
+		goto cleanup;
 	}
 
 	in = input_sndfile_init(source, bufq);
 	if (!in) {
-		error("tuna: Failed to initialise input_sndfile module");
+		error("simple_test: Failed to initialise input_sndfile module");
 		r = -1;
-		goto err_in;
+		goto cleanup;
 	}
 
 	r = in->run(in);
 
-	in->exit(in);
-err_in:
-	bufq->exit(bufq);
-err_bufq:
-	analysis->exit(analysis);
-err_analysis:
-	out_impulse->exit(out_impulse);
-err_impulse:
-	out_time_slice->exit(out_time_slice);
-err_time_slice:
+cleanup:
+	if (in)
+		in->exit(in);
+	if (bufq)
+		bufq->exit(bufq);
+	if (time_slice)
+		time_slice->exit(time_slice);
+	if (out)
+		out->exit(out);
+	fft_exit(&fft);
 	log_exit();
-err_log:
 	return r;
 }
