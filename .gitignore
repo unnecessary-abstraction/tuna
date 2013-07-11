@@ -5,7 +5,8 @@
 *.rej
 *.orig
 ChangeLog
-tuna
+tuna-alsa-rec
+simple_test
 output_csv_test
 *.log
 *.swp
