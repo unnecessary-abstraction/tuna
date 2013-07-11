@@ -402,6 +402,8 @@ struct consumer * time_slice_init(struct consumer * out, struct fft * f)
 
 	memset(t, 0, sizeof(*t));
 
+	list_init(&t->held_buffers);
+	slab_init(&t->held_buffer_allocator, sizeof(struct held_buffer), offsetof(struct held_buffer, e));
 	t->out = out;
 	t->fft = f;
 
