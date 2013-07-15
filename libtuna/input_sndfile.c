@@ -42,6 +42,7 @@ struct input_sndfile {
 	SNDFILE *		sf;
 	SF_INFO			sf_info;
 	const char *		sf_name;
+	volatile int		stop;
 };
 
 /*******************************************************************************
@@ -132,6 +133,12 @@ int run_single_channel(struct input_sndfile * snd)
 	}
 
 	while (1) {
+		/* Check for termination signal. */
+		if (snd->stop) {
+			msg("input_sndfile: Stop");
+			return snd->stop;
+		}
+
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
@@ -189,6 +196,12 @@ int run_multi_channel(struct input_sndfile * snd)
 		want into the front of the buffer.
 	*/
 	while (1) {
+		/* Check for termination signal. */
+		if (snd->stop) {
+			msg("input_sndfile: Stop");
+			return snd->stop;
+		}
+
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
@@ -259,6 +272,14 @@ void input_sndfile_exit(struct producer * producer)
 	free(snd);
 }
 
+void input_sndfile_stop(struct producer * producer, int condition)
+{
+	assert(producer);
+
+	struct input_sndfile * snd = container_of(producer, struct input_sndfile, producer);
+	snd->stop = condition;
+}
+
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
@@ -282,6 +303,7 @@ struct producer * input_sndfile_init(const char * source, struct consumer * c)
 	*/
 	snd->source = source;
 	snd->consumer = c;
+	snd->stop = 0;
 
 	r = open_sndfile(snd, source);
 	if (r)
@@ -290,6 +312,7 @@ struct producer * input_sndfile_init(const char * source, struct consumer * c)
 
 	snd->producer.run = input_sndfile_run;
 	snd->producer.exit = input_sndfile_exit;
+	snd->producer.stop = input_sndfile_stop;
 
 	return &snd->producer;
 }

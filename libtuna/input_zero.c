@@ -40,6 +40,7 @@ struct input_zero {
 	struct consumer *	consumer;
 
 	uint			sample_rate;
+	volatile int		stop;
 };
 
 int input_zero_run(struct producer * producer)
@@ -62,6 +63,12 @@ int input_zero_run(struct producer * producer)
 	}
 
 	while (1) {
+		/* Check for termination signal. */
+		if (z->stop) {
+			msg("input_zero: Stop");
+			return z->stop;
+		}
+
 		frames = 1<<16;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
@@ -90,6 +97,14 @@ void input_zero_exit(struct producer * producer)
 	free(z);
 }
 
+void input_zero_stop(struct producer * producer, int condition)
+{
+	assert(producer);
+
+	struct input_zero * z = container_of(producer, struct input_zero, producer);
+	z->stop = condition;
+}
+
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
@@ -104,11 +119,13 @@ struct producer * input_zero_init(uint sample_rate, struct consumer * c)
 		return NULL;
 	}
 
+	z->stop = 0;
 	z->sample_rate = sample_rate;
 	z->consumer = c;
 
 	z->producer.run = input_zero_run;
 	z->producer.exit = input_zero_exit;
+	z->producer.stop = input_zero_stop;
 
 	return &z->producer;
 }

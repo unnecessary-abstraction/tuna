@@ -38,6 +38,7 @@ struct input_alsa {
 
 	snd_pcm_t *		capture;
 	int16_t *		alsa_buf;
+	volatile int		stop;
 
 	/* ALSA parameters */
 	const char *		device_name;
@@ -327,6 +328,12 @@ int input_alsa_run(struct producer * producer)
 		return r;
 
 	while (1) {
+		/* Check for termination signal. */
+		if (a->stop) {
+			msg("input_alsa: Stop");
+			return a->stop;
+		}
+
 		r = snd_pcm_wait(a->capture, -1);
 		if (r < 0) {
 			/* TODO: Handle errors like xrun and suspend. */
@@ -390,6 +397,14 @@ void input_alsa_exit(struct producer * producer)
 	free(a);
 }
 
+void input_alsa_stop(struct producer * producer, int condition)
+{
+	assert(producer);
+
+	struct input_alsa * a = container_of(producer, struct input_alsa, producer);
+	a->stop = condition;
+}
+
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
@@ -413,6 +428,7 @@ struct producer * input_alsa_init(struct consumer * c, const char * device_name,
 	a->channels = 2;
 	a->format = SND_PCM_FORMAT_S16_LE;
 	a->period_size = 4096;			/* ~93 ms at 44.1kHz */
+	a->stop = 0;
 
 	a->capture = NULL;
 	a->alsa_buf = NULL;
@@ -426,6 +442,7 @@ struct producer * input_alsa_init(struct consumer * c, const char * device_name,
 
 	a->producer.run = input_alsa_run;
 	a->producer.exit = input_alsa_exit;
+	a->producer.stop = input_alsa_stop;
 
 	return &a->producer;
 }
