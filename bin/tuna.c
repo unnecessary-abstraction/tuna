@@ -1,5 +1,5 @@
 /*******************************************************************************
-	tuna-analyse.c: A simple analysis pipeline.
+	tuna.c: A simple analysis pipeline.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
@@ -70,7 +70,7 @@ char * safe_strdup(const char * p)
 {
 	char * r = strdup(p);
 	if (!r) {
-		error("tuna-analyse: Failed to allocate memory for internal string");
+		error("tuna: Failed to allocate memory for internal string");
 		exit(-ENOMEM);
 	}
 	return r;
@@ -143,13 +143,13 @@ int init_output(struct arguments * args)
 	if (strcmp(args->output, "time_slice") == 0) {
 		fft = (struct fft *)malloc(sizeof(struct fft));
 		if (!fft) {
-			error("tuna-analyse: Failed to allocate memory for fft module");
+			error("tuna: Failed to allocate memory for fft module");
 			return -ENOMEM;
 		}
 
 		r = fft_init(fft);
 		if (r < 0) {
-			error("tuna-analyse: Failed to initialize fft module");
+			error("tuna: Failed to initialize fft module");
 			free(fft);
 			fft = NULL;
 			return r;
@@ -157,7 +157,7 @@ int init_output(struct arguments * args)
 
 		out_csv = output_csv_init(sink);
 		if (!out_csv) {
-			error("tuna-analyse: Failed to initialise output_csv module");
+			error("tuna: Failed to initialise output_csv module");
 			return -1;
 		}
 
@@ -170,7 +170,7 @@ int init_output(struct arguments * args)
 	} else if (strcmp(args->output, "null") == 0) {
 		out = output_null_init();
 	} else {
-		error("tuna-analyse: Unknown output module %s", args->input);
+		error("tuna: Unknown output module %s", args->input);
 	}
 
 	return 0;
@@ -184,7 +184,7 @@ int init_input(struct arguments * args)
 
 	bufq = bufq_init(out);
 	if (!bufq) {
-		error("tuna-analyse: Failed to initialise bufq module");
+		error("tuna: Failed to initialise bufq module");
 		return -1;
 	}
 
@@ -195,12 +195,12 @@ int init_input(struct arguments * args)
 	} else if (strcmp(args->input, "zero") == 0) {
 		in = input_zero_init(args->sample_rate, bufq);
 	} else {
-		error("tuna-analyse: Unknown input module %s", args->input);
+		error("tuna: Unknown input module %s", args->input);
 		return -1;
 	}
 
 	if (!in) {
-		error("tuna-analyse: Failed to initialise %s input", args->input);
+		error("tuna: Failed to initialise %s input", args->input);
 	}
 
 	return 0;
@@ -225,8 +225,8 @@ void exit_all()
 int main(int argc, char * argv[])
 {
 	int r;
-	const char * log_file = "tuna-analyse.log";
-	const char * app_name = "tuna-analyse";
+	const char * log_file = "tuna.log";
+	const char * app_name = "tuna";
 
 	r = log_init(log_file, app_name);
 	if (r < 0)
