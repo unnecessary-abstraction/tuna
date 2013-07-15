@@ -20,6 +20,7 @@
 
 #include <argp.h>
 #include <assert.h>
+#include <signal.h>
 #include <sndfile.h>
 #include <stdlib.h>
 #include <string.h>
@@ -222,6 +223,13 @@ void exit_all()
 	}
 }
 
+void sigterm_handler(int sig)
+{
+	msg("tuna: Terminating due to SIGTERM");
+
+	in->stop(in, sig);
+}
+
 int main(int argc, char * argv[])
 {
 	int r;
@@ -244,6 +252,11 @@ int main(int argc, char * argv[])
 	r = init_input(&args);
 	if (r < 0)
 		return r;
+
+	/* Setup signal handler now that 'in' is valid (as the handler calls
+	 * in->stop() ).
+	 */
+	signal(SIGTERM, sigterm_handler);
 
 	r = in->run(in);
 
