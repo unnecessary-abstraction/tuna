@@ -18,95 +18,237 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#include <argp.h>
+#include <assert.h>
+#include <sndfile.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "bufq.h"
 #include "compiler.h"
 #include "consumer.h"
 #include "fft.h"
+#include "input_alsa.h"
 #include "input_sndfile.h"
+#include "input_zero.h"
 #include "log.h"
 #include "output_csv.h"
+#include "output_null.h"
+#include "output_sndfile.h"
 #include "producer.h"
 #include "time_slice.h"
 
-int main(int argc, char * argv[])
+/* Globals. */
+struct producer * in = NULL;
+struct consumer * bufq = NULL;
+struct consumer * out_csv = NULL;
+struct consumer * out = NULL;
+struct fft * fft = NULL;
+
+/* Set program name, version and bug reporting address so that they can be seen
+ * by argp.
+ */
+const char * argp_program_version = "tuna 0.1-pre1";
+const char * argp_program_bug_address = "https://bitbucket.org/underwater-acoustics/tuna/issues";
+
+static char docstring[] = "Toolkit for Underwater Noise Analysis (TUNA)";
+
+static const struct argp_option options[] = {
+	{"input", 'i', "SOURCE", 0, "Configure input module", 0},
+	{"output", 'o', "SINK", 0, "Configure output module", 0},
+	{"sample-rate", 'r', "RATE", 0, "Set sample rate for input module if supported", 0},
+	{0, 0, 0, 0, 0, 0}
+};
+
+struct arguments {
+	char * input;
+	char * output;
+	uint sample_rate;
+};
+
+char * safe_strdup(const char * p)
 {
-	int r;
-	int log_valid = 0;
-	int fft_valid = 0;
+	char * r = strdup(p);
+	if (!r) {
+		error("tuna-analyse: Failed to allocate memory for internal string");
+		exit(-ENOMEM);
+	}
+	return r;
+}
 
-	/* Pipeline:
-	 *
-	 * input_sndfile -> bufq -> time_slice -> output_csv
+void set_defaults(struct arguments * args)
+{
+	assert(args);
+
+	args->input = safe_strdup("alsa:hw:0");
+	args->output = safe_strdup("time_slice:results.csv");
+	args->sample_rate = 44100;
+}
+
+/* Split a string of the form "a:b" so that param just contains "a" and "b" is
+ * returned.
+ */
+char * split_param(char * param)
+{
+	char * split = strchr(param, ':');
+	if (!split)
+		return NULL;
+
+	/* Terminate param at separator so it just contains "a". */
+	*split = '\0';
+
+	/* Return a string starting one character after the separator, which
+	 * will just contain "b".
 	 */
-	struct producer * in = NULL;
-	struct consumer * bufq = NULL;
-	struct consumer * time_slice = NULL;
-	struct consumer * out = NULL;
-	struct fft fft;
+	return ++split;
+}
 
-	/* These need to be configurable. */
-	const char * source = "input.wav";
-	const char * sink = "time_slice.csv";
-	const char * log_file = "tuna-analyse.log";
-	const char * app_name = "tuna-analyse";
+static error_t parse(int key, char * param, struct argp_state * state)
+{
+	assert(state);
 
-	__unused argc;
-	__unused argv;
-	
-	r = log_init(log_file, app_name);
-	if (r < 0)
-		goto cleanup;
-	log_valid = 1;
+	struct arguments * args = state->input;
 
-	r = fft_init(&fft);
-	if (r < 0) {
-		error("tuna-analyse: Failed to initialize fft module");
-		goto cleanup;
-	}
-	fft_valid = 1;
+	switch (key) {
+	    case 'i':
+		args->input = param;
+		break;
 
-	out = output_csv_init(sink);
-	if (!out) {
-		error("tuna-analyse: Failed to initialise output_csv module");
-		r = -1;
-		goto cleanup;
+	    case 'o':
+		args->output = param;
+		break;
+
+	    case 'r':
+		args->sample_rate = (uint) strtoul(param, NULL, 10);
+		break;
+
+	    default:
+		return ARGP_ERR_UNKNOWN;
 	}
 
-	time_slice = time_slice_init(out, &fft);
-	if (!time_slice) {
-		error("tuna-analyse: Failed to initialise time_slice module");
-		r = -1;
-		goto cleanup;
+	return 0;
+}
+
+static struct argp argp = {options, parse, NULL, docstring, NULL, NULL, NULL};
+
+int init_output(struct arguments * args)
+{
+	assert(args);
+
+	char * sink = split_param(args->output);
+	int format;
+	uint max_samples_per_file;
+	int r;
+
+	if (strcmp(args->output, "time_slice") == 0) {
+		fft = (struct fft *)malloc(sizeof(struct fft));
+		if (!fft) {
+			error("tuna-analyse: Failed to allocate memory for fft module");
+			return -ENOMEM;
+		}
+
+		r = fft_init(fft);
+		if (r < 0) {
+			error("tuna-analyse: Failed to initialize fft module");
+			free(fft);
+			fft = NULL;
+			return r;
+		}
+
+		out_csv = output_csv_init(sink);
+		if (!out_csv) {
+			error("tuna-analyse: Failed to initialise output_csv module");
+			return -1;
+		}
+
+		out = time_slice_init(out_csv, fft);
+	} else if (strcmp(args->output, "sndfile") == 0) {
+		/* TODO: These should be configurable. */
+		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+		max_samples_per_file = 60 * 60 * args->sample_rate; /* One hour. */
+		out = output_sndfile_init(sink, ".wav", format, max_samples_per_file);
+	} else if (strcmp(args->output, "null") == 0) {
+		out = output_null_init();
+	} else {
+		error("tuna-analyse: Unknown output module %s", args->input);
 	}
 
-	bufq = bufq_init(time_slice);
+	return 0;
+}
+
+int init_input(struct arguments * args)
+{
+	assert(args);
+
+	char * source = split_param(args->input);
+
+	bufq = bufq_init(out);
 	if (!bufq) {
 		error("tuna-analyse: Failed to initialise bufq module");
-		r = -1;
-		goto cleanup;
+		return -1;
 	}
 
-	in = input_sndfile_init(source, bufq);
+	if (strcmp(args->input, "sndfile") == 0) {
+		in = input_sndfile_init(source, bufq);
+	} else if (strcmp(args->input, "alsa") == 0) {
+		in = input_alsa_init(bufq, source, args->sample_rate);
+	} else if (strcmp(args->input, "zero") == 0) {
+		in = input_zero_init(args->sample_rate, bufq);
+	} else {
+		error("tuna-analyse: Unknown input module %s", args->input);
+		return -1;
+	}
+
 	if (!in) {
-		error("tuna-analyse: Failed to initialise input_sndfile module");
-		r = -1;
-		goto cleanup;
+		error("tuna-analyse: Failed to initialise %s input", args->input);
 	}
 
-	r = in->run(in);
+	return 0;
+}
 
-cleanup:
+void exit_all()
+{
 	if (in)
 		in->exit(in);
 	if (bufq)
 		bufq->exit(bufq);
-	if (time_slice)
-		time_slice->exit(time_slice);
 	if (out)
 		out->exit(out);
-	if (fft_valid)
-		fft_exit(&fft);
-	if (log_valid)
-		log_exit();
+	if (out_csv)
+		out_csv->exit(out_csv);
+	if (fft) {
+		fft_exit(fft);
+		free(fft);
+	}
+}
+
+int main(int argc, char * argv[])
+{
+	int r;
+	const char * log_file = "tuna-analyse.log";
+	const char * app_name = "tuna-analyse";
+
+	r = log_init(log_file, app_name);
+	if (r < 0)
+		return r;
+
+	/* Argument parsing. */
+	struct arguments args;
+	set_defaults(&args);
+	argp_parse(&argp, argc, argv, 0, 0, &args);
+
+	r = init_output(&args);
+	if (r < 0)
+		return r;
+
+	r = init_input(&args);
+	if (r < 0)
+		return r;
+
+	r = in->run(in);
+
+	exit_all();
+	log_exit();
+
 	return r;
 }
