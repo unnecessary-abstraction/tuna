@@ -59,7 +59,7 @@ struct bufq {
 
 
 	uint			sample_rate;
-	int			exit;
+	volatile int		exit;
 	pthread_t		thread;
 
 	/* Rather than messing with the (void *) return type of a thread, we
