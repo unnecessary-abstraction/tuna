@@ -146,7 +146,10 @@ int output_sndfile_write(struct consumer * consumer, sample_t * buf, uint count)
 		}
 
 		close_sndfile(snd);
-		open_sndfile(snd);
+		r = open_sndfile(snd);
+		if (r < 0)
+			/* Error message already printed. */
+			return r;
 		msg("output_sndfile: Old file was full");
 
 		w += r;
@@ -201,11 +204,15 @@ int output_sndfile_resync(struct consumer * consumer, struct timespec * ts)
 	assert(consumer);
 	assert(ts);
 
+	int r;
 	struct output_sndfile * snd = container_of(consumer, struct output_sndfile, consumer);
 
 	/* Create a new output file. */
 	close_sndfile(snd);
-	open_sndfile(snd);
+	r = open_sndfile(snd);
+	if (r < 0)
+		/* Error message already printed. */
+		return r;
 
 	char s[64];
 	timespec_snprint(ts, s, 64);
