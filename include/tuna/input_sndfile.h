@@ -24,6 +24,6 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_sndfile_init(const char * source, struct consumer * c);
+struct producer * input_sndfile_init(struct consumer * c, const char * source);
 
 #endif /* !__TUNA_INPUT_SNDFILE_H_INCLUDED__ */

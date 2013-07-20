@@ -284,7 +284,7 @@ void input_sndfile_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_sndfile_init(const char * source, struct consumer * c)
+struct producer * input_sndfile_init(struct consumer * c, const char * source)
 {
 	assert(source);
 	assert(c);

@@ -190,11 +190,11 @@ int init_input(struct arguments * args)
 	}
 
 	if (strcmp(args->input, "sndfile") == 0) {
-		in = input_sndfile_init(source, bufq);
+		in = input_sndfile_init(bufq, source);
 	} else if (strcmp(args->input, "alsa") == 0) {
 		in = input_alsa_init(bufq, source, args->sample_rate);
 	} else if (strcmp(args->input, "zero") == 0) {
-		in = input_zero_init(args->sample_rate, bufq);
+		in = input_zero_init(bufq, args->sample_rate);
 	} else {
 		error("tuna: Unknown input module %s", args->input);
 		return -1;

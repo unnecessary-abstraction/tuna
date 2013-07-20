@@ -24,6 +24,6 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_zero_init(uint sample_rate, struct consumer * c);
+struct producer * input_zero_init(struct consumer * c, uint sample_rate);
 
 #endif /* !__TUNA_INPUT_ZERO_H_INCLUDED__ */

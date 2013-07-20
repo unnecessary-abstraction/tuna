@@ -109,7 +109,7 @@ void input_zero_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_zero_init(uint sample_rate, struct consumer * c)
+struct producer * input_zero_init(struct consumer * c, uint sample_rate)
 {
 	assert(c);
 
