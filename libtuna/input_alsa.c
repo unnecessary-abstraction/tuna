@@ -305,6 +305,9 @@ static void convert_buffer(struct input_alsa * a, sample_t * buf, uint frames)
 {
 	uint i;
 
+	assert(a);
+	assert(buf);
+
 	for (i = 0; i < frames; i++) {
 		buf[i] = (sample_t)a->alsa_buf[i * a->channels];
 	}
