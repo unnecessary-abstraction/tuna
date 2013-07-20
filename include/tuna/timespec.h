@@ -1,5 +1,5 @@
 /*******************************************************************************
-	timespec.h: Basic types used by TUNA.
+	timespec.h: Timespec manipulation functions.
 
 	Copyright (C) 2013 Paul Barker, Loughborough University
 	
