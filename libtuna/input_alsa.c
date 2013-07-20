@@ -373,9 +373,9 @@ int input_alsa_run(struct producer * producer)
 				buffer_release(buf);
 				return r;
 			}
-		}
 
-		buffer_release(buf);
+			buffer_release(buf);
+		}
 	}
 
 	return 0;
