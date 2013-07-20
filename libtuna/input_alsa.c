@@ -301,7 +301,7 @@ static int handle_error(struct input_alsa * a, int err)
  * from the ALSA buffer to a new buffer (given as an argument) as they are 
  * converted.
  */
-void convert_buffer(struct input_alsa * a, sample_t * buf, uint frames)
+static void convert_buffer(struct input_alsa * a, sample_t * buf, uint frames)
 {
 	uint i;
 
