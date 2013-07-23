@@ -49,6 +49,11 @@ var_set("DEPFLAGS", "-MD")
 var_set("PYTHON", "python")
 var_set("INSTALL", "install")
 
+# Check whether ADS1672 input module has been enabled and if so set a flag so
+# that this is known within the C source.
+if var_get("enable-ads1672"):
+	var_append("CFLAGS", "-DENABLE_ADS1672")
+
 finalize()
 find_srcdir()
 write_config_makefile()
