@@ -27,7 +27,6 @@ d := $(dir)
 OBJS_$(d) := $(d)/buffer.o \
 	$(d)/bufq.o \
 	$(d)/fft.o \
-	$(d)/input_ads1672.o \
 	$(d)/input_alsa.o \
 	$(d)/input_sndfile.o \
 	$(d)/input_zero.o \
@@ -40,6 +39,11 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/timespec.o \
 	$(d)/tol.o \
 	$(d)/window.o \
+
+# Only include ADS1672 input module if it was enabled by 'configure'
+ifdef enable-ads1672
+OBJS_$(d) += $(d)/input_ads1672.o
+endif
 
 DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
 
