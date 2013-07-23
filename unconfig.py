@@ -150,6 +150,9 @@ def configure_cc(default_name="gcc"):
 def configure_ld(default_name="ld"):
 	return configure_tool("LD", default_name)
 
+def configure_ccld(default_name="gcc"):
+	return configure_tool("CCLD", default_name)
+
 def configure_ar(default_name="ar"):
 	return configure_tool("AR", default_name)
 
