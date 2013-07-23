@@ -122,7 +122,7 @@ def configure_install_dirs(default_prefix="/usr/local"):
 ################################################################################
 def check_tool(tool):
 	try:
-		b = subprocess.check_output([tool, "--version"])
+		b = subprocess.check_output(tool + " --version", shell=True)
 		s = b.decode("utf-8").splitlines()[0]
 		print("Found: %s" % s)
 		return tool
@@ -130,25 +130,28 @@ def check_tool(tool):
 		print("Not found: %s" % tool)
 		return None
 
-def configure_tool(key, name):
-	prefix = var_get("TOOL_PREFIX")
-	if not prefix:
-		prefix = ""
-	tool = prefix + name
-	print("Searching for %s: %s" % (key, name))
+def configure_tool(key, default_name):
+	tool = var_get(key)
+	if not tool:
+		# Build tool name ourself
+		prefix = var_get("TOOL_PREFIX")
+		if not prefix:
+			prefix = ""
+		tool = prefix + default_name
+	print("Searching for %s: %s" % (key, tool))
 	value = check_tool(tool)
 	if value:
 		var_set(key, value)
 	return value
 
-def configure_cc(name="gcc"):
-	return configure_tool("CC", name)
+def configure_cc(default_name="gcc"):
+	return configure_tool("CC", default_name)
 
-def configure_ld(name="ld"):
-	return configure_tool("LD", name)
+def configure_ld(default_name="ld"):
+	return configure_tool("LD", default_name)
 
-def configure_ar(name="ar"):
-	return configure_tool("AR", name)
+def configure_ar(default_name="ar"):
+	return configure_tool("AR", default_name)
 
 ################################################################################
 # Configuration management
