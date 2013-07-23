@@ -31,8 +31,8 @@ INSTALL_DEPS += install-$(d)
 .PHONY: install-$(d)
 install-$(d): $(TUNA_HEADERS)
 	@echo INSTALL $^
-	$(Q)$(INSTALL) -m 0755 -d $(includedir)/tuna
-	$(Q)$(INSTALL) -m 0644 $^ $(includedir)/tuna
+	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(includedir)/tuna
+	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(includedir)/tuna
 
 # Pop directory stack
 d := $(dirstack_$(sp))

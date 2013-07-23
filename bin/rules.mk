@@ -49,8 +49,8 @@ $(d)/tuna: $(OBJS_tuna)
 .PHONY: install-$(d)
 install-$(d): $(TGTS_$(d))
 	@echo INSTALL $^
-	$(Q)$(INSTALL) -m 0755 -d $(bindir)
-	$(Q)$(INSTALL) -m 0755 $^ $(bindir)
+	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
+	$(Q)$(INSTALL) -m 0755 $^ $(DESTDIR)$(bindir)
 
 # Include dependencies
 -include $(DEPS_$(d))

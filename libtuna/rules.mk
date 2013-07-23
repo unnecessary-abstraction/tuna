@@ -59,8 +59,8 @@ $(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
 .PHONY: install-$(d)
 install-$(d): $(TGTS_$(d))
 	@echo INSTALL $^
-	$(Q)$(INSTALL) -m 0755 -d $(libdir)
-	$(Q)$(INSTALL) -m 0644 $^ $(libdir)
+	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(libdir)
 
 # Include dependencies
 -include $(DEPS_$(d))
