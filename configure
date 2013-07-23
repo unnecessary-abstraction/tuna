@@ -26,9 +26,13 @@ from unconfig import *
 name = "tuna"
 version = "0.1-pre1"
 
+# Environment variables which may be brought in
+env_list = ("CC", "CCLD", "AR", "CFLAGS", "LDFLAGS", "PYTHON", "INSTALL")
+
 # Main configuration
 init(name, version)
 parse_cmdline()
+read_envs(env_list)
 require(configure_cc())
 require(configure_ld("gcc"))
 require(configure_ar())

@@ -175,7 +175,7 @@ def require(v):
 		fail()
 
 ################################################################################
-# Command line arguments
+# Command line arguments and environment variables
 ################################################################################
 def parse_cmdline(argv=sys.argv):
 	# Skip first argument as that will be the name of the script
@@ -191,6 +191,17 @@ def parse_cmdline(argv=sys.argv):
 		# Strip leading dashes off key so "--prefix" aliases to "prefix"
 		key = key.lstrip('-')
 		var_set(key, value)
+
+def read_env(key):
+	value = os.environ.get(key)
+	# Use weak set so that these values from the environment may be easily
+	# overridden
+	if value:
+		var_weak_set(key, value)
+
+def read_envs(keylist):
+	for key in keylist:
+		read_env(key)
 
 ################################################################################
 # Support for out-of-tree builds
