@@ -47,12 +47,11 @@ var_set("INSTALL", "install")
 
 finalize()
 find_srcdir()
-link_makefile()
 write_config_makefile()
 
 # Create empty directory tree
-srcdir = var_get("SRCDIR")
-if srcdir != ".":
+if is_out_of_tree():
+	link_makefile()
 	os.makedirs("include/tuna", exist_ok=True)
 	os.makedirs("bin", exist_ok=True)
 	os.makedirs("libtuna", exist_ok=True)

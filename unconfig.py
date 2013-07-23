@@ -196,9 +196,14 @@ def find_srcdir():
 	path = os.path.dirname(sys.argv[0])
 	var_set("SRCDIR", path)
 
+def is_out_of_tree():
+	srcdir = os.path.realpath(var_get("SRCDIR"))
+	builddir = os.path.realpath(".")
+	return srcdir != builddir
+
 def link_makefile(filename="Makefile"):
-	srcdir = var_get("SRCDIR")
-	if srcdir != ".":
+	if is_out_of_tree():
+		srcdir = var_get("SRCDIR")
 		path = os.path.join(srcdir, filename)
 		# Warning: That srcdir check better be good!
 		if os.path.exists(filename):
