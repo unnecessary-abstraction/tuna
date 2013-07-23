@@ -39,6 +39,10 @@
 #include "producer.h"
 #include "time_slice.h"
 
+#ifdef ENABLE_ADS1672
+#include "input_ads1672.h"
+#endif
+
 /* Globals. */
 struct producer * in = NULL;
 struct consumer * bufq = NULL;
@@ -195,6 +199,10 @@ int init_input(struct arguments * args)
 		in = input_alsa_init(bufq, source, args->sample_rate);
 	} else if (strcmp(args->input, "zero") == 0) {
 		in = input_zero_init(bufq, args->sample_rate);
+#ifdef ENABLE_ADS1672
+	} else if (strcmp(args->input, "ads1672") == 0) {
+		in = input_ads1672_init(bufq);
+#endif
 	} else {
 		error("tuna: Unknown input module %s", args->input);
 		return -1;
