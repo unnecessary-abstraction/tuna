@@ -37,6 +37,7 @@ struct input_alsa {
 	struct consumer *	consumer;
 
 	snd_pcm_t *		capture;
+	int16_t *		alsa_buf;
 
 	/* ALSA parameters */
 	const char *		device_name;
@@ -155,6 +156,14 @@ static int prep(struct input_alsa * a)
 	snd_pcm_sw_params_free(sw_params);
 	sw_params = NULL;
 
+	/* Allocate memory for samples in ALSA format. */
+	a->alsa_buf = (int16_t *)malloc(MAX_FRAMES * a->channels * sizeof(int16_t));
+	if (!a->alsa_buf) {
+		error("input_alsa: Failed to allocate memory for incoming samples");
+		r = -ENOMEM;
+		goto handle_err;
+	}
+
 	r = snd_pcm_prepare(a->capture);
 	if (r < 0) {
 		error("input_alsa: Failed to prepare for reading: %s", snd_strerror(r));
@@ -165,6 +174,9 @@ static int prep(struct input_alsa * a)
 
 handle_err:
 	/* Error cleanup. */
+	if (a->alsa_buf)
+		free(a->alsa_buf);
+
 	if (hw_params)
 		snd_pcm_hw_params_free(hw_params);
 
@@ -283,6 +295,20 @@ static int handle_error(struct input_alsa * a, int err)
 	return r;
 }
 
+/* Convert 16-bit samples from ALSA into our sample_t type and if multiple
+ * channels are present the select only the first one. The samples are copied
+ * from the ALSA buffer to a new buffer (given as an argument) as they are 
+ * converted.
+ */
+void convert_buffer(struct input_alsa * a, sample_t * buf, uint frames)
+{
+	uint i;
+
+	for (i = 0; i < frames; i++) {
+		buf[i] = (sample_t)a->alsa_buf[i * a->channels];
+	}
+}
+
 int input_alsa_run(struct producer * producer)
 {
 	assert(producer);
@@ -309,13 +335,8 @@ int input_alsa_run(struct producer * producer)
 
 		avail = snd_pcm_avail_update(a->capture);
 		frames = (avail > MAX_FRAMES) ? MAX_FRAMES : (uint)avail;
-		buf = buffer_acquire(&frames);
-		if (!buf) {
-			error("input_alsa: Failed to acquire buffer");
-			return -1;
-		}
-
-		sf = snd_pcm_readi(a->capture, buf, (snd_pcm_uframes_t) frames);
+		
+		sf = snd_pcm_readi(a->capture, a->alsa_buf, (snd_pcm_uframes_t) frames);
 		r = (int)sf;
 
 		if (r < 0) {
@@ -324,12 +345,20 @@ int input_alsa_run(struct producer * producer)
 			r = handle_error(a, r);
 			if (r < 0) {
 				/* failed to handle error, message has already been printed */
-				buffer_release(buf);
 				return r;
 			}
 		} else {
 			/* Got sf frames. */
 			frames = (uint)sf;
+
+			buf = buffer_acquire(&frames);
+			if (!buf) {
+				error("input_alsa: Failed to acquire buffer");
+				return -1;
+			}
+
+			/* Convert samples from ALSA into our sample_t type. */
+			convert_buffer(a, buf, frames);
 			
 			r = a->consumer->write(a->consumer, buf, frames);
 			if (r < 0) {
@@ -386,6 +415,7 @@ struct producer * input_alsa_init(struct consumer * c, const char * device_name,
 	a->period_size = 4096;			/* ~93 ms at 44.1kHz */
 
 	a->capture = NULL;
+	a->alsa_buf = NULL;
 
 	r = prep(a);
 	if (r < 0) {
