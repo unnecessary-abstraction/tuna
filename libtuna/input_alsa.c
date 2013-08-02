@@ -388,6 +388,8 @@ struct producer * input_alsa_init(struct consumer * c, const char * device_name,
 	a->format = SND_PCM_FORMAT_S16_LE;
 	a->period_size = 4096;			/* ~93 ms at 44.1kHz */
 
+	a->capture = NULL;
+
 	r = prep(a);
 	if (r < 0) {
 		/* Prep failed, error message has already been printed */
