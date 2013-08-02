@@ -165,19 +165,16 @@ static int prep(struct input_alsa * a)
 
 handle_err:
 	/* Error cleanup. */
-	if (hw_params) {
+	if (hw_params)
 		snd_pcm_hw_params_free(hw_params);
-	}
 
-	if (sw_params) {
+	if (sw_params)
 		snd_pcm_sw_params_free(sw_params);
-	}
 
 	if (a->capture) {
 		r2 = snd_pcm_close(a->capture);
-		if (r2 < 0) {
+		if (r2 < 0)
 			error("input_alsa: Error closing device: %s", snd_strerror(r2));
-		}
 	}
 
 	return r;
