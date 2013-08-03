@@ -1,5 +1,5 @@
 ################################################################################
-#	rules.mk for libtuna.
+#	rules.mk for tuna headers.
 #
 #	Copyright (C) 2013 Paul Barker, Loughborough University
 #
@@ -24,7 +24,7 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 # Targets and rules in this directory
-TUNA_HEADERS := $(wildcard $(SRCDIR)/include/tuna/*.h)
+TUNA_HEADERS := $(wildcard $(SRCDIR)/$(d)/tuna/*.h)
 
 INSTALL_DEPS += install-$(d)
 
