@@ -112,7 +112,7 @@ static error_t parse(int key, char * param, struct argp_state * state)
 {
 	assert(state);
 
-	struct arguments * args = state->input;
+	struct arguments * args = (struct arguments *)state->input;
 
 	switch (key) {
 	    case 'i':
