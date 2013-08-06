@@ -155,6 +155,10 @@ int init_output(struct arguments * args)
 		r = fft_init(fft);
 		if (r < 0) {
 			error("tuna: Failed to initialize fft module");
+
+			/* Manually free and zero here as exit_all assumes
+			 * fft_init succeeded if fft is not NULL.
+			 */
 			free(fft);
 			fft = NULL;
 			return r;
@@ -175,7 +179,13 @@ int init_output(struct arguments * args)
 	} else if (strcmp(args->output, "null") == 0) {
 		out = output_null_init();
 	} else {
-		error("tuna: Unknown output module %s", args->input);
+		error("tuna: Unknown output module %s", args->output);
+		return -EINVAL;
+	}
+
+	if (!out) {
+		error("tuna: Failed to initialise %s output", args->output);
+		return -1;
 	}
 
 	return 0;
@@ -205,11 +215,12 @@ int init_input(struct arguments * args)
 #endif
 	} else {
 		error("tuna: Unknown input module %s", args->input);
-		return -1;
+		return -EINVAL;
 	}
 
 	if (!in) {
 		error("tuna: Failed to initialise %s input", args->input);
+		return -1;
 	}
 
 	return 0;
