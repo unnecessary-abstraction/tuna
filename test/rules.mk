@@ -24,25 +24,21 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 # Targets and intermediates in this directory
-OBJS_output_csv_test := $(d)/output_csv_test.o
-
-OBJS_$(d) := $(OBJS_output_csv_test) 
+OBJS_$(d) :=
 
 DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
 
-TGTS_$(d) := $(d)/output_csv_test 
+TGTS_$(d) := 
 
 TARGETS_TEST += $(TGTS_$(d))
 
 INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
 
 # Rules for this directory
-$(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
-$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
+#$(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
+#$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
 
-$(d)/output_csv_test: $(OBJS_output_csv_test)
-
-$(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+#$(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
 
 # Include dependencies
 -include $(DEPS_$(d))
