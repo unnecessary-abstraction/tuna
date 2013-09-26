@@ -28,7 +28,7 @@
 struct tol_transition {
 	uint				t_onset;
 	uint				t_width;
-	double *			coeffs;
+	float *			coeffs;
 };
 
 struct tol {
@@ -43,11 +43,11 @@ struct tol {
 };
 
 struct tol_results {
-	double				values[MAX_THIRD_OCTAVE_LEVELS + 1];
+	float				values[MAX_THIRD_OCTAVE_LEVELS + 1];
 };
 
-void tol_calculate(struct tol * t, double * data, struct tol_results * r);
-int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double overlap, uint phi_L);
+void tol_calculate(struct tol * t, float * data, struct tol_results * r);
+int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overlap, uint phi_L);
 void tol_exit(struct tol * t);
 
 #endif /* !__TUNA_TOL_H_INCLUDED__ */

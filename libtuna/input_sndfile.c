@@ -146,7 +146,7 @@ int run_single_channel(struct input_sndfile * snd)
 			return -ENOMEM;
 		}
 
-		r = sf_readf_double(snd->sf, buf, frames);
+		r = sf_readf_int(snd->sf, buf, frames);
 		if (r <= 0) {
 			r = sf_error(snd->sf);
 			error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));
@@ -212,7 +212,7 @@ int run_multi_channel(struct input_sndfile * snd)
 		/* Divide frames down by the number of channels. */
 		frames /= channels;
 
-		r = sf_readf_double(snd->sf, buf, frames);
+		r = sf_readf_int(snd->sf, buf, frames);
 		if (r <= 0) {
 			r = sf_error(snd->sf);
 			error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));

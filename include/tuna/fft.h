@@ -28,11 +28,11 @@
 #include "types.h"
 
 struct fft {
-	fftw_plan			plan;
+	fftwf_plan			plan;
 	uint				length;
 	union {
-		double *		data;
-		double complex *	cdata;
+		float *			data;
+		float complex *		cdata;
 	};
 
 	pthread_mutex_t			mutex;
@@ -41,7 +41,7 @@ struct fft {
 int fft_init(struct fft * fft);
 void fft_exit(struct fft * fft);
 int fft_set_length(struct fft * fft, uint length);
-double * fft_open(struct fft * fft);
+float * fft_open(struct fft * fft);
 void fft_close(struct fft * fft);
 int fft_transform(struct fft * fft);
 

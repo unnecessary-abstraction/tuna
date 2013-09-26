@@ -23,6 +23,6 @@
 
 #include "types.h"
 
-void window_init_sine(double * window, uint length);
+void window_init_sine(float * window, uint length);
 
 #endif /* !__TUNA_WINDOW_H_INCLUDED__ */

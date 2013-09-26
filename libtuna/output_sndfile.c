@@ -157,7 +157,7 @@ int output_sndfile_write(struct consumer * consumer, sample_t * buf, uint count)
 	}
 
 	while (w < count) {
-		r = sf_writef_double(snd->sf, buf, count - w);
+		r = sf_writef_int(snd->sf, buf, count - w);
 		if (r <= 0) {
 			r = sf_error(snd->sf);
 			error("libsndfile: Error %d: %s", r, sf_strerror(snd->sf));

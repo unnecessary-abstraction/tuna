@@ -31,7 +31,7 @@
 	Private declarations
 *******************************************************************************/
 
-static const double freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
+static const float freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
 	11.2,
 	14.1,
 	17.8,
@@ -83,11 +83,11 @@ static const double freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
 *******************************************************************************/
 
 /* Unweighted power sum. */
-static inline double psum(double *x, uint N)
+static inline float psum(float *x, uint N)
 {
 	assert(x);
 
-	double sum;
+	float sum;
 	uint i;
 
 	sum = 0;
@@ -101,14 +101,14 @@ static inline double psum(double *x, uint N)
 
 /* Dual band weighted power sum. */
 /* Weighting coefficients are interleaved to speed up memory loads. */
-static inline void wpsum2(double *x, double *w, uint N, double *e)
+static inline void wpsum2(float *x, float *w, uint N, float *e)
 {
 	assert(x);
 	assert(w);
 	assert(e);
 
-	double sum0, sum1;
-	double x_sq;
+	float sum0, sum1;
+	float x_sq;
 	uint i;
 
 	sum0 = sum1 = 0;
@@ -125,7 +125,7 @@ static inline void wpsum2(double *x, double *w, uint N, double *e)
 	e[1] += sum1;
 }
 
-static inline double phi(double p, uint l)
+static inline float phi(float p, uint l)
 {
 	uint i;
 
@@ -140,7 +140,7 @@ static inline double phi(double p, uint l)
 	Public functions
 *******************************************************************************/
 
-void tol_calculate(struct tol * t, double * data, struct tol_results * r)
+void tol_calculate(struct tol * t, float * data, struct tol_results * r)
 {
 	assert(t);
 	assert(data);
@@ -164,14 +164,14 @@ void tol_calculate(struct tol * t, double * data, struct tol_results * r)
 	}
 }
 
-int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double overlap, uint phi_L)
+int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overlap, uint phi_L)
 {
 	assert(t);
 
 	uint i, j;
-	double p, tmp, sin_tmp, cos_tmp;
-	double delta, cur_freq, offset;
-	double step;
+	float p, tmp, sin_tmp, cos_tmp;
+	float delta, cur_freq, offset;
+	float step;
 	uint t_end;
 
 	assert(overlap < 0.5);
@@ -195,7 +195,7 @@ int tol_init(struct tol * t, uint sample_rate, uint analysis_length, double over
 		}
 
 		/* Allocate enough memory. */
-		t->desc[i].coeffs = (double *)malloc(sizeof(double) * 2 * t->desc[i].t_width);
+		t->desc[i].coeffs = (float *)malloc(sizeof(float) * 2 * t->desc[i].t_width);
 		if (t->desc[i].coeffs == NULL)
 			return -ENOMEM;
 

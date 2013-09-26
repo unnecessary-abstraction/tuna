@@ -82,7 +82,7 @@ int fft_set_length(struct fft * fft, uint length)
 		pthread_mutex_lock(&fft->mutex);
 
 		fft->length = length;
-		fft->data = (double *)realloc(fft->data, (length + 4) * sizeof(double));
+		fft->data = (float *)realloc(fft->data, (length + 4) * sizeof(float));
 		if (!fft->data) {
 			error("fft: Failed to allocate memory");
 			return -ENOMEM;
@@ -91,9 +91,9 @@ int fft_set_length(struct fft * fft, uint length)
 		/* Ignore errors in reading or writing fftw wisdom as it is only
 		 * a time saving mechanism.
 		 */
-		fftw_import_wisdom_from_filename("fftw.wisdom");
-		fft->plan = fftw_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
-		fftw_export_wisdom_to_filename("fftw.wisdom");
+		fftwf_import_wisdom_from_filename("fftw.wisdom");
+		fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
+		fftwf_export_wisdom_to_filename("fftw.wisdom");
 
 		pthread_mutex_unlock(&fft->mutex);
 	}
@@ -101,7 +101,7 @@ int fft_set_length(struct fft * fft, uint length)
 	return 0;
 }
 
-double * fft_open(struct fft * fft)
+float * fft_open(struct fft * fft)
 {
 	assert(fft);
 
@@ -125,7 +125,7 @@ int fft_transform(struct fft * fft)
 
 	pthread_mutex_lock(&fft->mutex);
 
-	fftw_execute(fft->plan);
+	fftwf_execute(fft->plan);
 
 	/* Find the magnitude of each complex frequency sample. */
 	for (i = 0; i < fft->length / 2; i++) {

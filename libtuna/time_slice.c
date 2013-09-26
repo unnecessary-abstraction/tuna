@@ -70,7 +70,7 @@ struct time_slice {
 
 	/* The following fields are initialised in time_slice_start(). */
 	struct tol		tol;
-	double *		window;
+	float *			window;
 	uint			sample_rate;
 	uint			slice_period;
 	uint			available;
@@ -81,13 +81,13 @@ struct time_slice {
 };
 
 struct time_slice_results {
-	double			peak_positive;
-	double			peak_negative;
+	sample_t		peak_positive;
+	sample_t		peak_negative;
 	uint			peak_positive_offset;
 	uint			peak_negative_offset;
 
-	double			m_2;
-	double			m_4;
+	float			m_2;
+	float			m_4;
 
 	struct tol_results	tol;
 };
@@ -141,7 +141,7 @@ static void write_results(struct time_slice * t, struct time_slice_results * r)
 	buffer_release(buf);
 }
 
-static void process_buffer(struct time_slice * t, struct held_buffer * h, double * fft_data, struct time_slice_results * r)
+static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data, struct time_slice_results * r)
 {
 	assert(t);
 	assert(h);
@@ -170,14 +170,17 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, double
 	uint avail;	/* Number of available samples remaining. */
 	uint len = t->slice_period * 2;
 	uint i, c;
-	double x, x_2;
+	float x, x_2;
+	sample_t v;
 	uint offset = 0;
 	
 	avail = h->count;
 	if (avail && t->index < len/4) {
 		c = min(len/4 - t->index, avail);
 		for (i = 0; i < c; i++) {
-			x = (double)h->data[i];
+			v = h->data[i];
+			x = (float)v;
+
 			fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
@@ -187,20 +190,20 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, double
 	if (avail && t->index < len*3/4) {
 		c = min(len*3/4 - t->index, avail);
 		for (i = 0; i < c; i++) {
-			x = (double)h->data[offset + i];
+			v = h->data[offset + i];
+			x = (float)v;
 
 			/* Calculate x^2 and x^4 sums for kurtosis. */
 			x_2 = x * x;
-
 			r->m_2 += x_2;
 			r->m_4 += x_2 * x_2;
 
 			/* Detect Peaks */
-			if (x > r->peak_positive) {
-				r->peak_positive = x;
+			if (v > r->peak_positive) {
+				r->peak_positive = v;
 				r->peak_positive_offset = t->index - len/4;
-			} else if (x < r->peak_negative) {
-				r->peak_negative = x;
+			} else if (v < r->peak_negative) {
+				r->peak_negative = v;
 				r->peak_negative_offset = t->index - len/4;
 			}
 			
@@ -217,7 +220,9 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, double
 	if (avail) {
 		c = min(len - t->index, avail);
 		for (i = 0; i < c; i++) {
-			x = (double)h->data[offset + i];
+			v = h->data[offset + i];
+			x = (float)v;
+
 			fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
@@ -233,7 +238,7 @@ static void process_time_slice(struct time_slice * t)
 	struct held_buffer * h;
 	struct list_entry * e;
 	struct time_slice_results r;
-	double * fft_data;
+	float * fft_data;
 	uint start, offset;
 
 	fft_data = fft_open(t->fft);
@@ -348,7 +353,7 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	t->available = 0;
 
 	/* Create window function. */
-	t->window = (double *)malloc(sizeof(double) * t->slice_period * 2);
+	t->window = (float *)malloc(sizeof(float) * t->slice_period * 2);
 	if (!t->window) {
 		error("time_slice: Failed to allocate memory for window function");
 		return -ENOMEM;

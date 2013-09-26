@@ -24,6 +24,6 @@
 typedef unsigned int uint;
 typedef unsigned long long uint64;
 
-typedef double sample_t;
+typedef int sample_t;
 
 #endif /* !__TUNA_TYPES_H_INCLUDED__ */

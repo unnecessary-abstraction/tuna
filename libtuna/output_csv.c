@@ -78,9 +78,9 @@ int output_csv_write(struct consumer * consumer, sample_t * buf, uint count)
 
 	for (i = 0; i < count; i++) {
 		if ((++c->offset) % c->sample_rate)
-			r = fprintf(c->f, "%f, ", buf[i]);
+			r = fprintf(c->f, "%d, ", buf[i]);
 		else
-			r = fprintf(c->f, "%f\n", buf[i]);
+			r = fprintf(c->f, "%d\n", buf[i]);
 
 		if (r < 0) {
 			error("output_csv: Failed to write to output file %s", c->fname);
