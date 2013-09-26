@@ -5,9 +5,9 @@
 *.rej
 *.orig
 ChangeLog
-tuna-alsa-rec
-simple_test
-output_csv_test
+bin/tuna
+test/output_csv_test
+fftw.wisdom
 *.log
 *.swp
 *.a
