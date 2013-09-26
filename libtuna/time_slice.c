@@ -86,8 +86,10 @@ struct time_slice_results {
 	uint			peak_positive_offset;
 	uint			peak_negative_offset;
 
-	float			m_2;
-	float			m_4;
+	float			sum_1;
+	float			sum_2;
+	float			sum_3;
+	float			sum_4;
 
 	struct tol_results	tol;
 };
@@ -104,7 +106,7 @@ static inline uint values_per_slice(struct time_slice * t)
 {
 	assert(t);
 
-	return 6 + t->n_tol;
+	return 8 + t->n_tol;
 }
 
 static void write_results(struct time_slice * t, struct time_slice_results * r)
@@ -130,11 +132,13 @@ static void write_results(struct time_slice * t, struct time_slice_results * r)
 	buf[1] = (sample_t)r->peak_negative;
 	buf[2] = (sample_t)r->peak_positive_offset;
 	buf[3] = (sample_t)r->peak_negative_offset;
-	buf[4] = (sample_t)r->m_2;
-	buf[5] = (sample_t)r->m_4;
+	buf[4] = (sample_t)r->sum_1;
+	buf[5] = (sample_t)r->sum_2;
+	buf[6] = (sample_t)r->sum_3;
+	buf[7] = (sample_t)r->sum_4;
 
 	for (i = 0; i < t->n_tol; i++)
-		buf[6 + i] = (sample_t)r->tol.values[i];
+		buf[8 + i] = (sample_t)r->tol.values[i];
 
 	t->out->write(t->out, buf, values_per_slice(t));
 
@@ -170,7 +174,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 	uint avail;	/* Number of available samples remaining. */
 	uint len = t->slice_period * 2;
 	uint i, c;
-	float x, x_2;
+	float x, e, e_2;
 	sample_t v;
 	uint offset = 0;
 	
@@ -193,10 +197,13 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 			v = h->data[offset + i];
 			x = (float)v;
 
-			/* Calculate x^2 and x^4 sums for kurtosis. */
-			x_2 = x * x;
-			r->m_2 += x_2;
-			r->m_4 += x_2 * x_2;
+			/* Calculate intermediate sums for kurtosis. */
+			e = x * x;
+			e_2 = e * e;
+			r->sum_1 += e;
+			r->sum_2 += e_2;
+			r->sum_3 += e_2 * e;
+			r->sum_4 += e_2 * e_2;
 
 			/* Detect Peaks */
 			if (v > r->peak_positive) {
