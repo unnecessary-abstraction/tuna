@@ -21,7 +21,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "buffer.h"
 #include "compiler.h"
@@ -30,6 +32,7 @@
 #include "log.h"
 #include "slab.h"
 #include "time_slice.h"
+#include "timespec.h"
 #include "tol.h"
 #include "types.h"
 #include "window.h"
@@ -65,7 +68,8 @@ struct time_slice {
 	/* The following fields are initialised in time_slice_init(). */
 	struct list		held_buffers;
 	struct slab		held_buffer_allocator;
-	struct consumer *	out;
+	FILE *			csv;
+	char *			csv_name;
 	struct fft *		fft;
 
 	/* The following fields are initialised in time_slice_start(). */
@@ -109,40 +113,48 @@ static inline uint values_per_slice(struct time_slice * t)
 	return 8 + t->n_tol;
 }
 
-static void write_results(struct time_slice * t, struct time_slice_results * r)
+static int write_results(struct time_slice * t, struct time_slice_results * results)
 {
-	assert(t);
-	assert(r);
-
+	int r;
 	uint i;
-	uint frames;
 
-	/* We need to convert our results back into the original sample type and
-	 * put them in a contiguous array.
-	 *
-	 * TODO: We may need to do something more intelligent than just type
-	 * casting.
-	 */
-	frames = MAX_TIME_SLICE_RESULTS;
-	sample_t * buf = (sample_t *)buffer_acquire(&frames);
-	if (!buf)
-		fatal("time_slice: Failed to allocate memory for results");
-	
-	buf[0] = (sample_t)r->peak_positive;
-	buf[1] = (sample_t)r->peak_negative;
-	buf[2] = (sample_t)r->peak_positive_offset;
-	buf[3] = (sample_t)r->peak_negative_offset;
-	buf[4] = (sample_t)r->sum_1;
-	buf[5] = (sample_t)r->sum_2;
-	buf[6] = (sample_t)r->sum_3;
-	buf[7] = (sample_t)r->sum_4;
+	assert(t);
+	assert(results);
 
-	for (i = 0; i < t->n_tol; i++)
-		buf[8 + i] = (sample_t)r->tol.values[i];
+	r = fprintf(t->csv, "%d, %d, %d, %d, ", results->peak_positive,
+			results->peak_negative, results->peak_positive_offset,
+			results->peak_negative_offset);
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s",
+				t->csv_name);
+		return r;
+	}
 
-	t->out->write(t->out, buf, values_per_slice(t));
+	r = fprintf(t->csv, "%f, %f, %f, %f", results->sum_1, results->sum_2,
+			results->sum_3, results->sum_4);
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s",
+				t->csv_name);
+		return r;
+	}
 
-	buffer_release(buf);
+	for (i = 0; i < t->n_tol; i++) {
+		r = fprintf(t->csv, ", %f", results->tol.values[i]);
+		if (r < 0) {
+			error("time_slice: Failed to write to output file %s",
+					t->csv_name);
+			return r;
+		}
+	}
+
+	r = fprintf(t->csv, "\n");
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s",
+				t->csv_name);
+		return r;
+	}
+
+	return 0;
 }
 
 static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data, struct time_slice_results * r)
@@ -238,7 +250,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 	}
 }
 
-static void process_time_slice(struct time_slice * t)
+static int process_time_slice(struct time_slice * t)
 {
 	assert(t);
 
@@ -286,7 +298,7 @@ static void process_time_slice(struct time_slice * t)
 	tol_calculate(&t->tol, fft_data, &r.tol);
 
 	fft_close(t->fft);
-	write_results(t, &r);
+	return write_results(t, &r);
 }
 
 static void release_all(struct time_slice * t)
@@ -334,13 +346,18 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 	assert(consumer);
 	assert(buf);
 
+	int r;
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 	
 	t->available += count;
 	hold(t, buf, count);
 
 	while (t->available >= t->slice_period) {
-		process_time_slice(t);
+		r = process_time_slice(t);
+		if (r < 0) {
+			error("time_slice: Failed to process time slice");
+			return r;
+		}
 		t->available -= t->slice_period;
 	}
 
@@ -378,10 +395,26 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 
 	t->n_tol = (uint)r;
 
-	/* Pass the start on but give the number of analysis values per time
-	 * slice as the sample rate.
-	 */
-	return t->out->start(t->out, values_per_slice(t), ts);
+	/* Write start notification to csv file. */
+	r = fprintf(t->csv, "START ");
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	r = timespec_fprint(ts, t->csv);
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	r = fprintf(t->csv, "\n");
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	return 0;
 }
 
 int time_slice_resync(struct consumer * consumer, struct timespec * ts)
@@ -389,23 +422,42 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	assert(consumer);
 	assert(ts);
 
+	int r;
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
 	/* We're going to have to dump old data. */
 	release_all(t);
 	t->available = 0;
 
-	/* Pass the resync on. */
-	return t->out->resync(t->out, ts);
+	/* Write resync notification to csv file. */
+	r = fprintf(t->csv, "RESYNC ");
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	r = timespec_fprint(ts, t->csv);
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	r = fprintf(t->csv, "\n");
+	if (r < 0) {
+		error("time_slice: Failed to write to output file %s", t->csv_name);
+		return r;
+	}
+
+	return 0;
 }
 
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
 
-struct consumer * time_slice_init(struct consumer * out, struct fft * f)
+struct consumer * time_slice_init(const char * csv_name, struct fft * f)
 {
-	assert(out);
+	assert(csv_name);
 	assert(f);
 
 	struct time_slice * t = (struct time_slice *)malloc(sizeof(struct time_slice));
@@ -416,9 +468,24 @@ struct consumer * time_slice_init(struct consumer * out, struct fft * f)
 
 	memset(t, 0, sizeof(*t));
 
+	/* Initialize csv file. */
+	t->csv_name = strdup(csv_name);
+	if (!t->csv_name) {
+		error("time_slice: Failed to allocate memory for csv file name");
+		free(t);
+		return NULL;
+	}
+
+	t->csv = fopen(t->csv_name, "w");
+	if (!t->csv) {
+		error("time_slice: Failed to open file %s", t->csv_name);
+		free(t->csv_name);
+		free(t);
+		return NULL;
+	}
+
 	list_init(&t->held_buffers);
 	slab_init(&t->held_buffer_allocator, sizeof(struct held_buffer), offsetof(struct held_buffer, e));
-	t->out = out;
 	t->fft = f;
 
 	/* Setup consumer and return. */

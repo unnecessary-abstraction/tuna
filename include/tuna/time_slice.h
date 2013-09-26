@@ -24,6 +24,6 @@
 #include "consumer.h"
 #include "fft.h"
 
-struct consumer * time_slice_init(struct consumer * out, struct fft * f);
+struct consumer * time_slice_init(const char * csv_name, struct fft * f);
 
 #endif /* !__TUNA_TIME_SLICE_H_INCLUDED__ */

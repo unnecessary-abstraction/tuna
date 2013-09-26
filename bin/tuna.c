@@ -33,7 +33,6 @@
 #include "input_sndfile.h"
 #include "input_zero.h"
 #include "log.h"
-#include "output_csv.h"
 #include "output_null.h"
 #include "output_sndfile.h"
 #include "producer.h"
@@ -46,7 +45,6 @@
 /* Globals. */
 struct producer * in = NULL;
 struct consumer * bufq = NULL;
-struct consumer * out_csv = NULL;
 struct consumer * out = NULL;
 struct fft * fft = NULL;
 
@@ -164,13 +162,7 @@ int init_output(struct arguments * args)
 			return r;
 		}
 
-		out_csv = output_csv_init(sink);
-		if (!out_csv) {
-			error("tuna: Failed to initialise output_csv module");
-			return -1;
-		}
-
-		out = time_slice_init(out_csv, fft);
+		out = time_slice_init(sink, fft);
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
@@ -234,8 +226,6 @@ void exit_all()
 		bufq->exit(bufq);
 	if (out)
 		out->exit(out);
-	if (out_csv)
-		out_csv->exit(out_csv);
 	if (fft) {
 		fft_exit(fft);
 		free(fft);
