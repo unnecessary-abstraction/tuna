@@ -27,6 +27,7 @@
 
 struct buffer_head {
 	uint		refs;
+	sample_t	data;
 };
 
 /* Acquire a buffer of at least (*frames) samples. The actual number of samples
@@ -48,15 +49,13 @@ sample_t * buffer_acquire(uint * frames)
 		return NULL;
 
 	h->refs = 1;
-	sample_t * p = (sample_t *)ptr_offset(h, sizeof(struct buffer_head));
-
-	return p;
+	return &h->data;
 }
 
 void buffer_addref(sample_t * p)
 {
 	assert(p);
-	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
+	struct buffer_head * h = container_of(p, struct buffer_head, data);
 
 	h->refs++;
 }
@@ -64,7 +63,7 @@ void buffer_addref(sample_t * p)
 void buffer_release(sample_t * p)
 {
 	assert(p);
-	struct buffer_head * h = (struct buffer_head *)ptr_offset(p, -sizeof(struct buffer_head));
+	struct buffer_head * h = container_of(p, struct buffer_head, data);
 
 	h->refs--;
 
