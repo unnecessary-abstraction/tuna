@@ -37,6 +37,7 @@
 #define BUFQ_WRITE	1
 #define BUFQ_START	2
 #define BUFQ_RESYNC	3
+#define BUFQ_EXIT	4
 
 struct bufq_entry {
 	uint				event;
@@ -209,6 +210,23 @@ static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
 	return enqueue(b, e);
 }
 
+static int enqueue_exit(struct bufq * b)
+{
+	assert(b);
+
+	struct bufq_entry * e;
+
+	e = alloc_entry(b);
+	if (!e) {
+		error("bufq: Failed to allocate memory");
+		return -ENOMEM;
+	}
+
+	e->event = BUFQ_EXIT;
+
+	return enqueue(b, e);
+}
+
 static void * consumer_thread(void * param)
 {
 	int r;
@@ -268,6 +286,10 @@ static void * consumer_thread(void * param)
 				}
 				break;
 
+			case BUFQ_EXIT:
+				b->thread_exit_status = 0;
+				return NULL;
+
 			default:
 				error("bufq: Ignoring unknown event");
 		}
@@ -282,9 +304,10 @@ void bufq_exit(struct consumer * consumer)
 
 	struct bufq * b = container_of(consumer, struct bufq, consumer);
 
-	/* Signal consumer thread to terminate. */
-	b->exit = 1;
-	pthread_cond_signal(&b->cond);
+	/* Wait for the consumer thread to finish processing currently enqueued
+	 * data.
+	 */
+	enqueue_exit(b);
 	pthread_join(b->thread, NULL);
 
 	list_exit(&b->freestack);
