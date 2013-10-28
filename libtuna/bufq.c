@@ -119,52 +119,12 @@ static void free_entry(struct bufq * b, struct bufq_entry * e)
 	pthread_mutex_unlock(&b->mutex);
 }
 
-static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint count)
+static int enqueue(struct bufq * b, struct bufq_entry * e)
 {
 	assert(b);
-	assert(buf);
-
-	struct bufq_entry * e;
+	assert(e);
 
 	pthread_mutex_lock(&b->mutex);
-
-	e = alloc_entry(b);
-	if (!e) {
-		error("bufq: Failed to allocate memory");
-		return -ENOMEM;
-	}
-
-	e->event = event;
-	e->buf = buf;
-	e->count = count;
-
-	list_enqueue(&b->queue, &e->l);
-
-	/* Signal that there is data in the queue. */
-	pthread_cond_signal(&b->cond);
-
-	pthread_mutex_unlock(&b->mutex);
-
-	return 0;
-}
-
-static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
-{
-	assert(b);
-	assert(ts);
-
-	struct bufq_entry * e;
-
-	pthread_mutex_lock(&b->mutex);
-
-	e = alloc_entry(b);
-	if (!e) {
-		error("bufq: Failed to allocate memory");
-		return -ENOMEM;
-	}
-
-	e->event = event;
-	e->ts = *ts;
 
 	list_enqueue(&b->queue, &e->l);
 
@@ -208,6 +168,45 @@ static struct bufq_entry * dequeue(struct bufq * b)
 	e = container_of(l, struct bufq_entry, l);
 
 	return e;
+}
+
+static int enqueue_buffer(struct bufq * b, uint event, sample_t * buf, uint count)
+{
+	assert(b);
+	assert(buf);
+
+	struct bufq_entry * e;
+
+	e = alloc_entry(b);
+	if (!e) {
+		error("bufq: Failed to allocate memory");
+		return -ENOMEM;
+	}
+
+	e->event = event;
+	e->buf = buf;
+	e->count = count;
+
+	return enqueue(b, e);
+}
+
+static int enqueue_timespec(struct bufq * b, uint event, struct timespec * ts)
+{
+	assert(b);
+	assert(ts);
+
+	struct bufq_entry * e;
+
+	e = alloc_entry(b);
+	if (!e) {
+		error("bufq: Failed to allocate memory");
+		return -ENOMEM;
+	}
+
+	e->event = event;
+	e->ts = *ts;
+
+	return enqueue(b, e);
 }
 
 static void * consumer_thread(void * param)
