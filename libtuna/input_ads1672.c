@@ -45,10 +45,6 @@ struct input_ads1672 {
 	volatile int		stop;
 
 	int			fh;
-	ads1672_sample_t *	raw_buf;
-
-	/* Length of raw_buf in samples of type ads1672_sample_t. */
-	uint			raw_buf_length;
 
 	uint			sample_rate;
 };
@@ -84,19 +80,6 @@ static int prep(struct input_ads1672 * a)
 		return r;
 	}
 
-	/* Allocate buffer for samples in ads1672 driver format. The buffer
-	 * length is the same as the period length within the ads1672 driver to
-	 * maximise efficiency by aligning read operations.
-	 */
-	a->raw_buf_length = ADS1672_PERIOD_LENGTH;
-	a->raw_buf = (ads1672_sample_t *)
-		malloc(ADS1672_PERIOD_LENGTH * sizeof(ads1672_sample_t));
-	if (!a->raw_buf) {
-		error("input_ads1672: Failed to allocate memory for incoming samples");
-		close(a->fh);
-		return -ENOMEM;
-	}
-
 	return 0;
 }
 
@@ -104,7 +87,6 @@ static void cleanup(struct input_ads1672 * a)
 {
 	assert(a);
 
-	free(a->raw_buf);
 	close(a->fh);
 }
 
@@ -207,22 +189,6 @@ static int handle_condition(struct input_ads1672 * a, int cond)
 	}
 }
 
-/* Convert samples from the format used by the ads1672 driver into our sample_t
- * type. The samples are copied from the raw (unconverted) buffer to a new
- * buffer as they are converted.
- */
-static void convert_buffer(struct input_ads1672 * a, sample_t * buf, uint frames)
-{
-	uint i;
-
-	assert(a);
-	assert(buf);
-
-	for (i = 0; i < frames; i++) {
-		buf[i] = (sample_t)a->raw_buf[i];
-	}
-}
-
 int input_ads1672_run(struct producer * producer)
 {
 	assert(producer);
@@ -264,11 +230,19 @@ int input_ads1672_run(struct producer * producer)
 			return a->stop;
 		}
 
-		frames = a->raw_buf_length;
+		/* Life is easiest if we try to read blocks of length 1 s. */
+		frames = a->sample_rate;
+		buf = buffer_acquire(&frames);
+		if (!buf) {
+			error("input_ads1672: Failed to acquire buffer");
+			stop(a);
+			return -ENOMEM;
+		}
 
-		r = read(a->fh, a->raw_buf, frames * sizeof(ads1672_sample_t));
+		r = read(a->fh, buf, frames * sizeof(ads1672_sample_t));
 		if (r < 0) {
 			error("input_ads1672: Failed to read samples");
+			buffer_release(buf);
 
 			r = ads1672_ioctl_get_condition(a->fh, &cond);
 			if (r < 0) {
@@ -284,17 +258,6 @@ int input_ads1672_run(struct producer * producer)
 				return r;
 			}
 		} else {
-			/* Got r bytes. */
-			frames = r / sizeof(ads1672_sample_t);
-			buf = buffer_acquire(&frames);
-			if (!buf) {
-				error("input_ads1672: Failed to acquire buffer");
-				stop(a);
-				return -ENOMEM;
-			}
-			
-			convert_buffer(a, buf, frames);
-			
 			r = a->consumer->write(a->consumer, buf, frames);
 			if (r < 0) {
 				error("input_ads1672: consumer->write failed");
@@ -334,6 +297,9 @@ struct producer * input_ads1672_init(struct consumer * c)
 	int r;
 
 	assert(c);
+
+	/* We assume that sample_t and ads1672_sample_t are the same type. */
+	assert(sizeof(sample_t) == sizeof(ads1672_sample_t));
 
 	struct input_ads1672 * a = (struct input_ads1672 *)malloc(sizeof(struct input_ads1672));
 	if (!a) {
