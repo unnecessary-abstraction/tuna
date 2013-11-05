@@ -340,7 +340,7 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	t->available = 0;
 
 	/* Create window function. */
-	t->window = (float *)malloc(sizeof(float) * t->slice_period * 2);
+	t->window = (float *)malloc(sizeof(float) * sample_rate);
 	if (!t->window) {
 		error("time_slice: Failed to allocate memory for window function");
 		return -ENOMEM;
@@ -349,7 +349,7 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	window_init_sine(t->window, t->slice_period * 2);
 
 	fft_set_length(t->fft, sample_rate);
-	r = tol_init(&t->tol, t->sample_rate, t->slice_period * 2, 0.4, 3);
+	r = tol_init(&t->tol, sample_rate, sample_rate, 0.4, 3);
 	if (r < 0) {
 		error("time_slice: Failed to initialise third octave level calculation");
 		free(t->window);
