@@ -27,6 +27,7 @@ d := $(dir)
 OBJS_$(d) := $(d)/buffer.o \
 	$(d)/bufhold.o \
 	$(d)/bufq.o \
+	$(d)/csv.o \
 	$(d)/fft.o \
 	$(d)/input_alsa.o \
 	$(d)/input_sndfile.o \

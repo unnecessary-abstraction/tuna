@@ -29,6 +29,7 @@
 #include "bufhold.h"
 #include "compiler.h"
 #include "consumer.h"
+#include "csv.h"
 #include "log.h"
 #include "time_slice.h"
 #include "timespec.h"
@@ -100,40 +101,53 @@ static int write_results(struct time_slice * t, struct time_slice_results * resu
 	assert(t);
 	assert(results);
 
-	r = fprintf(t->csv, "%d, %d, %d, %d, ", results->peak_positive,
-			results->peak_negative, results->peak_positive_offset,
-			results->peak_negative_offset);
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s",
-				t->csv_name);
-		return r;
-	}
+	r = csv_write_sample(t->csv, results->peak_positive);
+	if (r < 0)
+		goto error;
 
-	r = fprintf(t->csv, "%f, %f, %f, %f", results->sum_1, results->sum_2,
-			results->sum_3, results->sum_4);
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s",
-				t->csv_name);
-		return r;
-	}
+	r = csv_write_sample(t->csv, results->peak_negative);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_uint(t->csv, results->peak_positive_offset);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_uint(t->csv, results->peak_negative_offset);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_float(t->csv, results->sum_1);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_float(t->csv, results->sum_2);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_float(t->csv, results->sum_3);
+	if (r < 0)
+		goto error;
+
+	r = csv_write_float(t->csv, results->sum_4);
+	if (r < 0)
+		goto error;
 
 	for (i = 0; i < t->n_tol; i++) {
-		r = fprintf(t->csv, ", %f", results->tol.values[i]);
-		if (r < 0) {
-			error("time_slice: Failed to write to output file %s",
-					t->csv_name);
-			return r;
-		}
+		r = csv_write_float(t->csv, results->tol.values[i]);
+		if (r < 0)
+			goto error;
 	}
 
-	r = fprintf(t->csv, "\n");
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s",
-				t->csv_name);
-		return r;
-	}
+	r = csv_next(t->csv);
+	if (r < 0)
+		goto error;
 
 	return 0;
+
+error:
+	error("time_slice: Failed to write to output file %s", t->csv_name);
+	return r;
 }
 
 static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data, struct time_slice_results * r)
@@ -285,6 +299,7 @@ void time_slice_exit(struct consumer * consumer)
 	bufhold_release_all(&t->held_buffers);
 	bufhold_exit(&t->held_buffers);
 	tol_exit(&t->tol);
+	csv_close(t->csv);
 }
 
 int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
@@ -341,20 +356,7 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 
 	t->n_tol = (uint)r;
 
-	/* Write start notification to csv file. */
-	r = fprintf(t->csv, "START ");
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s", t->csv_name);
-		return r;
-	}
-
-	r = timespec_fprint(ts, t->csv);
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s", t->csv_name);
-		return r;
-	}
-
-	r = fprintf(t->csv, "\n");
+	r = csv_write_start(t->csv, ts);
 	if (r < 0) {
 		error("time_slice: Failed to write to output file %s", t->csv_name);
 		return r;
@@ -375,20 +377,7 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	bufhold_release_all(&t->held_buffers);
 	t->available = 0;
 
-	/* Write resync notification to csv file. */
-	r = fprintf(t->csv, "RESYNC ");
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s", t->csv_name);
-		return r;
-	}
-
-	r = timespec_fprint(ts, t->csv);
-	if (r < 0) {
-		error("time_slice: Failed to write to output file %s", t->csv_name);
-		return r;
-	}
-
-	r = fprintf(t->csv, "\n");
+	r = csv_write_resync(t->csv, ts);
 	if (r < 0) {
 		error("time_slice: Failed to write to output file %s", t->csv_name);
 		return r;
@@ -422,7 +411,7 @@ struct consumer * time_slice_init(const char * csv_name, struct fft * f)
 		return NULL;
 	}
 
-	t->csv = fopen(t->csv_name, "w");
+	t->csv = csv_open(t->csv_name);
 	if (!t->csv) {
 		error("time_slice: Failed to open file %s", t->csv_name);
 		free(t->csv_name);
