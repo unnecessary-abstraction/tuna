@@ -26,11 +26,10 @@
 #include <time.h>
 
 #include "buffer.h"
+#include "bufhold.h"
 #include "compiler.h"
 #include "consumer.h"
-#include "list.h"
 #include "log.h"
-#include "slab.h"
 #include "time_slice.h"
 #include "timespec.h"
 #include "tol.h"
@@ -43,31 +42,11 @@
 
 #define MAX_TIME_SLICE_RESULTS (6 + MAX_THIRD_OCTAVE_LEVELS)
 
-struct held_buffer {
-	/* We may be starting at an offset into the buffer due to previous
-	 * processing or other reasons. If so, we will have a data pointer which
-	 * is different to the base pointer which references the base of the
-	 * allocated memory for the buffer. This is because we need to pass the
-	 * base address of the allocated buffer to free(), not a data pointer
-	 * which may have been subject to an offset.
-	 *
-	 * Note that count refers to the number of samples actually in the
-	 * buffer, beginning at the data pointer, not the total length of the
-	 * whole buffer itself.
-	 */
-	sample_t *		base;
-	sample_t *		data;
-	uint			count;
-
-	struct list_entry	e;
-};
-
 struct time_slice {
 	struct consumer		consumer;
 
 	/* The following fields are initialised in time_slice_init(). */
-	struct list		held_buffers;
-	struct slab		held_buffer_allocator;
+	struct bufhold		held_buffers;
 	FILE *			csv;
 	char *			csv_name;
 	struct fft *		fft;
@@ -189,12 +168,14 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 	float x, e, e_2;
 	sample_t v;
 	uint offset = 0;
+	sample_t * data;
 	
-	avail = h->count;
+	avail = bufhold_count(h);
+	data = bufhold_data(h);
 	if (avail && t->index < len/4) {
 		c = min(len/4 - t->index, avail);
 		for (i = 0; i < c; i++) {
-			v = h->data[i];
+			v = data[i];
 			x = (float)v;
 
 			fft_data[t->index] = x * t->window[t->index];
@@ -206,7 +187,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 	if (avail && t->index < len*3/4) {
 		c = min(len*3/4 - t->index, avail);
 		for (i = 0; i < c; i++) {
-			v = h->data[offset + i];
+			v = data[offset + i];
 			x = (float)v;
 
 			/* Calculate intermediate sums for kurtosis. */
@@ -239,7 +220,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 	if (avail) {
 		c = min(len - t->index, avail);
 		for (i = 0; i < c; i++) {
-			v = h->data[offset + i];
+			v = data[offset + i];
 			x = (float)v;
 
 			fft_data[t->index] = x * t->window[t->index];
@@ -255,7 +236,6 @@ static int process_time_slice(struct time_slice * t)
 	assert(t);
 
 	struct held_buffer * h;
-	struct list_entry * e;
 	struct time_slice_results r;
 	float * fft_data;
 	uint start, offset;
@@ -266,9 +246,9 @@ static int process_time_slice(struct time_slice * t)
 
 	t->index = 0;
 
-	e = list_head(&t->held_buffers);
-	while (e) {
-		h = container_of(e, struct held_buffer, e);
+	h = bufhold_oldest(&t->held_buffers);
+	while (h) {
+		struct held_buffer * next = bufhold_next(h);
 		start = t->index;
 		process_buffer(t, h, fft_data, &r);
 
@@ -276,22 +256,17 @@ static int process_time_slice(struct time_slice * t)
 		 * this time slice, if not then we can discard it.
 		 */
 		if (t->index <= t->slice_period) {
-			e = list_next(&h->e);
-			list_remove(&h->e);
-			buffer_release(h->base);
-			slab_free(&t->held_buffer_allocator, h);
+			bufhold_release(&t->held_buffers, h);
 		} else {
 			/* Adjust start of buffer if this is the first buffer
 			 * that we need to keep for the next time slice.
 			 */
 			if (start < t->slice_period) {
 				offset = t->slice_period - start;
-				h->data += offset;
-				h->count -= offset;
+				bufhold_advance(&t->held_buffers, h, offset);
 			}
-
-			e = list_next(&h->e);
 		}
+		h = next;
 	}
 
 	fft_transform(t->fft);
@@ -301,43 +276,14 @@ static int process_time_slice(struct time_slice * t)
 	return write_results(t, &r);
 }
 
-static void release_all(struct time_slice * t)
-{
-	assert(t);
-
-	struct held_buffer * h;
-	struct list_entry * e;
-
-	while ((e = list_pop(&t->held_buffers))) {
-		h = container_of(e, struct held_buffer, e);
-		buffer_release(h->base);
-		slab_free(&t->held_buffer_allocator, h);
-	}
-}
-
-static void hold(struct time_slice * t, sample_t * buf, uint count)
-{
-	assert(t);
-	assert(buf);
-
-	struct held_buffer * h = (struct held_buffer *)slab_alloc(&t->held_buffer_allocator);
-
-	h->base = buf;
-	h->data = buf;
-	h->count = count;
-	buffer_addref(buf);
-	list_enqueue(&t->held_buffers, &h->e);
-}
-
 void time_slice_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
-	release_all(t);
-	list_exit(&t->held_buffers);
-	slab_exit(&t->held_buffer_allocator);
+	bufhold_release_all(&t->held_buffers);
+	bufhold_exit(&t->held_buffers);
 	tol_exit(&t->tol);
 }
 
@@ -350,7 +296,7 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 	
 	t->available += count;
-	hold(t, buf, count);
+	bufhold_add(&t->held_buffers, buf, count);
 
 	while (t->available >= t->slice_period) {
 		r = process_time_slice(t);
@@ -426,7 +372,7 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
 	/* We're going to have to dump old data. */
-	release_all(t);
+	bufhold_release_all(&t->held_buffers);
 	t->available = 0;
 
 	/* Write resync notification to csv file. */
@@ -484,9 +430,9 @@ struct consumer * time_slice_init(const char * csv_name, struct fft * f)
 		return NULL;
 	}
 
-	list_init(&t->held_buffers);
-	slab_init(&t->held_buffer_allocator, sizeof(struct held_buffer), offsetof(struct held_buffer, e));
 	t->fft = f;
+
+	bufhold_init(&t->held_buffers);
 
 	/* Setup consumer and return. */
 	t->consumer.write = time_slice_write;

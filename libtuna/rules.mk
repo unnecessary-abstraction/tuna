@@ -25,6 +25,7 @@ d := $(dir)
 
 # Targets and intermediates in this directory
 OBJS_$(d) := $(d)/buffer.o \
+	$(d)/bufhold.o \
 	$(d)/bufq.o \
 	$(d)/fft.o \
 	$(d)/input_alsa.o \
