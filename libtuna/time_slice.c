@@ -300,6 +300,8 @@ void time_slice_exit(struct consumer * consumer)
 	bufhold_exit(&t->held_buffers);
 	tol_exit(&t->tol);
 	csv_close(t->csv);
+
+	free(t);
 }
 
 int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
