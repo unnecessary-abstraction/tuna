@@ -28,7 +28,7 @@
 struct tol_transition {
 	uint				t_onset;
 	uint				t_width;
-	float *			coeffs;
+	float *				coeffs;
 };
 
 struct tol {
