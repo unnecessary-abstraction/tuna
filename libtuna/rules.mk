@@ -39,6 +39,7 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/output_null.o \
 	$(d)/output_sndfile.o \
 	$(d)/producer.o \
+	$(d)/pulse.o \
 	$(d)/slab.o \
 	$(d)/time_slice.o \
 	$(d)/timespec.o \
