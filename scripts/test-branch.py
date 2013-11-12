@@ -48,7 +48,7 @@ def do_checkout(commit):
 def do_test():
 	os.chdir(src_dir)
 	rsh("./configure %s" % TUNA_CONFIGURE_OPTIONS)
-	rsh("make")
+	rsh("make %s" % TUNA_MAKE_OPTIONS)
 	#rsh("make check")
 	rsh("make DESTDIR=%s install" % install_dir)
 	print("\n")
@@ -57,6 +57,7 @@ TUNA_MASTER = read_env("TUNA_MASTER", "master")
 TUNA_BRANCH = read_env("TUNA_BRANCH", "HEAD")
 TUNA_TEST_DIR = read_env("TUNA_TEST_DIR", "/tmp/tuna-test")
 TUNA_CONFIGURE_OPTIONS = read_env("TUNA_CONFIGURE_OPTIONS", "")
+TUNA_MAKE_OPTIONS = read_env("TUNA_MAKE_OPTIONS", "")
 
 repo_dir = os.getcwd()
 commits = list_commits(TUNA_MASTER, TUNA_BRANCH)
