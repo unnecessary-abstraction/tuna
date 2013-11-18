@@ -301,6 +301,7 @@ void time_slice_exit(struct consumer * consumer)
 	tol_exit(&t->tol);
 	csv_close(t->csv);
 
+	free(t->csv_name);
 	free(t);
 }
 
