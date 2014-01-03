@@ -21,9 +21,13 @@
 #ifndef __TUNA_TYPES_H_INCLUDED__
 #define __TUNA_TYPES_H_INCLUDED__
 
+#include <limits.h>
+
 typedef unsigned int uint;
 typedef unsigned long long uint64;
 
 typedef int sample_t;
+#define SAMPLE_MAX INT_MAX
+#define SAMPLE_MIN INT_MIN
 
 #endif /* !__TUNA_TYPES_H_INCLUDED__ */
