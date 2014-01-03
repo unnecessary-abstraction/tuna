@@ -12,3 +12,4 @@ fftw.wisdom
 *.a
 .ycm*
 __pycache__
+*.swo
