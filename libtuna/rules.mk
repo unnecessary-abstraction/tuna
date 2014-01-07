@@ -34,6 +34,7 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/input_sndfile.o \
 	$(d)/input_zero.o \
 	$(d)/log.o \
+	$(d)/minima.o \
 	$(d)/output_null.o \
 	$(d)/output_sndfile.o \
 	$(d)/slab.o \
