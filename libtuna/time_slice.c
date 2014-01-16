@@ -296,6 +296,9 @@ void time_slice_exit(struct consumer * consumer)
 
 	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
 
+	if (t->window)
+		free(t->window);
+
 	bufhold_release_all(&t->held_buffers);
 	bufhold_exit(&t->held_buffers);
 	tol_exit(&t->tol);
