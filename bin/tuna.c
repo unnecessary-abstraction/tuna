@@ -272,15 +272,15 @@ int input_init(struct arguments * args)
 void input_exit()
 {
 	if (in)
-		in->exit(in);
+		producer_exit(in);
 	if (bufq)
-		bufq->exit(bufq);
+		consumer_exit(bufq);
 }
 
 void output_exit()
 {
 	if (out)
-		out->exit(out);
+		consumer_exit(out);
 	if (fft)
 		fft_exit(fft);
 }
@@ -291,7 +291,7 @@ void sigterm_handler(int sig)
 
 	msg("tuna: Terminating due to SIGTERM");
 
-	r = in->stop(in, sig);
+	r = producer_stop(in, sig);
 	if (r < 0)
 		fatal("tuna: Failed to stop input module");
 }
@@ -327,7 +327,7 @@ int main(int argc, char * argv[])
 	 */
 	signal(SIGTERM, sigterm_handler);
 
-	r = in->run(in);
+	r = producer_run(in);
 
 	input_exit();
 	output_exit();
