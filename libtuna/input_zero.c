@@ -97,12 +97,14 @@ void input_zero_exit(struct producer * producer)
 	free(z);
 }
 
-void input_zero_stop(struct producer * producer, int condition)
+int input_zero_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
 	struct input_zero * z = container_of(producer, struct input_zero, producer);
 	z->stop = condition;
+
+	return 0;
 }
 
 /*******************************************************************************

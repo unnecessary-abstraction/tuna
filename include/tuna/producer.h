@@ -24,7 +24,7 @@
 struct producer {
 	int (*run)(struct producer * producer);
 	void (*exit)(struct producer * producer);
-	void (*stop)(struct producer * producer, int condition);
+	int (*stop)(struct producer * producer, int condition);
 };
 
 #endif /* !__TUNA_PRODUCER_H_INCLUDED__ */

@@ -264,9 +264,13 @@ void output_exit()
 
 void sigterm_handler(int sig)
 {
+	int r;
+
 	msg("tuna: Terminating due to SIGTERM");
 
-	in->stop(in, sig);
+	r = in->stop(in, sig);
+	if (r < 0)
+		fatal("tuna: Failed to stop input module");
 }
 
 int main(int argc, char * argv[])

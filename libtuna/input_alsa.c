@@ -400,12 +400,14 @@ void input_alsa_exit(struct producer * producer)
 	free(a);
 }
 
-void input_alsa_stop(struct producer * producer, int condition)
+int input_alsa_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
 	struct input_alsa * a = container_of(producer, struct input_alsa, producer);
 	a->stop = condition;
+
+	return 0;
 }
 
 /*******************************************************************************

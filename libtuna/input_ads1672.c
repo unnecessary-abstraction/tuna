@@ -280,12 +280,14 @@ void input_ads1672_exit(struct producer * producer)
 	free(a);
 }
 
-void input_ads1672_stop(struct producer * producer, int condition)
+int input_ads1672_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
 	struct input_ads1672 * a = container_of(producer, struct input_ads1672, producer);
 	a->stop = condition;
+
+	return 0;
 }
 
 /*******************************************************************************
