@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_zero.h: /dev/zero as a producer.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_zero_init(struct consumer * c, uint sample_rate);
+int input_zero_init(struct producer * producer, struct consumer * consumer,
+		uint sample_rate);
 
 #endif /* !__TUNA_INPUT_ZERO_H_INCLUDED__ */

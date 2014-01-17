@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_zero.c: /dev/zero as a producer.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@
 *******************************************************************************/
 
 struct input_zero {
-	struct producer		producer;
 	struct consumer *	consumer;
 
 	uint			sample_rate;
@@ -52,13 +51,14 @@ int input_zero_run(struct producer * producer)
 	struct timespec ts;
 	sample_t *	buf;
 
-	struct input_zero * z = container_of(producer, struct input_zero, producer);
+	struct input_zero * z = (struct input_zero *)
+		producer_get_data(producer);
 
 	memset(&ts, 0, sizeof(struct timespec));
 
-	r = z->consumer->start(z->consumer, z->sample_rate, &ts);
+	r = consumer_start(z->consumer, z->sample_rate, &ts);
 	if (r < 0) {
-		error("input_zero: consumer->start failed");
+		error("input_zero: Failed to start consumer");
 		return r;
 	}
 
@@ -78,9 +78,9 @@ int input_zero_run(struct producer * producer)
 
 		memset(buf, 0, sizeof(*buf));
 		
-		r = z->consumer->write(z->consumer, buf, frames);
+		r = consumer_write(z->consumer, buf, frames);
 		if (r < 0) {
-			error("input_zero: consumer->write failed");
+			error("input_zero: Failed to write to consumer");
 			return r;
 		}
 
@@ -92,7 +92,8 @@ void input_zero_exit(struct producer * producer)
 {
 	assert(producer);
 
-	struct input_zero * z = container_of(producer, struct input_zero, producer);
+	struct input_zero * z = (struct input_zero *)
+		producer_get_data(producer);
 
 	free(z);
 }
@@ -101,7 +102,9 @@ int input_zero_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
-	struct input_zero * z = container_of(producer, struct input_zero, producer);
+	struct input_zero * z = (struct input_zero *)
+		producer_get_data(producer);
+
 	z->stop = condition;
 
 	return 0;
@@ -111,23 +114,24 @@ int input_zero_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_zero_init(struct consumer * c, uint sample_rate)
+int input_zero_init(struct producer * producer, struct consumer * consumer,
+		uint sample_rate)
 {
-	assert(c);
+	assert(consumer);
 
-	struct input_zero * z = (struct input_zero *)malloc(sizeof(struct input_zero));
+	struct input_zero * z = (struct input_zero *)
+		malloc(sizeof(struct input_zero));
 	if (!z) {
 		error("input_zero: Failed to allocate memory");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	z->stop = 0;
 	z->sample_rate = sample_rate;
-	z->consumer = c;
+	z->consumer = consumer;
 
-	z->producer.run = input_zero_run;
-	z->producer.exit = input_zero_exit;
-	z->producer.stop = input_zero_stop;
+	producer_set_module(producer, input_zero_run, input_zero_stop,
+			input_zero_exit, z);
 
-	return &z->producer;
+	return 0;
 }

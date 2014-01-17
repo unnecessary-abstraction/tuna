@@ -241,7 +241,14 @@ int input_init(struct arguments * args)
 			}
 		}
 	} else if (strcmp(args->input, "zero") == 0) {
-		in = input_zero_init(bufq, args->sample_rate);
+		in = producer_new();
+		if (in) {
+			r = input_zero_init(in, bufq, args->sample_rate);
+			if (r < 0) {
+				error("tuna: Could not initialise input module");
+				return r;
+			}
+		}
 #ifdef ENABLE_ADS1672
 	} else if (strcmp(args->input, "ads1672") == 0) {
 		in = producer_new();
