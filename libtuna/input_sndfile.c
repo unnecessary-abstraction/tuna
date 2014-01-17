@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_sndfile.c: Input from sound files of various formats.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 *******************************************************************************/
 
 struct input_sndfile {
-	struct producer		producer;
 	struct consumer *	consumer;
 
 	const char *		source;
@@ -126,9 +125,9 @@ int run_single_channel(struct input_sndfile * snd)
 	sample_t *	buf;
 
 	memset(&ts, 0, sizeof(struct timespec));
-	r = snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	r = consumer_start(snd->consumer, snd->sf_info.samplerate, &ts);
 	if (r < 0) {
-		error("input_sndfile: consumer->start failed");
+		error("input_sndfile: Failed to start consumer");
 		return r;
 	}
 
@@ -158,9 +157,9 @@ int run_single_channel(struct input_sndfile * snd)
 		/* Got r frames. */
 		frames = (uint)r;
 		
-		r = snd->consumer->write(snd->consumer, buf, frames);
+		r = consumer_write(snd->consumer, buf, frames);
 		if (r < 0) {
-			error("input_sndfile: consumer->write failed");
+			error("input_sndfile: Failed to write to consumer");
 			buffer_release(buf);
 			return r;
 		}
@@ -185,9 +184,9 @@ int run_multi_channel(struct input_sndfile * snd)
 	selected_channel = 0;	/* zero-based. TODO: Make configurable. */
 
 	memset(&ts, 0, sizeof(struct timespec));
-	r = snd->consumer->start(snd->consumer, snd->sf_info.samplerate, &ts);
+	r = consumer_start(snd->consumer, snd->sf_info.samplerate, &ts);
 	if (r < 0) {
-		error("input_sndfile: consumer->start failed");
+		error("input_sndfile: Failed to start consumer");
 		return r;
 	}
 	
@@ -227,9 +226,9 @@ int run_multi_channel(struct input_sndfile * snd)
 		for (i = 0; i < frames; i++)
 			buf[i] = buf[i*channels + selected_channel];
 
-		r = snd->consumer->write(snd->consumer, buf, frames);
+		r = consumer_write(snd->consumer, buf, frames);
 		if (r < 0) {
-			error("input_sndfile: consumer->write failed");
+			error("input_sndfile: Failed to write to consumer");
 			buffer_release(buf);
 			return r;
 		}
@@ -242,8 +241,9 @@ int input_sndfile_run(struct producer * producer)
 {
 	assert(producer);
 
-	int			r;
-	struct input_sndfile *	snd = container_of(producer, struct input_sndfile, producer);
+	int r;
+	struct input_sndfile * snd = (struct input_sndfile *)
+		producer_get_data(producer);
 
 	if (snd->sf_info.channels > 1)
 		r = run_multi_channel(snd);
@@ -263,7 +263,8 @@ void input_sndfile_exit(struct producer * producer)
 {
 	assert(producer);
 
-	struct input_sndfile * snd = container_of(producer, struct input_sndfile, producer);
+	struct input_sndfile * snd = (struct input_sndfile *)
+		producer_get_data(producer);
 
 	/* Close input wavefile if open. */
 	if (snd->sf)
@@ -276,7 +277,9 @@ int input_sndfile_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
-	struct input_sndfile * snd = container_of(producer, struct input_sndfile, producer);
+	struct input_sndfile * snd = (struct input_sndfile *)
+		producer_get_data(producer);
+
 	snd->stop = condition;
 
 	return 0;
@@ -286,35 +289,36 @@ int input_sndfile_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_sndfile_init(struct consumer * c, const char * source)
+int input_sndfile_init(struct producer * producer, struct consumer * consumer,
+		const char * source)
 {
+	assert(producer);
+	assert(consumer);
 	assert(source);
-	assert(c);
 
 	int r;
 
-	struct input_sndfile * snd = (struct input_sndfile *)malloc(sizeof(struct input_sndfile));
+	struct input_sndfile * snd = (struct input_sndfile *)
+		malloc(sizeof(struct input_sndfile));
 	if (!snd) {
 		error("input_sndfile: Failed to allocate memory");
-		return NULL;
+		return -ENOMEM;
 	}
 
-	/*
-		Currently, source must be one filename. Open this file and set
-		variables.
-	*/
+	/* Currently, source must be one filename. Open this file and set
+	 * variables.
+	 */
 	snd->source = source;
-	snd->consumer = c;
+	snd->consumer = consumer;
 	snd->stop = 0;
 
 	r = open_sndfile(snd, source);
-	if (r)
+	if (r < 0)
 		/* Error message already printed. */
-		return NULL;
+		return r;
 
-	snd->producer.run = input_sndfile_run;
-	snd->producer.exit = input_sndfile_exit;
-	snd->producer.stop = input_sndfile_stop;
+	producer_set_module(producer, input_sndfile_run, input_sndfile_stop,
+			input_sndfile_exit, snd);
 
-	return &snd->producer;
+	return 0;
 }

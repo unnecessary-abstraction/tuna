@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_sndfile.h: Input from sound files of various formats.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_sndfile_init(struct consumer * c, const char * source);
+int input_sndfile_init(struct producer * producer, struct consumer * consumer,
+		const char * source);
 
 #endif /* !__TUNA_INPUT_SNDFILE_H_INCLUDED__ */

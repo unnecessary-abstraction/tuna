@@ -223,7 +223,14 @@ int input_init(struct arguments * args)
 	}
 
 	if (strcmp(args->input, "sndfile") == 0) {
-		in = input_sndfile_init(bufq, source);
+		in = producer_new();
+		if (in) {
+			r = input_sndfile_init(in, bufq, source);
+			if (r < 0) {
+				error("tuna: Could not initialise input module");
+				return r;
+			}
+		}
 	} else if (strcmp(args->input, "alsa") == 0) {
 		in = producer_new();
 		if (in) {
