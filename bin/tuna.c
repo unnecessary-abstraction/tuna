@@ -73,9 +73,15 @@ struct arguments {
 	uint sample_rate;
 };
 
-int set_defaults(struct arguments * args)
+struct arguments * args_init()
 {
-	assert(args);
+	struct arguments * args;
+
+	args = (struct arguments *) malloc(sizeof(struct arguments));
+	if (!args) {
+		error("tuna: Failed to allocate memory for arguments");
+		return NULL;
+	}
 
 	/* We must copy the default strings as they will be modified during
 	 * parsing.
@@ -83,24 +89,25 @@ int set_defaults(struct arguments * args)
 	args->input = strdup(default_input);
 	if (!args->input) {
 		error("tuna: Failed to allocate memory for default input specifier");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	args->output = strdup(default_output);
 	if (!args->output) {
 		error("tuna: Failed to allocate memory for default output specifier");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	args->sample_rate = 44100;
 
-	return 0;
+	return args;
 }
 
 void args_exit(struct arguments * args)
 {
 	free(args->input);
 	free(args->output);
+	free(args);
 }
 
 /* Split a string of the form "a:b" so that param just contains "a" and "b" is
@@ -265,6 +272,7 @@ void sigterm_handler(int sig)
 int main(int argc, char * argv[])
 {
 	int r;
+	struct arguments * args;
 	const char * log_file = "tuna.log";
 	const char * app_name = "tuna";
 
@@ -273,18 +281,17 @@ int main(int argc, char * argv[])
 		return r;
 
 	/* Argument parsing. */
-	struct arguments args;
-	r = set_defaults(&args);
+	args = args_init();
+	if (!args)
+		return -ENOMEM;
+
+	argp_parse(&argp, argc, argv, 0, 0, args);
+
+	r = output_init(args);
 	if (r < 0)
 		return r;
 
-	argp_parse(&argp, argc, argv, 0, 0, &args);
-
-	r = output_init(&args);
-	if (r < 0)
-		return r;
-
-	r = input_init(&args);
+	r = input_init(args);
 	if (r < 0)
 		return r;
 
@@ -298,7 +305,7 @@ int main(int argc, char * argv[])
 	input_exit();
 	output_exit();
 	log_exit();
-	args_exit(&args);
+	args_exit(args);
 
 	return r;
 }
