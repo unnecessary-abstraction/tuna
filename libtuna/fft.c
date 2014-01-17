@@ -1,7 +1,7 @@
 /*******************************************************************************
 	fft.c: Fast Fourier Transform implementation using fftw.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,20 +35,23 @@
 	Public functions
 *******************************************************************************/
 
-int fft_init(struct fft * fft)
+struct fft * fft_init()
 {
-	assert(fft);
-
 	int r;
 	pthread_mutexattr_t attr;
+	struct fft * fft;
 
-	memset(fft, 0, sizeof(*fft));
+	fft = (struct fft *) calloc(1, sizeof(struct fft));
+	if (!fft) {
+		error("fft: Failed to allocated memory");
+		return NULL;
+	}
 
 	/* Create a recursive mutex. */
 	r = pthread_mutexattr_init(&attr);
 	if (r != 0) {
 		error("fft: Failed to create mutexattr");
-		return r;
+		return NULL;
 	}
 
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -57,10 +60,10 @@ int fft_init(struct fft * fft)
 	pthread_mutexattr_destroy(&attr);
 	if (r != 0) {
 		error("fft: Failed to create mutex");
-		return r;
+		return NULL;
 	}
 	
-	return 0;
+	return fft;
 }
 
 void fft_exit(struct fft * fft)
@@ -68,6 +71,7 @@ void fft_exit(struct fft * fft)
 	assert(fft);
 
 	pthread_mutex_destroy(&fft->mutex);
+	free(fft);
 }
 
 int fft_set_length(struct fft * fft, uint length)

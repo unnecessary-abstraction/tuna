@@ -179,22 +179,11 @@ int output_init(struct arguments * args)
 	int r;
 
 	if (strcmp(args->output, "time_slice") == 0) {
-		fft = (struct fft *)malloc(sizeof(struct fft));
+		fft = fft_init();
 		if (!fft) {
-			error("tuna: Failed to allocate memory for fft module");
-			return -ENOMEM;
-		}
-
-		r = fft_init(fft);
-		if (r < 0) {
 			error("tuna: Failed to initialize fft module");
 
-			/* Manually free and zero here as exit_all assumes
-			 * fft_init succeeded if fft is not NULL.
-			 */
-			free(fft);
-			fft = NULL;
-			return r;
+			return -ENOMEM;
 		}
 
 		out = time_slice_init(sink, fft);
@@ -300,10 +289,8 @@ void output_exit()
 {
 	if (out)
 		out->exit(out);
-	if (fft) {
+	if (fft)
 		fft_exit(fft);
-		free(fft);
-	}
 }
 
 void sigterm_handler(int sig)

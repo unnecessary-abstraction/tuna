@@ -1,7 +1,7 @@
 /*******************************************************************************
 	fft.h: Fast Fourier Transform.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ struct fft {
 	pthread_mutex_t			mutex;
 };
 
-int fft_init(struct fft * fft);
+struct fft * fft_init();
 void fft_exit(struct fft * fft);
 int fft_set_length(struct fft * fft, uint length);
 float * fft_open(struct fft * fft);
