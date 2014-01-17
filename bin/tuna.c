@@ -143,7 +143,7 @@ static error_t parse(int key, char * param, struct argp_state * state)
 
 static struct argp argp = {options, parse, NULL, docstring, NULL, NULL, NULL};
 
-int init_output(struct arguments * args)
+int output_init(struct arguments * args)
 {
 	assert(args);
 
@@ -192,7 +192,7 @@ int init_output(struct arguments * args)
 	return 0;
 }
 
-int init_input(struct arguments * args)
+int input_init(struct arguments * args)
 {
 	assert(args);
 
@@ -227,12 +227,16 @@ int init_input(struct arguments * args)
 	return 0;
 }
 
-void exit_all()
+void input_exit()
 {
 	if (in)
 		in->exit(in);
 	if (bufq)
 		bufq->exit(bufq);
+}
+
+void output_exit()
+{
 	if (out)
 		out->exit(out);
 	if (fft) {
@@ -266,11 +270,11 @@ int main(int argc, char * argv[])
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
-	r = init_output(&args);
+	r = output_init(&args);
 	if (r < 0)
 		return r;
 
-	r = init_input(&args);
+	r = input_init(&args);
 	if (r < 0)
 		return r;
 
@@ -281,7 +285,8 @@ int main(int argc, char * argv[])
 
 	r = in->run(in);
 
-	exit_all();
+	input_exit();
+	output_exit();
 	log_exit();
 
 	return r;
