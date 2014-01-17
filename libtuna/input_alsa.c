@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_alsa.c: Input from ALSA.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 *******************************************************************************/
 
 struct input_alsa {
-	struct producer		producer;
 	struct consumer *	consumer;
 
 	snd_pcm_t *		capture;
@@ -224,9 +223,9 @@ static int start(struct input_alsa * a)
 		return r;
 	}
 
-	r = a->consumer->start(a->consumer, a->sample_rate, &ts);
+	r = consumer_start(a->consumer, a->sample_rate, &ts);
 	if (r < 0) {
-		error("input_alsa: consumer->start failed");
+		error("input_alsa: Failed to start consumer");
 		return r;
 	}
 
@@ -287,9 +286,9 @@ static int handle_error(struct input_alsa * a, int err)
 		return r;
 	}
 	
-	r = a->consumer->resync(a->consumer, &ts);
+	r = consumer_resync(a->consumer, &ts);
 	if (r < 0) {
-		error("input_alsa: consumer->resync failed");
+		error("input_alsa: Failed to resync consumer");
 		return r;
 	}
 
@@ -317,7 +316,8 @@ int input_alsa_run(struct producer * producer)
 {
 	assert(producer);
 
-	struct input_alsa * a = container_of(producer, struct input_alsa, producer);
+	struct input_alsa * a = (struct input_alsa *)
+		producer_get_data(producer);
 
 	int			r;
 	snd_pcm_sframes_t	sf;
@@ -370,9 +370,9 @@ int input_alsa_run(struct producer * producer)
 			/* Convert samples from ALSA into our sample_t type. */
 			convert_buffer(a, buf, frames);
 			
-			r = a->consumer->write(a->consumer, buf, frames);
+			r = consumer_write(a->consumer, buf, frames);
 			if (r < 0) {
-				error("input_alsa: consumer->write failed");
+				error("input_alsa: Failed to write to consumer");
 				buffer_release(buf);
 				return r;
 			}
@@ -390,7 +390,8 @@ void input_alsa_exit(struct producer * producer)
 
 	int r;
 
-	struct input_alsa * a = container_of(producer, struct input_alsa, producer);
+	struct input_alsa * a = (struct input_alsa *)
+		producer_get_data(producer);
 
 	r = snd_pcm_close(a->capture);
 	if (r < 0) {
@@ -404,7 +405,9 @@ int input_alsa_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
-	struct input_alsa * a = container_of(producer, struct input_alsa, producer);
+	struct input_alsa * a = (struct input_alsa *)
+		producer_get_data(producer);
+
 	a->stop = condition;
 
 	return 0;
@@ -414,20 +417,22 @@ int input_alsa_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_alsa_init(struct consumer * c, const char * device_name,
-		uint sample_rate)
+int input_alsa_init(struct producer * producer, struct consumer * consumer,
+		const char * device_name, uint sample_rate)
 {
-	assert(c);
+	assert(producer);
+	assert(consumer);
 
 	int r;
 
-	struct input_alsa * a = (struct input_alsa *)malloc(sizeof(struct input_alsa));
+	struct input_alsa * a = (struct input_alsa *)
+		malloc(sizeof(struct input_alsa));
 	if (!a) {
 		error("input_alsa: Failed to allocate memory");
-		return NULL;
+		return -ENOMEM;
 	}
 
-	a->consumer = c;
+	a->consumer = consumer;
 	a->device_name = device_name;
 	a->sample_rate = sample_rate;
 	a->channels = 2;
@@ -442,12 +447,11 @@ struct producer * input_alsa_init(struct consumer * c, const char * device_name,
 	if (r < 0) {
 		/* Prep failed, error message has already been printed */
 		free(a);
-		return NULL;
+		return r;
 	}
 
-	a->producer.run = input_alsa_run;
-	a->producer.exit = input_alsa_exit;
-	a->producer.stop = input_alsa_stop;
+	producer_set_module(producer, input_alsa_run, input_alsa_stop,
+			input_alsa_exit, a);
 
-	return &a->producer;
+	return 0;
 }

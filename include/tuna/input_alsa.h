@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_alsa.h: Input from ALSA.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_alsa_init(struct consumer * c, const char * device_name,
-		uint sample_rate);
+int input_alsa_init(struct producer * producer, struct consumer * consumer,
+		const char * device_name, uint sample_rate);
 
 #endif /* !__TUNA_INPUT_ALSA_H_INCLUDED__ */

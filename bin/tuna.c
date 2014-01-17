@@ -225,7 +225,14 @@ int input_init(struct arguments * args)
 	if (strcmp(args->input, "sndfile") == 0) {
 		in = input_sndfile_init(bufq, source);
 	} else if (strcmp(args->input, "alsa") == 0) {
-		in = input_alsa_init(bufq, source, args->sample_rate);
+		in = producer_new();
+		if (in) {
+			r = input_alsa_init(in, bufq, source, args->sample_rate);
+			if (r < 0) {
+				error("tuna: Could not initialise input module");
+				return r;
+			}
+		}
 	} else if (strcmp(args->input, "zero") == 0) {
 		in = input_zero_init(bufq, args->sample_rate);
 #ifdef ENABLE_ADS1672
