@@ -28,6 +28,7 @@ OBJS_$(d) := $(d)/buffer.o \
 	$(d)/bufhold.o \
 	$(d)/bufq.o \
 	$(d)/cbuf.o \
+	$(d)/consumer.o \
 	$(d)/csv.o \
 	$(d)/fft.o \
 	$(d)/input_alsa.o \

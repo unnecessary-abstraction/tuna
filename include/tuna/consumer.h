@@ -1,7 +1,7 @@
 /*******************************************************************************
 	consumer.h: Consumer type.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -25,11 +25,35 @@
 
 #include "types.h"
 
+struct consumer;
+
+typedef int (*consumer_write_fn)(struct consumer * consumer, sample_t * buf,
+		uint count);
+typedef int (*consumer_start_fn)(struct consumer * consumer, uint sample_rate,
+		struct timespec * ts);
+typedef int (*consumer_resync_fn)(struct consumer * consumer,
+		struct timespec * ts);
+typedef void (*consumer_exit_fn)(struct consumer * consumer);
+
 struct consumer {
-	int (*write)(struct consumer * consumer, sample_t * buf, uint count);
-	int (*start)(struct consumer * consumer, uint sample_rate, struct timespec * ts);
-	int (*resync)(struct consumer * consumer, struct timespec * ts);
-	void (*exit)(struct consumer * consumer);
+	consumer_write_fn		write;
+	consumer_start_fn		start;
+	consumer_resync_fn		resync;
+	consumer_exit_fn		exit;
+	void *				data;
 };
+
+struct consumer * consumer_new();
+void consumer_exit(struct consumer * consumer);
+
+void consumer_set_module(struct consumer * consumer, consumer_write_fn write,
+		consumer_start_fn start, consumer_resync_fn resync,
+		consumer_exit_fn exit, void * data);
+void * consumer_get_data(struct consumer * consumer);
+
+int consumer_write(struct consumer * consumer, sample_t * buf, uint count);
+int consumer_start(struct consumer * consumer, uint sample_rate,
+		struct timespec * ts);
+int consumer_resync(struct consumer * consumer, struct timespec * ts);
 
 #endif /* !__TUNA_CONSUMER_H_INCLUDED__ */
