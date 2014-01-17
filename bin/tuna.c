@@ -97,6 +97,12 @@ int set_defaults(struct arguments * args)
 	return 0;
 }
 
+void args_exit(struct arguments * args)
+{
+	free(args->input);
+	free(args->output);
+}
+
 /* Split a string of the form "a:b" so that param just contains "a" and "b" is
  * returned.
  */
@@ -123,10 +129,14 @@ static error_t parse(int key, char * param, struct argp_state * state)
 
 	switch (key) {
 	    case 'i':
+		/* Replace default/previous input specifier. */
+		free(args->input);
 		args->input = param;
 		break;
 
 	    case 'o':
+		/* Replace default/previous output specifier. */
+		free(args->output);
 		args->output = param;
 		break;
 
@@ -288,6 +298,7 @@ int main(int argc, char * argv[])
 	input_exit();
 	output_exit();
 	log_exit();
+	args_exit(&args);
 
 	return r;
 }
