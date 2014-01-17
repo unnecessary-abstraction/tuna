@@ -27,13 +27,6 @@ typedef int (*producer_run_fn)(struct producer * producer);
 typedef int (*producer_stop_fn)(struct producer * producer, int condition);
 typedef void (*producer_exit_fn)(struct producer * producer);
 
-struct producer {
-	producer_run_fn		run;
-	producer_stop_fn	stop;
-	producer_exit_fn	exit;
-	void *			data;
-};
-
 struct producer * producer_new();
 void producer_exit(struct producer * producer);
 

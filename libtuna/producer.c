@@ -25,6 +25,13 @@
 #include "log.h"
 #include "producer.h"
 
+struct producer {
+	producer_run_fn		run;
+	producer_stop_fn	stop;
+	producer_exit_fn	exit;
+	void *			data;
+};
+
 struct producer * producer_new()
 {
 	struct producer * producer;
