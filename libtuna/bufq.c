@@ -1,7 +1,7 @@
 /*******************************************************************************
 	bufq.c: Buffer queue to decouple input from output.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -54,8 +54,6 @@ struct bufq_entry {
 };
 
 struct bufq {
-	struct consumer		consumer;
-
 	struct consumer *	target;
 
 
@@ -259,9 +257,9 @@ static void * consumer_thread(void * param)
 
 		switch (e->event) {
 			case BUFQ_WRITE:
-				r = b->target->write(b->target, e->buf, e->count);
+				r = consumer_write(b->target, e->buf, e->count);
 				if (r < 0) {
-					error("bufq: target->write failed");
+					error("bufq: Failed to write to target consumer");
 					b->thread_exit_status = r;
 					return NULL;
 				}
@@ -269,18 +267,18 @@ static void * consumer_thread(void * param)
 				break;
 
 			case BUFQ_START:
-				r = b->target->start(b->target, b->sample_rate, &e->ts);
+				r = consumer_start(b->target, b->sample_rate, &e->ts);
 				if (r < 0) {
-					error("bufq: target->start failed");
+					error("bufq: Failed to start target consumer");
 					b->thread_exit_status = r;
 					return NULL;
 				}
 				break;
 
 			case BUFQ_RESYNC:
-				r = b->target->resync(b->target, &e->ts);
+				r = consumer_resync(b->target, &e->ts);
 				if (r < 0) {
-					error("bufq: target->resync failed");
+					error("bufq: Failed to resync target consumer");
 					b->thread_exit_status = r;
 					return NULL;
 				}
@@ -302,7 +300,7 @@ void bufq_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
-	struct bufq * b = container_of(consumer, struct bufq, consumer);
+	struct bufq * b = (struct bufq *)consumer_get_data(consumer);
 
 	/* Wait for the consumer thread to finish processing currently enqueued
 	 * data.
@@ -322,7 +320,7 @@ int bufq_write(struct consumer * consumer, sample_t * buf, uint count)
 	assert(consumer);
 	assert(buf);
 
-	struct bufq * b = container_of(consumer, struct bufq, consumer);
+	struct bufq * b = (struct bufq *)consumer_get_data(consumer);
 
 	buffer_addref(buf);
 	return enqueue_buffer(b, BUFQ_WRITE, buf, count);
@@ -333,7 +331,7 @@ int bufq_start(struct consumer * consumer, uint sample_rate, struct timespec * t
 	assert(consumer);
 	assert(ts);
 
-	struct bufq * b = container_of(consumer, struct bufq, consumer);
+	struct bufq * b = (struct bufq *)consumer_get_data(consumer);
 
 	b->sample_rate = sample_rate;
 	return enqueue_timespec(b, BUFQ_START, ts);
@@ -344,7 +342,7 @@ int bufq_resync(struct consumer * consumer, struct timespec * ts)
 	assert(consumer);
 	assert(ts);
 
-	struct bufq * b = container_of(consumer, struct bufq, consumer);
+	struct bufq * b = (struct bufq *)consumer_get_data(consumer);
 
 	return enqueue_timespec(b, BUFQ_RESYNC, ts);
 }
@@ -353,7 +351,7 @@ int bufq_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-struct consumer * bufq_init(struct consumer * target)
+int bufq_init(struct consumer * consumer, struct consumer * target)
 {
 	assert(target);
 
@@ -401,13 +399,10 @@ struct consumer * bufq_init(struct consumer * target)
 		goto err_thread;
 	}
 
-	/* Setup consumer and return. */
-	b->consumer.write = bufq_write;
-	b->consumer.start = bufq_start;
-	b->consumer.resync = bufq_resync;
-	b->consumer.exit = bufq_exit;
+	consumer_set_module(consumer, bufq_write, bufq_start, bufq_resync,
+			bufq_exit, b);
 
-	return &b->consumer;
+	return 0;
 
 	/* Error cleanup */
 err_thread:
@@ -418,5 +413,5 @@ err_mutex:
 err_mutexattr:
 	free(b);
 err_malloc:
-	return NULL;
+	return 0;
 }

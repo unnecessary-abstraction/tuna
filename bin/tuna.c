@@ -232,10 +232,16 @@ int input_init(struct arguments * args)
 	char * source = split_param(args->input);
 	int r;
 
-	bufq = bufq_init(out);
+	bufq = consumer_new();
 	if (!bufq) {
-		error("tuna: Failed to initialise bufq module");
+		error("tuna: Failed to create consumer object for bufq");
 		return -1;
+	}
+
+	r = bufq_init(bufq, out);
+	if (r < 0) {
+		error("tuna: Failed to initialise bufq module");
+		return r;
 	}
 
 	in = producer_new();

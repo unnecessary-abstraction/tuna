@@ -1,7 +1,7 @@
 /*******************************************************************************
 	bufq.h: Buffer queue to decouple input from output.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,6 +23,6 @@
 
 #include "consumer.h"
 
-struct consumer * bufq_init(struct consumer * target);
+int bufq_init(struct consumer * consumer, struct consumer * target);
 
 #endif /* !__TUNA_BUFQ_H_INCLUDED__ */
