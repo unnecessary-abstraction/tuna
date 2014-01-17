@@ -1,7 +1,7 @@
 /*******************************************************************************
 	output_null.c: Consumer equivalent of /dev/null.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ void output_null_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
-	free(consumer);
+	/* Nothing to do. */
 }
 
 int output_null_write(struct consumer * consumer, sample_t * buf, uint count)
@@ -70,18 +70,12 @@ int output_null_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-struct consumer * output_null_init()
+int output_null_init(struct consumer * consumer)
 {
-	struct consumer * c = (struct consumer *)malloc(sizeof(struct consumer));
-	if (!c) {
-		error("output_null: Failed to allocate memory");
-		return NULL;
-	}
+	assert(consumer);
 
-	c->write = output_null_write;
-	c->start = output_null_start;
-	c->resync = output_null_resync;
-	c->exit = output_null_exit;
+	consumer_set_module(consumer, output_null_write, output_null_start,
+			output_null_resync, output_null_exit, NULL);
 
-	return c;
+	return 0;
 }

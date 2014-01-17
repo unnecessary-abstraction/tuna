@@ -195,7 +195,14 @@ int output_init(struct arguments * args)
 		max_samples_per_file = 60 * 60 * args->sample_rate; /* One hour. */
 		out = output_sndfile_init(sink, ".wav", format, max_samples_per_file);
 	} else if (strcmp(args->output, "null") == 0) {
-		out = output_null_init();
+		out = consumer_new();
+		if (out) {
+			r = output_null_init(out);
+			if (r < 0) {
+				error("tuna: Could not initialise output module %s", args->output);
+				return r;
+			}
+		}
 	} else {
 		error("tuna: Unknown output module %s", args->output);
 		return -EINVAL;

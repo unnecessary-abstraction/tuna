@@ -1,7 +1,7 @@
 /*******************************************************************************
 	output_null.h: Consumer equivalent of /dev/null.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,6 +23,6 @@
 
 #include "consumer.h"
 
-struct consumer * output_null_init();
+int output_null_init(struct consumer * consumer);
 
 #endif /* !__TUNA_OUTPUT_NULL_H_INCLUDED__ */
