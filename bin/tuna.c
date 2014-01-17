@@ -48,6 +48,10 @@ struct consumer * bufq = NULL;
 struct consumer * out = NULL;
 struct fft * fft = NULL;
 
+/* Defaults. */
+const char * default_input = "alsa:hw:0";
+const char * default_output = "time_slice:results.csv";
+
 /* Set program name, version and bug reporting address so that they can be seen
  * by argp.
  */
@@ -69,23 +73,28 @@ struct arguments {
 	uint sample_rate;
 };
 
-char * safe_strdup(const char * p)
-{
-	char * r = strdup(p);
-	if (!r) {
-		error("tuna: Failed to allocate memory for internal string");
-		exit(-ENOMEM);
-	}
-	return r;
-}
-
-void set_defaults(struct arguments * args)
+int set_defaults(struct arguments * args)
 {
 	assert(args);
 
-	args->input = safe_strdup("alsa:hw:0");
-	args->output = safe_strdup("time_slice:results.csv");
+	/* We must copy the default strings as they will be modified during
+	 * parsing.
+	 */
+	args->input = strdup(default_input);
+	if (!args->input) {
+		error("tuna: Failed to allocate memory for default input specifier");
+		return -ENOMEM;
+	}
+
+	args->output = strdup(default_output);
+	if (!args->output) {
+		error("tuna: Failed to allocate memory for default output specifier");
+		return -ENOMEM;
+	}
+
 	args->sample_rate = 44100;
+
+	return 0;
 }
 
 /* Split a string of the form "a:b" so that param just contains "a" and "b" is
@@ -251,7 +260,10 @@ int main(int argc, char * argv[])
 
 	/* Argument parsing. */
 	struct arguments args;
-	set_defaults(&args);
+	r = set_defaults(&args);
+	if (r < 0)
+		return r;
+
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
 	r = init_output(&args);
