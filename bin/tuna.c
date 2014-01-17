@@ -178,6 +178,12 @@ int output_init(struct arguments * args)
 	uint max_samples_per_file;
 	int r;
 
+	out = consumer_new();
+	if (!out) {
+		error("tune: Failed to create consumer object");
+		return -1;
+	}
+
 	if (strcmp(args->output, "time_slice") == 0) {
 		fft = fft_init();
 		if (!fft) {
@@ -186,45 +192,24 @@ int output_init(struct arguments * args)
 			return -ENOMEM;
 		}
 
-		out = consumer_new();
-		if (out) {
-			r = time_slice_init(out, sink, fft);
-			if (r < 0) {
-				error("tuna: Could not initialise output module %s", args->output);
-				return r;
-			}
-		}
+		r = time_slice_init(out, sink, fft);
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 		max_samples_per_file = 60 * 60 * args->sample_rate; /* One hour. */
 
-		out = consumer_new();
-		if (out) {
-			r = output_sndfile_init(out, sink, ".wav", format,
-					max_samples_per_file);
-			if (r < 0) {
-				error("tuna: Could not initialise output module %s", args->output);
-				return r;
-			}
-		}
+		r = output_sndfile_init(out, sink, ".wav", format,
+				max_samples_per_file);
 	} else if (strcmp(args->output, "null") == 0) {
-		out = consumer_new();
-		if (out) {
-			r = output_null_init(out);
-			if (r < 0) {
-				error("tuna: Could not initialise output module %s", args->output);
-				return r;
-			}
-		}
+		r = output_null_init(out);
 	} else {
 		error("tuna: Unknown output module %s", args->output);
 		return -EINVAL;
 	}
 
-	if (!out) {
+	if (r < 0) {
 		error("tuna: Failed to initialise %s output", args->output);
-		return -1;
+		return r;
 	}
 
 	return 0;
