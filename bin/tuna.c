@@ -222,52 +222,30 @@ int input_init(struct arguments * args)
 		return -1;
 	}
 
-	if (strcmp(args->input, "sndfile") == 0) {
-		in = producer_new();
-		if (in) {
-			r = input_sndfile_init(in, bufq, source);
-			if (r < 0) {
-				error("tuna: Could not initialise input module");
-				return r;
-			}
-		}
-	} else if (strcmp(args->input, "alsa") == 0) {
-		in = producer_new();
-		if (in) {
-			r = input_alsa_init(in, bufq, source, args->sample_rate);
-			if (r < 0) {
-				error("tuna: Could not initialise input module");
-				return r;
-			}
-		}
-	} else if (strcmp(args->input, "zero") == 0) {
-		in = producer_new();
-		if (in) {
-			r = input_zero_init(in, bufq, args->sample_rate);
-			if (r < 0) {
-				error("tuna: Could not initialise input module");
-				return r;
-			}
-		}
+	in = producer_new();
+	if (!in) {
+		error("tuna: Failed to create producer object");
+		return -1;
+	}
+
+	if (strcmp(args->input, "sndfile") == 0)
+		r = input_sndfile_init(in, bufq, source);
+	else if (strcmp(args->input, "alsa") == 0)
+		r = input_alsa_init(in, bufq, source, args->sample_rate);
+	else if (strcmp(args->input, "zero") == 0)
+		r = input_zero_init(in, bufq, args->sample_rate);
 #ifdef ENABLE_ADS1672
-	} else if (strcmp(args->input, "ads1672") == 0) {
-		in = producer_new();
-		if (in) {
-			r = input_ads1672_init(in, bufq);
-			if (r < 0) {
-				error("tuna: Could not initialise input module");
-				return r;
-			}
-		}
+	else if (strcmp(args->input, "ads1672") == 0)
+		r = input_ads1672_init(in, bufq);
 #endif
-	} else {
+	else {
 		error("tuna: Unknown input module %s", args->input);
 		return -EINVAL;
 	}
 
-	if (!in) {
-		error("tuna: Failed to initialise %s input", args->input);
-		return -1;
+	if (r < 0) {
+		error("tuna: Could not initialise input module %s", args->input);
+		return r;
 	}
 
 	return 0;
