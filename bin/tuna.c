@@ -64,6 +64,7 @@ static const struct argp_option options[] = {
 	{"input", 'i', "SOURCE", 0, "Configure input module", 0},
 	{"output", 'o', "SINK", 0, "Configure output module", 0},
 	{"sample-rate", 'r', "RATE", 0, "Set sample rate for input module if supported", 0},
+	{"bufq", 'q', "BOOL", OPTION_ARG_OPTIONAL, "Enable (BOOL=1) or disable (BOOL=0) buffer queueing", 0},
 	{0, 0, 0, 0, 0, 0}
 };
 
@@ -71,6 +72,7 @@ struct arguments {
 	char * input;
 	char * output;
 	uint sample_rate;
+	int use_bufq;
 };
 
 struct arguments * args_init()
@@ -99,6 +101,7 @@ struct arguments * args_init()
 	}
 
 	args->sample_rate = 44100;
+	args->use_bufq = 0;
 
 	return args;
 }
@@ -150,6 +153,12 @@ static error_t parse(int key, char * param, struct argp_state * state)
 	    case 'r':
 		args->sample_rate = (uint) strtoul(param, NULL, 10);
 		break;
+
+	    case 'q':
+		if (param)
+			args->use_bufq = (int) strtol(param, NULL, 10);
+		else
+			args->use_bufq = 1;
 
 	    default:
 		return ARGP_ERR_UNKNOWN;
@@ -231,18 +240,24 @@ int input_init(struct arguments * args)
 
 	char * source = split_param(args->input);
 	int r;
+	struct consumer * target;
 
-	bufq = consumer_new();
-	if (!bufq) {
-		error("tuna: Failed to create consumer object for bufq");
-		return -1;
-	}
+	if (args->use_bufq) {
+		bufq = consumer_new();
+		if (!bufq) {
+			error("tuna: Failed to create consumer object for bufq");
+			return -1;
+		}
 
-	r = bufq_init(bufq, out);
-	if (r < 0) {
-		error("tuna: Failed to initialise bufq module");
-		return r;
-	}
+		r = bufq_init(bufq, out);
+		if (r < 0) {
+			error("tuna: Failed to initialise bufq module");
+			return r;
+		}
+
+		target = bufq;
+	} else
+		target = out;
 
 	in = producer_new();
 	if (!in) {
@@ -251,14 +266,14 @@ int input_init(struct arguments * args)
 	}
 
 	if (strcmp(args->input, "sndfile") == 0)
-		r = input_sndfile_init(in, bufq, source);
+		r = input_sndfile_init(in, target, source);
 	else if (strcmp(args->input, "alsa") == 0)
-		r = input_alsa_init(in, bufq, source, args->sample_rate);
+		r = input_alsa_init(in, target, source, args->sample_rate);
 	else if (strcmp(args->input, "zero") == 0)
-		r = input_zero_init(in, bufq, args->sample_rate);
+		r = input_zero_init(in, target, args->sample_rate);
 #ifdef ENABLE_ADS1672
 	else if (strcmp(args->input, "ads1672") == 0)
-		r = input_ads1672_init(in, bufq);
+		r = input_ads1672_init(in, target);
 #endif
 	else {
 		error("tuna: Unknown input module %s", args->input);
