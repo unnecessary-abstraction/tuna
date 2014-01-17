@@ -35,14 +35,6 @@ typedef int (*consumer_resync_fn)(struct consumer * consumer,
 		struct timespec * ts);
 typedef void (*consumer_exit_fn)(struct consumer * consumer);
 
-struct consumer {
-	consumer_write_fn		write;
-	consumer_start_fn		start;
-	consumer_resync_fn		resync;
-	consumer_exit_fn		exit;
-	void *				data;
-};
-
 struct consumer * consumer_new();
 void consumer_exit(struct consumer * consumer);
 

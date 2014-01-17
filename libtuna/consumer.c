@@ -27,6 +27,14 @@
 #include "log.h"
 #include "types.h"
 
+struct consumer {
+	consumer_write_fn		write;
+	consumer_start_fn		start;
+	consumer_resync_fn		resync;
+	consumer_exit_fn		exit;
+	void *				data;
+};
+
 struct consumer * consumer_new()
 {
 	struct consumer * consumer;
