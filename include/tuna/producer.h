@@ -1,7 +1,7 @@
 /*******************************************************************************
 	producer.h: Producer type.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -21,10 +21,27 @@
 #ifndef __TUNA_PRODUCER_H_INCLUDED__
 #define __TUNA_PRODUCER_H_INCLUDED__
 
+struct producer;
+
+typedef int (*producer_run_fn)(struct producer * producer);
+typedef int (*producer_stop_fn)(struct producer * producer, int condition);
+typedef void (*producer_exit_fn)(struct producer * producer);
+
 struct producer {
-	int (*run)(struct producer * producer);
-	void (*exit)(struct producer * producer);
-	int (*stop)(struct producer * producer, int condition);
+	producer_run_fn		run;
+	producer_stop_fn	stop;
+	producer_exit_fn	exit;
+	void *			data;
 };
+
+struct producer * producer_new();
+void producer_exit(struct producer * producer);
+
+void producer_set_module(struct producer * producer, producer_run_fn run,
+		producer_stop_fn stop, producer_exit_fn exit, void * data);
+void * producer_get_data(struct producer * producer);
+
+int producer_run(struct producer * producer);
+int producer_stop(struct producer * producer, int condition);
 
 #endif /* !__TUNA_PRODUCER_H_INCLUDED__ */
