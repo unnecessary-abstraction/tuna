@@ -1,7 +1,7 @@
 /*******************************************************************************
 	time_slice.c: Per time-slice processing.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -44,8 +44,6 @@
 #define MAX_TIME_SLICE_RESULTS (6 + MAX_THIRD_OCTAVE_LEVELS)
 
 struct time_slice {
-	struct consumer		consumer;
-
 	/* The following fields are initialised in time_slice_init(). */
 	struct bufhold		held_buffers;
 	FILE *			csv;
@@ -294,7 +292,8 @@ void time_slice_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
-	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
+	struct time_slice * t = (struct time_slice *)
+		consumer_get_data(consumer);
 
 	if (t->window)
 		free(t->window);
@@ -314,7 +313,9 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 	assert(buf);
 
 	int r;
-	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
+
+	struct time_slice * t = (struct time_slice *)
+		consumer_get_data(consumer);
 	
 	t->available += count;
 	bufhold_add(&t->held_buffers, buf, count);
@@ -337,7 +338,9 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	assert(ts);
 
 	int r;
-	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
+
+	struct time_slice * t = (struct time_slice *)
+		consumer_get_data(consumer);
 
 	t->sample_rate = sample_rate;
 	t->slice_period = sample_rate / 2;
@@ -377,7 +380,9 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	assert(ts);
 
 	int r;
-	struct time_slice * t = container_of(consumer, struct time_slice, consumer);
+
+	struct time_slice * t = (struct time_slice *)
+		consumer_get_data(consumer);
 
 	/* We're going to have to dump old data. */
 	bufhold_release_all(&t->held_buffers);
@@ -396,25 +401,25 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-struct consumer * time_slice_init(const char * csv_name, struct fft * f)
+int time_slice_init(struct consumer * consumer, const char * csv_name,
+		struct fft * f)
 {
 	assert(csv_name);
 	assert(f);
 
-	struct time_slice * t = (struct time_slice *)malloc(sizeof(struct time_slice));
+	struct time_slice * t = (struct time_slice *)
+		calloc(1, sizeof(struct time_slice));
 	if (!t) {
 		error("time_slice: Failed to allocate memory");
-		return NULL;
+		return -ENOMEM;
 	}
-
-	memset(t, 0, sizeof(*t));
 
 	/* Initialize csv file. */
 	t->csv_name = strdup(csv_name);
 	if (!t->csv_name) {
 		error("time_slice: Failed to allocate memory for csv file name");
 		free(t);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	t->csv = csv_open(t->csv_name);
@@ -422,18 +427,15 @@ struct consumer * time_slice_init(const char * csv_name, struct fft * f)
 		error("time_slice: Failed to open file %s", t->csv_name);
 		free(t->csv_name);
 		free(t);
-		return NULL;
+		return -1;
 	}
 
 	t->fft = f;
 
 	bufhold_init(&t->held_buffers);
 
-	/* Setup consumer and return. */
-	t->consumer.write = time_slice_write;
-	t->consumer.start = time_slice_start;
-	t->consumer.resync = time_slice_resync;
-	t->consumer.exit = time_slice_exit;
+	consumer_set_module(consumer, time_slice_write, time_slice_start,
+			time_slice_resync, time_slice_exit, t);
 
-	return &t->consumer;
+	return 0;
 }

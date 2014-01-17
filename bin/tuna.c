@@ -186,7 +186,14 @@ int output_init(struct arguments * args)
 			return -ENOMEM;
 		}
 
-		out = time_slice_init(sink, fft);
+		out = consumer_new();
+		if (out) {
+			r = time_slice_init(out, sink, fft);
+			if (r < 0) {
+				error("tuna: Could not initialise output module %s", args->output);
+				return r;
+			}
+		}
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;

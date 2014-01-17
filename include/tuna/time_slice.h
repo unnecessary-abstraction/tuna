@@ -1,7 +1,7 @@
 /*******************************************************************************
 	time_slice.h: Per time-slice processing.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "consumer.h"
 #include "fft.h"
 
-struct consumer * time_slice_init(const char * csv_name, struct fft * f);
+int time_slice_init(struct consumer * consumer, const char * csv_name,
+		struct fft * f);
 
 #endif /* !__TUNA_TIME_SLICE_H_INCLUDED__ */
