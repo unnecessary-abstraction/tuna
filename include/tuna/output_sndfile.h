@@ -1,7 +1,7 @@
 /*******************************************************************************
 	output_sndfile.h: Output via libsndfile.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "consumer.h"
 #include "types.h"
 
-struct consumer * output_sndfile_init(const char * prefix, const char * suffix, int format, uint max_samples_per_file);
+int output_sndfile_init(struct consumer * consumer, const char * prefix,
+		const char * suffix, int format, uint max_samples_per_file);
 
 #endif /* !__TUNA_OUTPUT_SNDFILE_H_INCLUDED__ */

@@ -1,7 +1,7 @@
 /*******************************************************************************
 	output_sndfile.c: Output via libsndfile.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <assert.h>
+#include <errno.h>
 #include <malloc.h>
 #include <sndfile.h>
 #include <stdio.h>
@@ -35,8 +36,6 @@
 *******************************************************************************/
 
 struct output_sndfile {
-	struct consumer		consumer;
-
 	SNDFILE *		sf;
 	SF_INFO			sf_info;
 	char *			sf_name;
@@ -107,7 +106,8 @@ void output_sndfile_exit(struct consumer * consumer)
 {
 	assert(consumer);
 
-	struct output_sndfile * snd = container_of(consumer, struct output_sndfile, consumer);
+	struct output_sndfile * snd = (struct output_sndfile *)
+		consumer_get_data(consumer);
 
 	close_sndfile(snd);
 
@@ -122,7 +122,9 @@ int output_sndfile_write(struct consumer * consumer, sample_t * buf, uint count)
 
 	int r;
 	uint w = 0;
-	struct output_sndfile * snd = container_of(consumer, struct output_sndfile, consumer);
+
+	struct output_sndfile * snd = (struct output_sndfile *)
+		consumer_get_data(consumer);
 
 	if (snd->samples_written + count > snd->samples_max) {
 		/* We need to start a new wavefile before we can write all the
@@ -183,7 +185,9 @@ int output_sndfile_start(struct consumer * consumer, uint sample_rate, struct ti
 	assert(ts);
 
 	int r;
-	struct output_sndfile * snd = container_of(consumer, struct output_sndfile, consumer);
+
+	struct output_sndfile * snd = (struct output_sndfile *)
+		consumer_get_data(consumer);
 
 	snd->sf_info.samplerate = sample_rate;
 
@@ -205,7 +209,9 @@ int output_sndfile_resync(struct consumer * consumer, struct timespec * ts)
 	assert(ts);
 
 	int r;
-	struct output_sndfile * snd = container_of(consumer, struct output_sndfile, consumer);
+
+	struct output_sndfile * snd = (struct output_sndfile *)
+		consumer_get_data(consumer);
 
 	/* Create a new output file. */
 	close_sndfile(snd);
@@ -225,15 +231,18 @@ int output_sndfile_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-struct consumer * output_sndfile_init(const char * prefix, const char * suffix, int format, uint max_samples_per_file)
+int output_sndfile_init(struct consumer * consumer, const char * prefix,
+		const char * suffix, int format, uint max_samples_per_file)
 {
+	assert(consumer);
 	assert(prefix);
 	assert(suffix);
 
-	struct output_sndfile * snd = (struct output_sndfile *)malloc(sizeof(struct output_sndfile));
+	struct output_sndfile * snd = (struct output_sndfile *)
+		malloc(sizeof(struct output_sndfile));
 	if (!snd) {
 		error("output_sndfile: Failed to allocate memory for internal data");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	snd->sf = NULL;
@@ -246,16 +255,15 @@ struct consumer * output_sndfile_init(const char * prefix, const char * suffix, 
 	snd->sf_name = (char *)malloc(snd->sf_name_len);
 	if (!snd->sf_name) {
 		error("output_sndfile: Failed to allocate memory for filename");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	snd->sf_info.format = format;
 	snd->sf_info.channels = 1;
 	
-	snd->consumer.write = output_sndfile_write;
-	snd->consumer.start = output_sndfile_start;
-	snd->consumer.resync = output_sndfile_resync;
-	snd->consumer.exit = output_sndfile_exit;
+	consumer_set_module(consumer, output_sndfile_write,
+			output_sndfile_start, output_sndfile_resync,
+			output_sndfile_exit, snd);
 
-	return &snd->consumer;
+	return 0;
 }

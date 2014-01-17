@@ -193,7 +193,16 @@ int output_init(struct arguments * args)
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
 		max_samples_per_file = 60 * 60 * args->sample_rate; /* One hour. */
-		out = output_sndfile_init(sink, ".wav", format, max_samples_per_file);
+
+		out = consumer_new();
+		if (out) {
+			r = output_sndfile_init(out, sink, ".wav", format,
+					max_samples_per_file);
+			if (r < 0) {
+				error("tuna: Could not initialise output module %s", args->output);
+				return r;
+			}
+		}
 	} else if (strcmp(args->output, "null") == 0) {
 		out = consumer_new();
 		if (out) {
