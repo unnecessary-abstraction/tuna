@@ -359,7 +359,6 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	r = tol_init(&t->tol, sample_rate, sample_rate, 0.4, 3);
 	if (r < 0) {
 		error("time_slice: Failed to initialise third octave level calculation");
-		free(t->window);
 		return r;
 	}
 
@@ -406,28 +405,29 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 {
 	assert(csv_name);
 	assert(f);
+	int r;
 
 	struct time_slice * t = (struct time_slice *)
 		calloc(1, sizeof(struct time_slice));
 	if (!t) {
 		error("time_slice: Failed to allocate memory");
-		return -ENOMEM;
+		r = -ENOMEM;
+		goto err;
 	}
 
 	/* Initialize csv file. */
 	t->csv_name = strdup(csv_name);
 	if (!t->csv_name) {
 		error("time_slice: Failed to allocate memory for csv file name");
-		free(t);
-		return -ENOMEM;
+		r = -ENOMEM;
+		goto err;
 	}
 
 	t->csv = csv_open(t->csv_name);
 	if (!t->csv) {
 		error("time_slice: Failed to open file %s", t->csv_name);
-		free(t->csv_name);
-		free(t);
-		return -1;
+		r = -1;
+		goto err;
 	}
 
 	t->fft = f;
@@ -438,4 +438,14 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 			time_slice_resync, time_slice_exit, t);
 
 	return 0;
+
+err:
+	if (t->csv)
+		csv_close(t->csv);
+	if (t->csv_name)
+		free(t->csv_name);
+	if (t)
+		free(t);
+
+	return r;
 }
