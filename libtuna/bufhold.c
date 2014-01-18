@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <assert.h>
+#include <malloc.h>
 #include <stddef.h>
 
 #include "buffer.h"
@@ -28,6 +29,30 @@
 #include "log.h"
 #include "slab.h"
 #include "types.h"
+
+struct bufhold {
+	struct list		buffers;
+	struct slab		allocator;
+};
+
+struct held_buffer {
+	/* We may be starting at an offset into the buffer due to previous
+	 * processing or other reasons. If so, we will have a data pointer which
+	 * is different to the base pointer which references the base of the
+	 * allocated memory for the buffer. This is because we need to pass the
+	 * base address of the allocated buffer to free(), not a data pointer
+	 * which may have been subject to an offset.
+	 *
+	 * Note that count refers to the number of samples actually in the
+	 * buffer, beginning at the data pointer, not the total length of the
+	 * whole buffer itself.
+	 */
+	sample_t *		base;
+	sample_t *		data;
+	uint			count;
+
+	struct list_entry	e;
+};
 
 struct held_buffer * bufhold_oldest(struct bufhold * bh)
 {
@@ -140,12 +165,20 @@ void bufhold_add(struct bufhold * bh, sample_t * buf, uint count)
 	list_enqueue(&bh->buffers, &h->e);
 }
 
-void bufhold_init(struct bufhold * bh)
+struct bufhold * bufhold_init()
 {
-	assert(bh);
+	struct bufhold * bh;
+
+	bh = (struct bufhold *) malloc(sizeof(struct bufhold));
+	if (!bh) {
+		error("bufhold: Failed to allocate memory");
+		return NULL;
+	}
 
 	list_init(&bh->buffers);
 	slab_init(&bh->allocator, sizeof(struct held_buffer), offsetof(struct held_buffer, e));
+
+	return bh;
 }
 
 void bufhold_exit(struct bufhold * bh)
@@ -157,4 +190,5 @@ void bufhold_exit(struct bufhold * bh)
 
 	list_exit(&bh->buffers);
 	slab_exit(&bh->allocator);
+	free(bh);
 }

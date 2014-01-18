@@ -45,7 +45,7 @@
 
 struct time_slice {
 	/* The following fields are initialised in time_slice_init(). */
-	struct bufhold		held_buffers;
+	struct bufhold *	held_buffers;
 	FILE *			csv;
 	char *			csv_name;
 	struct fft *		fft;
@@ -258,7 +258,7 @@ static int process_time_slice(struct time_slice * t)
 
 	t->index = 0;
 
-	h = bufhold_oldest(&t->held_buffers);
+	h = bufhold_oldest(t->held_buffers);
 	while (h) {
 		struct held_buffer * next = bufhold_next(h);
 		start = t->index;
@@ -268,14 +268,14 @@ static int process_time_slice(struct time_slice * t)
 		 * this time slice, if not then we can discard it.
 		 */
 		if (t->index <= t->slice_period) {
-			bufhold_release(&t->held_buffers, h);
+			bufhold_release(t->held_buffers, h);
 		} else {
 			/* Adjust start of buffer if this is the first buffer
 			 * that we need to keep for the next time slice.
 			 */
 			if (start < t->slice_period) {
 				offset = t->slice_period - start;
-				bufhold_advance(&t->held_buffers, h, offset);
+				bufhold_advance(t->held_buffers, h, offset);
 			}
 		}
 		h = next;
@@ -298,8 +298,8 @@ void time_slice_exit(struct consumer * consumer)
 	if (t->window)
 		free(t->window);
 
-	bufhold_release_all(&t->held_buffers);
-	bufhold_exit(&t->held_buffers);
+	bufhold_release_all(t->held_buffers);
+	bufhold_exit(t->held_buffers);
 	tol_exit(&t->tol);
 	csv_close(t->csv);
 
@@ -318,7 +318,7 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 		consumer_get_data(consumer);
 	
 	t->available += count;
-	bufhold_add(&t->held_buffers, buf, count);
+	bufhold_add(t->held_buffers, buf, count);
 
 	while (t->available >= t->slice_period) {
 		r = process_time_slice(t);
@@ -384,7 +384,7 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 		consumer_get_data(consumer);
 
 	/* We're going to have to dump old data. */
-	bufhold_release_all(&t->held_buffers);
+	bufhold_release_all(t->held_buffers);
 	t->available = 0;
 
 	r = csv_write_resync(t->csv, ts);
@@ -415,6 +415,13 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 		goto err;
 	}
 
+	bufhold_init(&t->held_buffers);
+	if (!t->held_buffers) {
+		error("time_slice: Failed to allocate memory for held buffers");
+		r = -1;
+		goto err;
+	}
+
 	/* Initialize csv file. */
 	t->csv_name = strdup(csv_name);
 	if (!t->csv_name) {
@@ -432,8 +439,6 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 
 	t->fft = f;
 
-	bufhold_init(&t->held_buffers);
-
 	consumer_set_module(consumer, time_slice_write, time_slice_start,
 			time_slice_resync, time_slice_exit, t);
 
@@ -444,6 +449,8 @@ err:
 		csv_close(t->csv);
 	if (t->csv_name)
 		free(t->csv_name);
+	if (t->held_buffers)
+		bufhold_exit(t->held_buffers);
 	if (t)
 		free(t);
 
