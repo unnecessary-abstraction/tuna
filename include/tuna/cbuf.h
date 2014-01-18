@@ -23,13 +23,6 @@
 
 #include "types.h"
 
-struct cbuf {
-	uint index;
-	uint len;
-
-	sample_t data[];
-};
-
 struct cbuf * cbuf_init(uint len);
 void cbuf_reset(struct cbuf * c);
 sample_t cbuf_index(struct cbuf * c, uint i);

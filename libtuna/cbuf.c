@@ -27,6 +27,13 @@
 #include "log.h"
 #include "types.h"
 
+struct cbuf {
+	uint index;
+	uint len;
+
+	sample_t data[];
+};
+
 struct cbuf * cbuf_init(uint len)
 {
 	/* Use calloc so that the index and all data values are initialised to
