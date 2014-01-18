@@ -1,7 +1,7 @@
 /*******************************************************************************
 	slab.c: Slab allocator.
 
-	Copyright (C) 2013 Paul Barker
+	Copyright (C) 2013, 2014 Paul Barker
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -30,6 +30,13 @@
 const size_t page_size = 1<<12;		/* 4 KiB */
 const size_t rounding = 1<<4;		/* 16 B */
 
+struct slab {
+	size_t			sz;
+	size_t			offset;
+	struct list		pages;
+	struct list		cache;
+};
+
 struct page_header {
 	struct list_entry	e;
 
@@ -37,9 +44,15 @@ struct page_header {
 	uint			allocated;
 };
 
-int slab_init(struct slab * s, size_t element_size, size_t list_entry_offset)
+struct slab * slab_init(size_t element_size, size_t list_entry_offset)
 {
-	assert(s);
+	struct slab * s;
+
+	s = (struct slab *) malloc(sizeof(struct slab *));
+	if (!s) {
+		error("slab: Failed to allocate memory");
+		return NULL;
+	}
 
 	/* Currently don't support large items. */
 	assert(element_size <= page_size / 2);
@@ -50,7 +63,7 @@ int slab_init(struct slab * s, size_t element_size, size_t list_entry_offset)
 	list_init(&s->pages);
 	list_init(&s->cache);
 
-	return 0;
+	return s;
 }
 
 void slab_exit(struct slab * s)
@@ -59,6 +72,7 @@ void slab_exit(struct slab * s)
 
 	list_exit(&s->pages);
 	list_exit(&s->cache);
+	free(s);
 }
 
 int slab_prealloc(struct slab * s, uint n_pages)

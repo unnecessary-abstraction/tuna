@@ -1,7 +1,7 @@
 /*******************************************************************************
 	slab.h: Slab allocator.
 
-	Copyright (C) 2013 Paul Barker
+	Copyright (C) 2013, 2014 Paul Barker
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,17 +23,9 @@
 
 #include <stddef.h>
 
-#include "list.h"
 #include "types.h"
 
-struct slab {
-	size_t			sz;
-	size_t			offset;
-	struct list		pages;
-	struct list		cache;
-};
-
-int slab_init(struct slab * s, size_t element_size, size_t list_entry_offset);
+struct slab * slab_init(size_t element_size, size_t list_entry_offset);
 void slab_exit(struct slab * s);
 int slab_prealloc(struct slab * s, uint n_pages);
 void * slab_alloc(struct slab * s);
