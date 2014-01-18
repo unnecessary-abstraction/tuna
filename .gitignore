@@ -13,3 +13,6 @@ fftw.wisdom
 .ycm*
 __pycache__
 *.swo
+doxy/html
+doxy/latex
+doxy/libtuna.pdf

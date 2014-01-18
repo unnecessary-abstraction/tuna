@@ -116,6 +116,7 @@ def configure_install_dirs(default_prefix="/usr/local"):
 	var_weak_set("bindir", os.path.join(prefix, "bin"))
 	var_weak_set("libdir", os.path.join(prefix, "lib"))
 	var_weak_set("includedir", os.path.join(prefix, "include"))
+	var_weak_set("docdir", os.path.join(prefix, "share/doc"))
 
 ################################################################################
 # Toolchain
@@ -155,6 +156,9 @@ def configure_ccld(default_name="gcc"):
 
 def configure_ar(default_name="ar"):
 	return configure_tool("AR", default_name)
+
+def configure_doxygen(default_name="doxygen"):
+	return configure_tool("DOXYGEN", default_name)
 
 ################################################################################
 # Configuration management

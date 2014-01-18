@@ -39,6 +39,7 @@ require(configure_ar())
 require(configure_pkg("fftw3f"))
 require(configure_pkg("sndfile"))
 require(configure_pkg("alsa"))
+require(configure_doxygen())
 configure_install_dirs()
 
 var_append("CFLAGS", "-Wall -Wextra -pthread")

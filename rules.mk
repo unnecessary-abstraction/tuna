@@ -29,6 +29,7 @@ LDLIBRARIES_ALL :=
 TARGETS_BIN :=
 TARGETS_LIB :=
 TARGETS_TEST :=
+TARGETS_DOCS :=
 INTERMEDIATES :=
 INSTALL_DEPS :=
 
@@ -52,8 +53,11 @@ include $(SRCDIR)/$(dir)/rules.mk
 dir := include
 include $(SRCDIR)/$(dir)/rules.mk
 
+dir := doxy
+include $(SRCDIR)/$(dir)/rules.mk
+
 # Combined list of targets
-TARGETS_ALL := $(TARGETS_BIN) $(TARGETS_LIB) $(TARGETS_TEST)
+TARGETS_ALL := $(TARGETS_BIN) $(TARGETS_LIB) $(TARGETS_TEST) $(TARGETS_DOCS)
 
 .PHONY: targets
 targets: $(TARGETS_ALL)
@@ -94,8 +98,4 @@ TOPLEVEL_DEPS := $(SRCDIR)/rules.mk $(SRCDIR)/Makefile unconfig.mk
 
 $(INTERMEDIATES): $(TOPLEVEL_DEPS)
 
-$(TARGETS_BIN): $(TOPLEVEL_DEPS)
-
-$(TARGETS_LIB): $(TOPLEVEL_DEPS)
-
-$(TARGETS_TEST): $(TOPLEVEL_DEPS)
+$(TARGETS_ALL) : $(TOPLEVEL_DEPS)
