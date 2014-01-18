@@ -24,6 +24,12 @@
 #include "compiler.h"
 
 /**
+ * \file <tuna/log.h>
+ *
+ * Logging subsystem.
+ */
+
+/**
  * Initilize logging subsystem.
  *
  * \param output_file Path and filename to write log messages to. This file will
