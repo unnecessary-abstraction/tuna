@@ -1,7 +1,7 @@
 /*******************************************************************************
 	tuna.c: A simple analysis pipeline.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -214,6 +214,7 @@ int input_init(struct arguments * args)
 	assert(args);
 
 	char * source = split_param(args->input);
+	int r;
 
 	bufq = bufq_init(out);
 	if (!bufq) {
@@ -229,7 +230,14 @@ int input_init(struct arguments * args)
 		in = input_zero_init(bufq, args->sample_rate);
 #ifdef ENABLE_ADS1672
 	} else if (strcmp(args->input, "ads1672") == 0) {
-		in = input_ads1672_init(bufq);
+		in = producer_new();
+		if (in) {
+			r = input_ads1672_init(in, bufq);
+			if (r < 0) {
+				error("tuna: Could not initialise input module");
+				return r;
+			}
+		}
 #endif
 	} else {
 		error("tuna: Unknown input module %s", args->input);

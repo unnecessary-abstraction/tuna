@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_ads1672.c: Input from ads1672 driver.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -172,7 +172,7 @@ static int handle_condition(struct input_ads1672 * a, int cond)
 				return r;
 			}
 
-			return a->consumer->resync(a->consumer, &ts);
+			return consumer_resync(a->consumer, &ts);
 
 		/* Errors which just require reading again */
 		case ADS1672_COND_IN_USE:
@@ -199,7 +199,8 @@ int input_ads1672_run(struct producer * producer)
 	sample_t *	buf;
 	int		cond;
 
-	struct input_ads1672 * a = container_of(producer, struct input_ads1672, producer);
+	struct input_ads1672 * a = (struct input_ads1672 *)
+		producer_get_data(producer);
 
 	/* TODO: This will likely return nonsense before the start() has been
 	 * called. However calling start() before consumer->start() may cause a
@@ -211,9 +212,9 @@ int input_ads1672_run(struct producer * producer)
 		return r;
 	}
 
-	r = a->consumer->start(a->consumer, a->sample_rate, &ts);
+	r = consumer_start(a->consumer, a->sample_rate, &ts);
 	if (r < 0) {
-		error("input_ads1672: consumer->start failed");
+		error("input_ads1672: Failed to start consumer");
 		return r;
 	}
 
@@ -258,9 +259,9 @@ int input_ads1672_run(struct producer * producer)
 				return r;
 			}
 		} else {
-			r = a->consumer->write(a->consumer, buf, frames);
+			r = consumer_write(a->consumer, buf, frames);
 			if (r < 0) {
-				error("input_ads1672: consumer->write failed");
+				error("input_ads1672: Failed to write to consumer");
 				stop(a);
 				return r;
 			}
@@ -274,7 +275,8 @@ void input_ads1672_exit(struct producer * producer)
 {
 	assert(producer);
 
-	struct input_ads1672 * a = container_of(producer, struct input_ads1672, producer);
+	struct input_ads1672 * a = (struct input_ads1672 *)
+		producer_get_data(producer);
 
 	cleanup(a);
 	free(a);
@@ -284,7 +286,8 @@ int input_ads1672_stop(struct producer * producer, int condition)
 {
 	assert(producer);
 
-	struct input_ads1672 * a = container_of(producer, struct input_ads1672, producer);
+	struct input_ads1672 * a = (struct input_ads1672 *)
+		producer_get_data(producer);
 	a->stop = condition;
 
 	return 0;
@@ -294,37 +297,38 @@ int input_ads1672_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-struct producer * input_ads1672_init(struct consumer * c)
+int input_ads1672_init(struct producer * producer, struct consumer * consumer)
 {
 	int r;
 
-	assert(c);
+	assert(producer);
+	assert(consumer);
 
 	/* We assume that sample_t and ads1672_sample_t are the same type. */
 	assert(sizeof(sample_t) == sizeof(ads1672_sample_t));
 
-	struct input_ads1672 * a = (struct input_ads1672 *)malloc(sizeof(struct input_ads1672));
+	struct input_ads1672 * a = (struct input_ads1672 *)
+		malloc(sizeof(struct input_ads1672));
 	if (!a) {
 		error("input_ads1672: Failed to allocate memory");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	a->stop = 0;
-	a->consumer = c;
+	a->consumer = consumer;
 
 	/* For now, the sample rate is always 625 kHz. */
 	a->sample_rate = 625000;
-
-	a->producer.run = input_ads1672_run;
-	a->producer.exit = input_ads1672_exit;
-	a->producer.stop = input_ads1672_stop;
 
 	r = prep(a);
 	if (r < 0) {
 		/* Error already logged */
 		free(a);
-		return NULL;
+		return r;
 	}
 
-	return &a->producer;
+	producer_set_module(producer, input_ads1672_run, input_ads1672_stop,
+			input_ads1672_exit, a);
+
+	return 0;
 }

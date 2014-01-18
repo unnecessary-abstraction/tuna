@@ -1,7 +1,7 @@
 /*******************************************************************************
 	input_ads1672.h: Input from ads1672 driver.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,6 @@
 #include "consumer.h"
 #include "producer.h"
 
-struct producer * input_ads1672_init(struct consumer * c);
+int input_ads1672_init(struct producer * producer, struct consumer * consumer);
 
 #endif /* !__TUNA_INPUT_ADS1672_H_INCLUDED__ */
