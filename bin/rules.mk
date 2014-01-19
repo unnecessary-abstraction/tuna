@@ -42,7 +42,7 @@ INSTALL_DEPS += install-$(d)
 $(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
 $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
 
-$(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
 $(d)/tuna: $(OBJS_tuna)
 

@@ -64,7 +64,7 @@ INSTALL_DEPS += install-$(d)
 # Rules for this directory
 $(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk $(OBJS_$(d))
 
-$(OBJS_$(d)): CFLAGS_TGT := -I$(SRCDIR)/$(d)
+$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
 .PHONY: install-$(d)
 install-$(d): $(TGTS_$(d))

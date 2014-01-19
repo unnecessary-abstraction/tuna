@@ -19,7 +19,8 @@
 ################################################################################
 
 # Required flags which cannot be configured by the user
-CFLAGS_ALL := -I$(SRCDIR)/include -I$(SRCDIR)/include/tuna
+INCLUDE_ALL := -I$(SRCDIR)/include -I$(SRCDIR)/include/tuna
+CFLAGS_ALL :=
 LDFLAGS_ALL := 
 
 # Required libraries
@@ -65,13 +66,13 @@ targets: $(TARGETS_ALL)
 # Compiler rule
 %.o: %.c
 	@echo CC $@
-	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(DEPFLAGS) -o $@ -c $<
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(INCLUDE_ALL) $(INCLUDE_TGT) $(DEPFLAGS) -o $@ -c $<
 	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
 	$(Q)mv $*.d.tmp $*.d
 
 %.lo: %.c
 	@echo CC $@
-	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) -fPIC $(DEPFLAGS) -o $@ -c $<
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) -fPIC $(INCLUDE_ALL) $(INCLUDE_TGT) $(DEPFLAGS) -o $@ -c $<
 	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
 	$(Q)mv $*.d.tmp $*.d
 
