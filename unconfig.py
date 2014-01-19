@@ -49,6 +49,10 @@ def var_append(name, value):
 	else:
 		_vars[name] = value.strip()
 
+def var_remove(name):
+	if name in _vars:
+		del _vars[name]
+
 ################################################################################
 # Packages and pkg-config
 ################################################################################
@@ -232,7 +236,12 @@ def parse_cmdline(argv=sys.argv):
 		value = pair[1]
 		# Strip leading dashes off key so "--prefix" aliases to "prefix"
 		key = key.lstrip('-')
-		var_set(key, value)
+                # Alias 'disable-x' to remove any instance of 'enable-x'
+		if key.startswith('disable-'):
+			key = 'enable-' + key[8:]
+			var_remove(key)
+		else:
+			var_set(key, value)
 
 def read_env(key):
 	value = os.environ.get(key)
