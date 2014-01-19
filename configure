@@ -26,36 +26,45 @@ from unconfig import *
 name = "tuna"
 version = "0.1-pre1"
 
+init(name, version)
+
+# Set default variables
+var_set("VERBOSITY", "0")
+var_set("DEPFLAGS", "-MD")
+var_set("PYTHON", "python")
+var_set("INSTALL", "install")
+var_set("enable-python-bindings", "1")
+var_set("enable-docs", "1")
+
+parse_cmdline()
+
 # Environment variables which may be brought in
 env_list = ("CC", "CCLD", "AR", "CFLAGS", "LDFLAGS", "PYTHON", "INSTALL")
+read_envs(env_list)
 
 # Main configuration
-init(name, version)
-parse_cmdline()
-read_envs(env_list)
 require(configure_cc())
 require(configure_ccld())
 require(configure_ar())
 require(configure_pkg("fftw3f"))
 require(configure_pkg("sndfile"))
 require(configure_pkg("alsa"))
-require(configure_doxygen())
-require(configure_pkg("python3"))
-require(configure_swig())
+if var_get("enable-python-bindings"):
+	require(configure_pkg("python3"))
+	require(configure_swig())
+if var_get("enable-docs"):
+	require(configure_doxygen())
 configure_install_dirs()
-
-var_append("CFLAGS", "-Wall -Wextra -pthread")
-var_append("LDFLAGS", "-pthread")
-var_append("LDLIBRARIES", "-lm -lrt")
-var_set("VERBOSITY", "0")
-var_set("DEPFLAGS", "-MD")
-var_set("PYTHON", "python")
-var_set("INSTALL", "install")
 
 # Check whether ADS1672 input module has been enabled and if so set a flag so
 # that this is known within the C source.
 if var_get("enable-ads1672"):
 	var_append("CFLAGS", "-DENABLE_ADS1672")
+
+# Append other flags
+var_append("CFLAGS", "-Wall -Wextra -pthread")
+var_append("LDFLAGS", "-pthread")
+var_append("LDLIBRARIES", "-lm -lrt")
 
 finalize()
 find_srcdir()

@@ -57,8 +57,10 @@ include $(SRCDIR)/$(dir)/rules.mk
 dir := swig
 include $(SRCDIR)/$(dir)/rules.mk
 
+ifdef enable-docs
 dir := doxy
 include $(SRCDIR)/$(dir)/rules.mk
+endif
 
 # Combined list of targets
 TARGETS_ALL := $(TARGETS_BIN) $(TARGETS_LIB) $(TARGETS_TEST) $(TARGETS_DOCS)

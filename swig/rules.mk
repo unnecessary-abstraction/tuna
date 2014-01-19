@@ -25,8 +25,10 @@ d := $(dir)
 
 SWIGFILE := $(SRCDIR)/swig/libtuna.i
 
+ifdef enable-python-bindings
 dir := swig/python
 include $(SRCDIR)/$(dir)/rules.mk
+endif
 
 # Pop directory stack
 d := $(dirstack_$(sp))
