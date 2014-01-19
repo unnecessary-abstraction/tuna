@@ -31,6 +31,17 @@
 #include "log.h"
 #include "types.h"
 
+struct fft {
+	fftwf_plan			plan;
+	uint				length;
+	union {
+		float *			data;
+		float complex *		cdata;
+	};
+
+	pthread_mutex_t			mutex;
+};
+
 /*******************************************************************************
 	Public functions
 *******************************************************************************/

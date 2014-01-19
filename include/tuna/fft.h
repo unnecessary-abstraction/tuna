@@ -21,22 +21,7 @@
 #ifndef __TUNA_FFT_H_INCLUDED__
 #define __TUNA_FFT_H_INCLUDED__
 
-#include <fftw3.h>
-#include <complex.h>
-#include <pthread.h>
-
 #include "types.h"
-
-struct fft {
-	fftwf_plan			plan;
-	uint				length;
-	union {
-		float *			data;
-		float complex *		cdata;
-	};
-
-	pthread_mutex_t			mutex;
-};
 
 struct fft * fft_init();
 void fft_exit(struct fft * fft);
