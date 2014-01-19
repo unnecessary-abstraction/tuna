@@ -40,6 +40,8 @@ require(configure_pkg("fftw3f"))
 require(configure_pkg("sndfile"))
 require(configure_pkg("alsa"))
 require(configure_doxygen())
+require(configure_pkg("python3"))
+require(configure_swig())
 configure_install_dirs()
 
 var_append("CFLAGS", "-Wall -Wextra -pthread")

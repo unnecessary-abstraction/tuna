@@ -54,6 +54,9 @@ include $(SRCDIR)/$(dir)/rules.mk
 dir := include
 include $(SRCDIR)/$(dir)/rules.mk
 
+dir := swig
+include $(SRCDIR)/$(dir)/rules.mk
+
 dir := doxy
 include $(SRCDIR)/$(dir)/rules.mk
 

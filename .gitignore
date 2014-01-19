@@ -18,3 +18,5 @@ doxy/latex
 doxy/libtuna.pdf
 *.so
 *.lo
+swig/python/libtuna.py
+swig/python/libtuna_wrap.c

@@ -188,6 +188,13 @@ def configure_ar(default_name="ar"):
 def configure_doxygen(default_name="doxygen"):
 	return configure_tool("DOXYGEN", default_name)
 
+def swig_parse_version(b):
+	return b.decode("utf-8").splitlines()[1]
+
+def configure_swig(default_name="swig"):
+	return configure_tool("SWIG", default_name, args="-version",
+			parse_version=swig_parse_version)
+
 ################################################################################
 # Configuration management
 ################################################################################
