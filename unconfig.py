@@ -121,41 +121,48 @@ def configure_install_dirs(default_prefix="/usr/local"):
 ################################################################################
 # Toolchain
 ################################################################################
-def check_tool(tool):
+def default_parse_version(b):
+	return b.decode("utf-8").splitlines()[0]
+
+def check_tool(tool, args, parse_version):
 	try:
-		b = subprocess.check_output(tool + " --version", shell=True)
-		s = b.decode("utf-8").splitlines()[0]
+		b = subprocess.check_output(tool + " " + args, shell=True)
+		s = parse_version(b)
 		print("Found: %s" % s)
 		return tool
 	except Exception:
 		print("Not found: %s" % tool)
 		return None
 
-def configure_tool(key, default_name):
+def configure_tool(key, default_name, args="--version", use_tool_prefix=False,
+		parse_version=default_parse_version):
 	tool = var_get(key)
 	if not tool:
 		# Build tool name ourself
-		prefix = var_get("TOOL_PREFIX")
-		if not prefix:
-			prefix = ""
-		tool = prefix + default_name
+		if use_tool_prefix:
+			prefix = var_get("TOOL_PREFIX")
+			if not prefix:
+				prefix = ""
+			tool = prefix + default_name
+		else:
+			tool = default_name
 	print("Searching for %s: %s" % (key, tool))
-	value = check_tool(tool)
+	value = check_tool(tool, args, parse_version)
 	if value:
 		var_set(key, value)
 	return value
 
 def configure_cc(default_name="gcc"):
-	return configure_tool("CC", default_name)
+	return configure_tool("CC", default_name, use_tool_prefix=True)
 
 def configure_ld(default_name="ld"):
-	return configure_tool("LD", default_name)
+	return configure_tool("LD", default_name, use_tool_prefix=True)
 
 def configure_ccld(default_name="gcc"):
-	return configure_tool("CCLD", default_name)
+	return configure_tool("CCLD", default_name, use_tool_prefix=True)
 
 def configure_ar(default_name="ar"):
-	return configure_tool("AR", default_name)
+	return configure_tool("AR", default_name, use_tool_prefix=True)
 
 def configure_doxygen(default_name="doxygen"):
 	return configure_tool("DOXYGEN", default_name)
