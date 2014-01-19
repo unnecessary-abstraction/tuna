@@ -45,35 +45,36 @@
 
 struct time_slice {
 	/* The following fields are initialised in time_slice_init(). */
-	struct bufhold *	held_buffers;
-	FILE *			csv;
-	char *			csv_name;
-	struct fft *		fft;
+	struct bufhold *		held_buffers;
+	FILE *				csv;
+	char *				csv_name;
+	struct fft *			fft;
 
 	/* The following fields are initialised in time_slice_start(). */
-	struct tol		tol;
-	float *			window;
-	uint			sample_rate;
-	uint			slice_period;
-	uint			available;
-	uint			n_tol;
+	struct tol *			tol;
+	struct time_slice_results *	results;
+	float *				window;
+	uint				sample_rate;
+	uint				slice_period;
+	uint				available;
+	uint				n_tol;
 
 	/* The following field is used within process_time_slice(). */
-	uint			index;
+	uint				index;
 };
 
 struct time_slice_results {
-	sample_t		peak_positive;
-	sample_t		peak_negative;
-	uint			peak_positive_offset;
-	uint			peak_negative_offset;
+	sample_t			peak_positive;
+	sample_t			peak_negative;
+	uint				peak_positive_offset;
+	uint				peak_negative_offset;
 
-	float			sum_1;
-	float			sum_2;
-	float			sum_3;
-	float			sum_4;
+	float				sum_1;
+	float				sum_2;
+	float				sum_3;
+	float				sum_4;
 
-	struct tol_results	tol;
+	float				tols[];
 };
 
 static inline uint min(uint a, uint b)
@@ -91,48 +92,47 @@ static inline uint values_per_slice(struct time_slice * t)
 	return 8 + t->n_tol;
 }
 
-static int write_results(struct time_slice * t, struct time_slice_results * results)
+static int write_results(struct time_slice * t)
 {
 	int r;
 	uint i;
 
 	assert(t);
-	assert(results);
 
-	r = csv_write_sample(t->csv, results->peak_positive);
+	r = csv_write_sample(t->csv, t->results->peak_positive);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_sample(t->csv, results->peak_negative);
+	r = csv_write_sample(t->csv, t->results->peak_negative);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_uint(t->csv, results->peak_positive_offset);
+	r = csv_write_uint(t->csv, t->results->peak_positive_offset);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_uint(t->csv, results->peak_negative_offset);
+	r = csv_write_uint(t->csv, t->results->peak_negative_offset);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_float(t->csv, results->sum_1);
+	r = csv_write_float(t->csv, t->results->sum_1);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_float(t->csv, results->sum_2);
+	r = csv_write_float(t->csv, t->results->sum_2);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_float(t->csv, results->sum_3);
+	r = csv_write_float(t->csv, t->results->sum_3);
 	if (r < 0)
 		goto error;
 
-	r = csv_write_float(t->csv, results->sum_4);
+	r = csv_write_float(t->csv, t->results->sum_4);
 	if (r < 0)
 		goto error;
 
 	for (i = 0; i < t->n_tol; i++) {
-		r = csv_write_float(t->csv, results->tol.values[i]);
+		r = csv_write_float(t->csv, t->results->tols[i]);
 		if (r < 0)
 			goto error;
 	}
@@ -148,12 +148,11 @@ error:
 	return r;
 }
 
-static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data, struct time_slice_results * r)
+static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data)
 {
 	assert(t);
 	assert(h);
 	assert(fft_data);
-	assert(r);
 
 	/* We split processing into quarters as we need overlapped windowed
 	 * analysis in the frequency domain and non-overlapped non-windowed
@@ -205,18 +204,18 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 			/* Calculate intermediate sums for kurtosis. */
 			e = x * x;
 			e_2 = e * e;
-			r->sum_1 += e;
-			r->sum_2 += e_2;
-			r->sum_3 += e_2 * e;
-			r->sum_4 += e_2 * e_2;
+			t->results->sum_1 += e;
+			t->results->sum_2 += e_2;
+			t->results->sum_3 += e_2 * e;
+			t->results->sum_4 += e_2 * e_2;
 
 			/* Detect Peaks */
-			if (v > r->peak_positive) {
-				r->peak_positive = v;
-				r->peak_positive_offset = t->index - len/4;
-			} else if (v < r->peak_negative) {
-				r->peak_negative = v;
-				r->peak_negative_offset = t->index - len/4;
+			if (v > t->results->peak_positive) {
+				t->results->peak_positive = v;
+				t->results->peak_positive_offset = t->index - len/4;
+			} else if (v < t->results->peak_negative) {
+				t->results->peak_negative = v;
+				t->results->peak_negative_offset = t->index - len/4;
 			}
 			
 			fft_data[t->index] = x * t->window[t->index];
@@ -248,13 +247,13 @@ static int process_time_slice(struct time_slice * t)
 	assert(t);
 
 	struct held_buffer * h;
-	struct time_slice_results r;
 	float * fft_data;
 	uint start, offset;
 
 	fft_data = fft_open(t->fft);
 
-	memset(&r, 0, sizeof(r));
+	memset(&t->results, 0,
+		sizeof(struct time_slice_results) + t->n_tol * sizeof(float));
 
 	t->index = 0;
 
@@ -262,7 +261,7 @@ static int process_time_slice(struct time_slice * t)
 	while (h) {
 		struct held_buffer * next = bufhold_next(h);
 		start = t->index;
-		process_buffer(t, h, fft_data, &r);
+		process_buffer(t, h, fft_data);
 
 		/* Check whether this buffer extends into the second half of
 		 * this time slice, if not then we can discard it.
@@ -282,10 +281,10 @@ static int process_time_slice(struct time_slice * t)
 	}
 
 	fft_transform(t->fft);
-	tol_calculate(&t->tol, fft_data, &r.tol);
+	tol_calculate(t->tol, fft_data, t->results->tols);
 
 	fft_close(t->fft);
-	return write_results(t, &r);
+	return write_results(t);
 }
 
 void time_slice_exit(struct consumer * consumer)
@@ -298,9 +297,14 @@ void time_slice_exit(struct consumer * consumer)
 	if (t->window)
 		free(t->window);
 
+	if (t->results)
+		free(t->results);
+
+        if (t->tol)
+                tol_exit(t->tol);
+
 	bufhold_release_all(t->held_buffers);
 	bufhold_exit(t->held_buffers);
-	tol_exit(&t->tol);
 	csv_close(t->csv);
 
 	free(t->csv_name);
@@ -356,13 +360,21 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	window_init_sine(t->window, t->slice_period * 2);
 
 	fft_set_length(t->fft, sample_rate);
-	r = tol_init(&t->tol, sample_rate, sample_rate, 0.4, 3);
-	if (r < 0) {
+	t->tol = tol_init(sample_rate, sample_rate, 0.4, 3);
+	if (!t->tol) {
 		error("time_slice: Failed to initialise third octave level calculation");
-		return r;
+		return -1;
 	}
 
-	t->n_tol = (uint)r;
+	t->n_tol = tol_get_num_levels(t->tol);
+
+	t->results = (struct time_slice_results *)
+		malloc(sizeof(struct time_slice_results) + (t->n_tol + 1) *
+				sizeof(float));
+	if (!t->results) {
+		error("time_slice: Failed to allocate memory for results");
+		return -ENOMEM;
+	}
 
 	r = csv_write_start(t->csv, ts);
 	if (r < 0) {

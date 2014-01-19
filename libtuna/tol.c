@@ -1,7 +1,7 @@
 /*******************************************************************************
 	tol.c: Third octave level calculation.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,8 +24,28 @@
 #include <math.h>
 #include <string.h>
 
+#include "log.h"
 #include "tol.h"
 #include "types.h"
+
+#define MAX_THIRD_OCTAVE_LEVELS 43
+
+struct tol_transition {
+	uint				t_onset;
+	uint				t_width;
+	float *				coeffs;
+};
+
+struct tol {
+	/* Number of third octave levels which are active. This is at most
+	 * MAX_THIRD_OCTAVE_LEVELS when the sample rate is high enough.
+	 * Otherwise this is the number of third octave levels which are
+	 * completely contained below half the sampling rate.
+	 */
+	uint				n_tol;
+
+	struct tol_transition		desc[MAX_THIRD_OCTAVE_LEVELS];
+};
 
 /*******************************************************************************
 	Private declarations
@@ -140,34 +160,40 @@ static inline float phi(float p, uint l)
 	Public functions
 *******************************************************************************/
 
-void tol_calculate(struct tol * t, float * data, struct tol_results * r)
+/* We assume the the results array has already been zero'd by the caller. This
+ * allows slightly optimised performance.
+ */
+void tol_calculate(struct tol * t, float * data, float * results)
 {
 	assert(t);
 	assert(data);
-	assert(r);
 
 	uint i, j;
 	
 	j = 0;
 
-	memset(r, 0, sizeof(*r));
-
 	for (i = 0; i < t->n_tol; i++) {
 		/* Unweighted sum from current position to start of transition, this is added to band i. */
-		r->values[i] += psum(&data[j], (t->desc[i].t_onset - j));
+		results[i] += psum(&data[j], (t->desc[i].t_onset - j));
 
 		/* Weighted sum over the transition, added to bands i and i+1. */
-		wpsum2(&data[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &r->values[i]);
+		wpsum2(&data[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &results[i]);
 
 		/* Update j to end of transition. */
 		j = t->desc[i].t_onset + t->desc[i].t_width;
 	}
 }
 
-int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overlap, uint phi_L)
+uint tol_get_num_levels(struct tol * t)
 {
 	assert(t);
 
+	return t->n_tol;
+}
+
+struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uint phi_L)
+{
+	struct tol * t;
 	uint i, j;
 	float p, tmp, sin_tmp, cos_tmp;
 	float delta, cur_freq, offset;
@@ -175,6 +201,12 @@ int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overl
 	uint t_end;
 
 	assert(overlap < 0.5);
+
+	t = (struct tol *) malloc(sizeof(struct tol));
+	if (!t) {
+		error("tol: Failed to allocate memory");
+		return NULL;
+	}
 
 	step = sample_rate / analysis_length;
 
@@ -191,13 +223,20 @@ int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overl
 			/* The current third octave band does not fit within half the sampling rate. */
 			t->n_tol = i - 1;
 
-			return t->n_tol;
+			return t;
 		}
 
 		/* Allocate enough memory. */
 		t->desc[i].coeffs = (float *)malloc(sizeof(float) * 2 * t->desc[i].t_width);
-		if (t->desc[i].coeffs == NULL)
-			return -ENOMEM;
+		if (!t->desc[i].coeffs) {
+			error("tol: Failed to allocate memory for tol coefficients");
+
+                        /* Free previously allocated coefficient arrays. */
+                        for (j = 0; j < i; j++)
+                                free(t->desc[j].coeffs);
+			free(t);
+			return NULL;
+		}
 
 		/* Fill memory with correct coefficients. */
 		for (j = 0; j < t->desc[i].t_width; j++) {
@@ -217,7 +256,7 @@ int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overl
 	}
 
 	t->n_tol = MAX_THIRD_OCTAVE_LEVELS;
-	return t->n_tol;
+	return t;
 }
 
 void tol_exit(struct tol * t)
@@ -229,4 +268,6 @@ void tol_exit(struct tol * t)
 	for (i = 0; i < t->n_tol; i++) {
 		free(t->desc[i].coeffs);
 	}
+
+	free(t);
 }

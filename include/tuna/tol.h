@@ -1,7 +1,7 @@
 /*******************************************************************************
 	tol.h: Third octave level calculation.
 
-	Copyright (C) 2013 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,31 +23,9 @@
 
 #include "types.h"
 
-#define MAX_THIRD_OCTAVE_LEVELS 43
-
-struct tol_transition {
-	uint				t_onset;
-	uint				t_width;
-	float *				coeffs;
-};
-
-struct tol {
-	/* Number of third octave levels which are active. This is at most
-	 * MAX_THIRD_OCTAVE_LEVELS when the sample rate is high enough.
-	 * Otherwise this is the number of third octave levels which are
-	 * completely contained below half the sampling rate.
-	 */
-	uint				n_tol;
-
-	struct tol_transition		desc[MAX_THIRD_OCTAVE_LEVELS];
-};
-
-struct tol_results {
-	float				values[MAX_THIRD_OCTAVE_LEVELS + 1];
-};
-
-void tol_calculate(struct tol * t, float * data, struct tol_results * r);
-int tol_init(struct tol * t, uint sample_rate, uint analysis_length, float overlap, uint phi_L);
+struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uint phi_L);
 void tol_exit(struct tol * t);
+uint tol_get_num_levels(struct tol * t);
+void tol_calculate(struct tol * t, float * data, float * results);
 
 #endif /* !__TUNA_TOL_H_INCLUDED__ */

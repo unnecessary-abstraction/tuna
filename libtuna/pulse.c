@@ -59,15 +59,15 @@ struct pulse_results {
 	 * duration_90 = offset_95 - offset_5;
 	 */
 
-	struct tol_results			tol;
+	float					tols[];
 };
 
 struct pulse_processor {
 	/* Third-octave analysis. */
-	struct tol				tol;
+	struct tol *				tol;
 
 	/* Current result set. */
-	struct pulse_results			results;
+	struct pulse_results *			results;
 
 	/* List of held buffers. */
 	struct bufhold *			held_buffers;
@@ -184,32 +184,32 @@ static int write_results(struct pulse_processor * p)
 	int r;
 	uint i;
 
-	r = csv_write_sample(p->csv, p->results.peak_positive);
+	r = csv_write_sample(p->csv, p->results->peak_positive);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_sample(p->csv, p->results.peak_negative);
+	r = csv_write_sample(p->csv, p->results->peak_negative);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results.peak_positive_offset);
+	r = csv_write_uint(p->csv, p->results->peak_positive_offset);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results.peak_negative_offset);
+	r = csv_write_uint(p->csv, p->results->peak_negative_offset);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results.offset_5);
+	r = csv_write_uint(p->csv, p->results->offset_5);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results.offset_95);
+	r = csv_write_uint(p->csv, p->results->offset_95);
 	if (r < 0)
 		goto err;
 
 	for (i = 0; i < p->n_tol; i++) {
-		r = csv_write_float(p->csv, p->results.tol.values[i]);
+		r = csv_write_float(p->csv, p->results->tols[i]);
 		if (r < 0)
 			goto err;
 	}
@@ -243,22 +243,22 @@ void calc_offsets(struct pulse_processor * p)
 	energy_5perc = energy / 20.0f;
 
 	/* Find 5% offset. */
-	p->results.offset_5 = 0;
+	p->results->offset_5 = 0;
 	energy = p->fft_data[0] * p->fft_data[0];
 	while (energy <= energy_5perc) {
-		p->results.offset_5++;
-		energy += p->fft_data[p->results.offset_5] *
-			p->fft_data[p->results.offset_5];
+		p->results->offset_5++;
+		energy += p->fft_data[p->results->offset_5] *
+			p->fft_data[p->results->offset_5];
 	}
 
 	/* Find 5% offset from end. */
-	p->results.offset_95 = p->index - 1;
-	energy = p->fft_data[p->results.offset_95] *
-		p->fft_data[p->results.offset_95];
+	p->results->offset_95 = p->index - 1;
+	energy = p->fft_data[p->results->offset_95] *
+		p->fft_data[p->results->offset_95];
 	while (energy < energy_5perc) {
-		p->results.offset_95--;
-		energy += p->fft_data[p->results.offset_95] *
-			p->fft_data[p->results.offset_95];
+		p->results->offset_95--;
+		energy += p->fft_data[p->results->offset_95] *
+			p->fft_data[p->results->offset_95];
 	}
 }
 
@@ -266,7 +266,7 @@ void process_start_pulse(struct pulse_processor * p)
 {
 	assert(p);
 
-	memset(&p->results, 0, sizeof(p->results));
+        memset(p->results, 0, sizeof(struct pulse_results) + p->n_tol * sizeof(float));
 
 	p->fft_data = fft_open(p->fft);
 	p->index = 0;
@@ -282,7 +282,7 @@ static void process_end_pulse(struct pulse_processor * p)
 	memset(&p->fft_data[p->index], 0,
 			(p->fft_length - p->index) * sizeof(float));
 	fft_transform(p->fft);
-	tol_calculate(&p->tol, p->fft_data, &p->results.tol);
+	tol_calculate(p->tol, p->fft_data, p->results->tols);
 
 	fft_close(p->fft);
 	write_results(p);
@@ -300,14 +300,14 @@ static int process_sample(struct pulse_processor * p, sample_t x)
 	p->fft_data[p->index] = (float)x;
 
 	/* Detect Peaks */
-	if (x > p->results.peak_positive) {
-		p->results.peak_positive = x;
-		p->results.peak_positive_offset = p->index;
+	if (x > p->results->peak_positive) {
+		p->results->peak_positive = x;
+		p->results->peak_positive_offset = p->index;
 
 		r = 1;
-	} else if (x < p->results.peak_negative) {
-		p->results.peak_negative = x;
-		p->results.peak_negative_offset = p->index;
+	} else if (x < p->results->peak_negative) {
+		p->results->peak_negative = x;
+		p->results->peak_negative_offset = p->index;
 	}
 
 	p->index++;
@@ -467,7 +467,7 @@ static int check_pulse_end(struct pulse_processor * p, sample_t env)
 	/* Check for min/max pulse duration. */
 	if (p->index > p->pulse_max_duration_w)
 		return 1;
-	else if ((p->index - p->results.peak_positive_offset) < p->pulse_min_decay_w)
+	else if ((p->index - p->results->peak_positive_offset) < p->pulse_min_decay_w)
 		/* TODO: Do we still need to update delayed_min in this case? */
 		return 0;
 
@@ -587,8 +587,13 @@ void pulse_exit(struct consumer * consumer)
 	if (p->delay_line)
 		cbuf_exit(p->delay_line);
 
+	if (p->results)
+		free(p->results);
+
+	if (p->tol)
+		tol_exit(p->tol);
+
 	bufhold_exit(p->held_buffers);
-	tol_exit(&p->tol);
 	csv_close(p->csv);
 	free(p->csv_name);
 	free(p);
@@ -653,14 +658,22 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 
 	p->fft_length = p->pulse_max_duration_w; /* 1 s long FFT. */
 	fft_set_length(p->fft, p->fft_length);
-	r = tol_init(&p->tol, sample_rate, p->fft_length, 0.4, 3);
-	if (r < 0) {
-		error("pulse: Failed to initialise third octave level "
-				"calculation");
-		return r;
+	p->tol = tol_init(sample_rate, p->fft_length, 0.4, 3);
+	if (!p->tol) {
+		error("pulse: Failed to initialise third octave level calculation");
+		return -1;
 	}
 
-	p->n_tol = (uint)r;
+	p->n_tol = tol_get_num_levels(p->tol);
+
+	p->results = (struct pulse_results *)
+		malloc(sizeof(struct pulse_results) + (p->n_tol + 1) *
+				sizeof(float));
+	if (!p->results) {
+		error("pulse: Failed to allocate memory for results");
+		return -ENOMEM;
+	}
+
 
 	r = csv_write_start(p->csv, ts);
 	if (r < 0) {
