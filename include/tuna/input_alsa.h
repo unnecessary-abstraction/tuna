@@ -23,6 +23,7 @@
 
 #include "consumer.h"
 #include "producer.h"
+#include "types.h"
 
 int input_alsa_init(struct producer * producer, struct consumer * consumer,
 		const char * device_name, uint sample_rate);

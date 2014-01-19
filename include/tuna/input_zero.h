@@ -23,6 +23,7 @@
 
 #include "consumer.h"
 #include "producer.h"
+#include "types.h"
 
 int input_zero_init(struct producer * producer, struct consumer * consumer,
 		uint sample_rate);
