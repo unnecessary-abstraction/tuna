@@ -31,6 +31,33 @@
 #include "log.h"
 #include "types.h"
 
+struct minima {
+	sample_t		value;
+	uint			expiry;
+};
+
+struct minima_tracker {
+	/* Indices of left and right ends of the queue. Data at mins[left] and
+	 * mins[right] is valid as long as len > 0.
+	 */
+	uint			left;
+	uint			right;
+
+	/* Number of valid minima in the deque. */
+	uint			len;
+
+	/* Length of the analysis window and therefore length of the circular
+	 * buffer allocated.
+	 */
+	uint			windowlen;
+
+	/* Incrementing counter used to determine when a minima expires.
+	 */
+	uint			ticker;
+
+	struct minima		mins[];
+};
+
 struct minima_tracker * minima_init(uint windowlen)
 {
 	struct minima_tracker * t = (struct minima_tracker *)
