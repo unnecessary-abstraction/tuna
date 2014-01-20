@@ -31,7 +31,7 @@
 #include "env_estimate.h"
 #include "fft.h"
 #include "log.h"
-#include "minima.h"
+#include "onset_threshold.h"
 #include "pulse.h"
 #include "tol.h"
 #include "types.h"
@@ -93,8 +93,8 @@ struct pulse_processor {
 	/* Pointer to FFT data buffer, when open. */
 	float *					fft_data;
 
-	/* Moving minimum filter. */
-	struct minima_tracker *			minima;
+	/* Onset threshold tracker. */
+	struct onset_threshold *		onset;
 
 	/* Envelope estimation. */
 	struct env_estimate *			env;
@@ -138,12 +138,6 @@ struct pulse_processor {
 	 * at any time?
 	 */
 	sample_t				decay_threshold;
-
-	/* Highest minima value as a sample_t that can be multiplied by
-	 * params->threshold_ratio without causing overflow. Calculated from the
-	 * value of params->threshold_ratio.
-	 */
-	sample_t				threshold_limit;
 
 	/* Highest minima value as a sample_t that can be multiplied by
 	 * params->decay_threshold_ratio without causing overflow. Calculated
@@ -382,39 +376,13 @@ static sample_t calc_envelope(struct pulse_processor * p, sample_t x)
 {
 	assert(p);
 
-	sample_t e, min;
-
-	/* Calculate envelope estimate. */
-	e = env_estimate_next(p->env, x);
-
-	/* Track minima and calculate new threshold. */
-	min = minima_next(p->minima, e);
-	if (min <= p->threshold_limit)
-		p->threshold = min * p->params->threshold_ratio;
-	else
-		p->threshold = SAMPLE_MAX;
-
-	return e;
-}
-
-static void calc_first_envelope(struct pulse_processor * p, sample_t x)
-{
-	assert(p);
-
 	sample_t e;
 
-	env_estimate_reset(p->env);
+	/* Calculate envelope estimate and detection threshold. */
 	e = env_estimate_next(p->env, x);
+	p->threshold = onset_threshold_next(p->onset, e);
 
-	/* Add initial envelope estimate to sample buffer and minimums queue and
-	 * calculate the initial threshold.
-	 */
-	minima_next(p->minima, e);
-
-	if (e <= p->threshold_limit)
-		p->threshold = e * p->params->threshold_ratio;
-	else
-		p->threshold = SAMPLE_MAX;
+	return e;
 }
 
 static void reset_pulse_end(struct pulse_processor * p, sample_t env)
@@ -488,17 +456,6 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 	int start_offset;
 	sample_t e;
 
-	/* If the minimums array is empty, this is the first sample we're
-	 * processing and we need to prime the detection threshold.
-	 */
-	if (minima_len(p->minima) == 0) {
-		calc_first_envelope(p, data[0]);
-
-		/* Move to the next sample. */
-		count--;
-		data++;
-	}
-
 	for (i = 0; i < count; i++) {
 		e = calc_envelope(p, data[i]);
 
@@ -516,7 +473,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			 * age of the current minimum from our current offset
 			 * into the buffer.
 			 */
-			start_offset = i - minima_current_age(p->minima);
+			start_offset = i - onset_threshold_age(p->onset);
 
 			/* Process the data between the minimum point and the
 			 * start of the buffer passed to this function.
@@ -560,8 +517,8 @@ void pulse_exit(struct consumer * consumer)
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
 
-	if (p->minima)
-		minima_exit(p->minima);
+	if (p->onset)
+		onset_threshold_exit(p->onset);
 
 	if (p->delay_line)
 		cbuf_exit(p->delay_line);
@@ -595,7 +552,7 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 	/* Discard all data before the current minimum if we are not currently
 	 * in a pulse as it will not be needed.
 	 */
-	int start_offset = count - minima_current_age(p->minima);
+	int start_offset = count - onset_threshold_age(p->onset);
 	if (start_offset < 0)
 		discard_leading_data(p, -start_offset);
 
@@ -611,7 +568,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	assert(ts);
 
 	int r;
-	uint Td_w, Tw_w;
+	uint Td_w;
 	struct pulse_processor * p;
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
@@ -620,7 +577,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	p->state = STATE_NONPULSE;
 
 	/* Convert parameters. */
-	Tw_w = (uint) floor(p->params->Tw * sample_rate);
 	Td_w = (uint) floor(p->params->Td * sample_rate);
 	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
 	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
@@ -631,9 +587,9 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -1;
 	}
 
-	p->minima = minima_init(Tw_w);
-	if (!p->minima) {
-		error("pulse: Failed to allocate memory for minima tracking");
+	p->onset = onset_threshold_init(p->params->Tw, sample_rate, p->params->threshold_ratio);
+	if (!p->onset) {
+		error("pulse: Failed to initialise onset threshold tracking");
 		return -1;
 	}
 
@@ -685,7 +641,7 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 	/* Reset detector. */
 	p->state = STATE_NONPULSE;
 	env_estimate_reset(p->env);
-	minima_reset(p->minima);
+	onset_threshold_reset(p->onset);
 
 	r = csv_write_resync(p->csv, ts);
 	if (r < 0) {
@@ -742,14 +698,13 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 	p->params = params;
 	p->fft = f;
 	p->env = NULL;
-	p->minima = NULL;
+	p->onset = NULL;
 	p->delay_line = NULL;
 	p->fft_data = NULL;
 
-	/* Set highest value which we can multiply by threshold_ratio or
-	 * decay_threshold_ratio without overflow.
+	/* Set highest value which we can multiply by decay_threshold_ratio
+	 * without overflow.
 	 */
-	p->threshold_limit = SAMPLE_MAX / params->threshold_ratio;
 	p->decay_threshold_limit = SAMPLE_MAX / params->decay_threshold_ratio;
 
 	consumer_set_module(consumer, pulse_write, pulse_start, pulse_resync,
