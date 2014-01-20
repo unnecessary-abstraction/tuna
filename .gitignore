@@ -16,3 +16,5 @@ __pycache__
 doxy/html
 doxy/latex
 doxy/libtuna.pdf
+*.so
+*.lo

@@ -1,7 +1,7 @@
 ################################################################################
 #	rules.mk for libtuna.
 #
-#	Copyright (C) 2013 Paul Barker, Loughborough University
+#	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -24,36 +24,36 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 # Targets and intermediates in this directory
-OBJS_$(d) := $(d)/buffer.o \
-	$(d)/bufhold.o \
-	$(d)/bufq.o \
-	$(d)/cbuf.o \
-	$(d)/consumer.o \
-	$(d)/csv.o \
-	$(d)/fft.o \
-	$(d)/input_alsa.o \
-	$(d)/input_sndfile.o \
-	$(d)/input_zero.o \
-	$(d)/log.o \
-	$(d)/minima.o \
-	$(d)/output_null.o \
-	$(d)/output_sndfile.o \
-	$(d)/producer.o \
-	$(d)/pulse.o \
-	$(d)/slab.o \
-	$(d)/time_slice.o \
-	$(d)/timespec.o \
-	$(d)/tol.o \
-	$(d)/window.o \
+OBJS_$(d) := $(d)/buffer.lo \
+	$(d)/bufhold.lo \
+	$(d)/bufq.lo \
+	$(d)/cbuf.lo \
+	$(d)/consumer.lo \
+	$(d)/csv.lo \
+	$(d)/fft.lo \
+	$(d)/input_alsa.lo \
+	$(d)/input_sndfile.lo \
+	$(d)/input_zero.lo \
+	$(d)/log.lo \
+	$(d)/minima.lo \
+	$(d)/output_null.lo \
+	$(d)/output_sndfile.lo \
+	$(d)/producer.lo \
+	$(d)/pulse.lo \
+	$(d)/slab.lo \
+	$(d)/time_slice.lo \
+	$(d)/timespec.lo \
+	$(d)/tol.lo \
+	$(d)/window.lo \
 
 # Only include ADS1672 input module if it was enabled by 'configure'
 ifdef enable-ads1672
 OBJS_$(d) += $(d)/input_ads1672.o
 endif
 
-DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
+DEPS_$(d) := $(OBJS_$(d):%.lo=%.d)
 
-TGTS_$(d) := $(d)/libtuna.a
+TGTS_$(d) := $(d)/libtuna.so $(d)/libtuna.a
 
 TARGETS_LIB += $(TGTS_$(d))
 

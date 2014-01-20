@@ -1,7 +1,7 @@
 ################################################################################
 #	Top-level rules.mk for TUNA.
 #
-#	Copyright (C) 2013 Paul Barker, Loughborough University
+#	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -69,15 +69,25 @@ targets: $(TARGETS_ALL)
 	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
 	$(Q)mv $*.d.tmp $*.d
 
+%.lo: %.c
+	@echo CC $@
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) -fPIC $(DEPFLAGS) -o $@ -c $<
+	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
+	$(Q)mv $*.d.tmp $*.d
+
 # Linker rule
 %: %.o
 	@echo CCLD $@
 	$(Q)$(CCLD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -o $@ $(filter %.o,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
 
+%.so:
+	@echo CCLD $@
+	$(Q)$(CCLD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -shared -o $@ $(filter %.lo,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
+
 # Archiver rule
 %.a:
 	@echo AR $@
-	$(Q)$(AR) rcs $@ $(filter %.o,$^)
+	$(Q)$(AR) rcs $@ $(filter %.lo,$^)
 
 # Clean rules
 .PHONY: clean clean-intermediates
