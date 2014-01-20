@@ -89,11 +89,31 @@ void log_sync();
  * Valid log levels in decreasing order of severity.
  */
 enum __log_levels {
+	/**
+	 * Fatal errors which cannot be recovered from and must cause immediate
+	 * termination of the program.
+	 */
 	LOG_FATAL,
+
+	/**
+	 * Errors which may be recovered from.
+	 */
 	LOG_ERROR,
+
+	/**
+	 * Warnings.
+	 */
 	LOG_WARNING,
+
+	/**
+	 * General notice messages.
+	 */
 	LOG_MESSAGE,
-	LOG_MAX_LEVEL		/* Not valid for use. */
+
+	/**
+	 * Internal marker value, not valid for use.
+	 */
+	LOG_MAX_LEVEL
 };
 
 #endif /* !__TUNA_LOG_H_INCLUDED__ */

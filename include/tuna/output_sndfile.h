@@ -24,6 +24,43 @@
 #include "consumer.h"
 #include "types.h"
 
+/**
+ * \file <tuna/output_sndfile.h>
+ *
+ * \brief Consumer module to write sample data to any format supported by
+ * libsndfile.
+ *
+ * This consumer module is useful for both testing and basic recording of
+ * captured acoustic data without analysis. It uses libsndfile to write data to
+ * a WAVE file or other appropriate sound file format.
+ */
+
+/**
+ * Initialise sndfile output consumer.
+ *
+ * Output filenames are constructed from the given prefix, an index number and
+ * the given suffix. For example, if the prefix is "output-" and the suffix is
+ * ".wav", output files will be named "output-000.wav", "output-001.wav", etc.
+ * The size of each output file will be limited by max_samples_per_file.
+ *
+ * \param consumer The consumer object to initialise. The call to
+ * output_sndfile_init() should immediately follow the creation of a consumer
+ * object with consumer_new().
+ *
+ * \param prefix The first part of the path for the output file that is to be
+ * written.
+ *
+ * \param suffix The last part of the path for the output file that is to be
+ * written.
+ *
+ * \param format The output file format. This value should be constructed from
+ * the format flags specified in <sndfile.h>.
+ *
+ * \param max_samples_per_file Maximum number of samples to be written to a
+ * single output file until it is closed and a new output file is started.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int output_sndfile_init(struct consumer * consumer, const char * prefix,
 		const char * suffix, int format, uint max_samples_per_file);
 

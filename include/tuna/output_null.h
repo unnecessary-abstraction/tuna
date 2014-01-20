@@ -23,6 +23,21 @@
 
 #include "consumer.h"
 
+/**
+ * \file <tuna/output_null.h>
+ *
+ * \brief Dummy consumer module, the equivalent of /dev/null.
+ */
+
+/**
+ * Initialise null output consumer.
+ *
+ * \param consumer The consumer object to initialise. The call to
+ * output_null_init() should immediately follow the creation of a consumer
+ * object with consumer_new().
+ *
+ * \return 0. This function always succeeds.
+ */
 int output_null_init(struct consumer * consumer);
 
 #endif /* !__TUNA_OUTPUT_NULL_H_INCLUDED__ */
