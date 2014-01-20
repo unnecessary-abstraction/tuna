@@ -101,6 +101,26 @@ def finalize_pkgs():
 ################################################################################
 # Install directories
 ################################################################################
+
+def get_sitedir(prefix, exec_prefix):
+	# Python is too clever and recommends we use distutils and a setup.py
+	# file to install our extensions. However, that would require firkling
+	# about to get the flags and options that we've determined correctly
+	# passed to setup.py and it would require a lot of messing with our
+	# dependency tracking. Basically, it's a load of nonsense.
+	#
+	# To install python packages by hand, we just need to know where to put
+	# them. This will vary systesm to system, but we can query the 'site'
+	# module to get this info. We will need to temporarily modify the
+	# prefixes to those given by our arguments to ensure things are put in
+	# the right place.
+	import site
+	tmp_prefixes = site.PREFIXES
+	site.PREFIXES = [prefix, exec_prefix]
+	site_packages_dir = site.getsitepackages()[0]
+	site.PREFIXES = tmp_prefixes
+	return site_packages_dir
+
 def configure_install_dirs(default_prefix="/usr/local"):
 	# DESTDIR is expected to be handled in the Makefile (or other user of
 	# the config outputs) and is not set here. We just set prefix and
@@ -117,6 +137,7 @@ def configure_install_dirs(default_prefix="/usr/local"):
 	var_weak_set("libdir", os.path.join(prefix, "lib"))
 	var_weak_set("includedir", os.path.join(prefix, "include"))
 	var_weak_set("docdir", os.path.join(prefix, "share/doc"))
+	var_weak_set("python_sitedir", get_sitedir(prefix, prefix))
 
 ################################################################################
 # Toolchain
