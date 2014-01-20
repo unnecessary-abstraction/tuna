@@ -639,7 +639,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 
 	p->delay_line = cbuf_init(Td_w);
 	if (!p->delay_line) {
-		error("pulse: Failed to allocate memory for delay line");
+		error("pulse: Failed to initialise delay line");
 		return -1;
 	}
 
