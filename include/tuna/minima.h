@@ -23,6 +23,8 @@
 
 #include "types.h"
 
+struct minima_tracker;
+
 struct minima_tracker * minima_init(uint windowlen);
 void minima_exit(struct minima_tracker * t);
 sample_t minima_current(struct minima_tracker * t);
