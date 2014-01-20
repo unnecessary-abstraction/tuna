@@ -1,7 +1,7 @@
 /*******************************************************************************
 	pulse.c: Per *pulse* processing.
 
-	Copyright (C) 2013,2014 Paul Barker, Loughborough University
+	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include "cbuf.h"
 #include "consumer.h"
 #include "csv.h"
+#include "env_estimate.h"
 #include "fft.h"
 #include "log.h"
 #include "minima.h"
@@ -95,19 +96,8 @@ struct pulse_processor {
 	/* Moving minimum filter. */
 	struct minima_tracker *			minima;
 
-	/* params->Tc as a per sample decay rate. */
-	float					decay;
-
-	/* Scaling factor used to convert an energy value in floating point
-	 * format to an integer of type sample_t. This conversion allows us to
-	 * save memory and processing time at a small cost in accuracy.
-	 */
-	float					scale;
-
-	/* Current envelope estimate, prior to scaling and conversion to
-	 * sample_t. Used in the detection of pulse onset.
-	 */
-	float					cur;
+	/* Envelope estimation. */
+	struct env_estimate *			env;
 
 	/* Current state: See enum above. */
 	enum pulse_state			state;
@@ -170,12 +160,6 @@ struct pulse_processor {
 	 */
 	sample_t				delayed_min;
 };
-
-/* TODO: Move elsewhere? */
-static inline float maxf(float a, float b)
-{
-	return (a > b) ? a : b;
-}
 
 static int write_results(struct pulse_processor * p)
 {
@@ -398,42 +382,37 @@ static sample_t calc_envelope(struct pulse_processor * p, sample_t x)
 {
 	assert(p);
 
-	float f;
-	sample_t env, min;
+	sample_t e, min;
 
 	/* Calculate envelope estimate. */
-	f = (float) x;
-	p->cur = maxf(p->decay * p->cur, f * f);
-	env = (sample_t)(p->cur * p->scale);
+	e = env_estimate_next(p->env, x);
 
 	/* Track minima and calculate new threshold. */
-	min = minima_next(p->minima, env);
+	min = minima_next(p->minima, e);
 	if (min <= p->threshold_limit)
 		p->threshold = min * p->params->threshold_ratio;
 	else
 		p->threshold = SAMPLE_MAX;
 
-	return env;
+	return e;
 }
 
 static void calc_first_envelope(struct pulse_processor * p, sample_t x)
 {
 	assert(p);
 
-	float f;
-	sample_t env;
+	sample_t e;
 
-	f = (float) x;
-	p->cur = f * f;
-	env = (sample_t)(p->cur * p->scale);
+	env_estimate_reset(p->env);
+	e = env_estimate_next(p->env, x);
 
 	/* Add initial envelope estimate to sample buffer and minimums queue and
 	 * calculate the initial threshold.
 	 */
-	minima_next(p->minima, env);
+	minima_next(p->minima, e);
 
-	if (env <= p->threshold_limit)
-		p->threshold = env * p->params->threshold_ratio;
+	if (e <= p->threshold_limit)
+		p->threshold = e * p->params->threshold_ratio;
 	else
 		p->threshold = SAMPLE_MAX;
 }
@@ -507,7 +486,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 
 	uint i;
 	int start_offset;
-	sample_t env;
+	sample_t e;
 
 	/* If the minimums array is empty, this is the first sample we're
 	 * processing and we need to prime the detection threshold.
@@ -521,12 +500,12 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 	}
 
 	for (i = 0; i < count; i++) {
-		env = calc_envelope(p, data[i]);
+		e = calc_envelope(p, data[i]);
 
 		/* Check against detection threshold if we're not already in a
 		 * pulse.
 		 */
-		if ((p->state == STATE_NONPULSE) && (env > p->threshold)) {
+		if ((p->state == STATE_NONPULSE) && (e > p->threshold)) {
 			p->state = STATE_PULSE;
 			process_start_pulse(p);
 
@@ -554,7 +533,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			process_data(p, &data[start_offset], i - start_offset);
 
 			/* Setup the pulse end detector. */
-			reset_pulse_end(p, env);
+			reset_pulse_end(p, e);
 		} else if (p->state == STATE_PULSE) {
 			/* We're in a pulse but this isn't the first sample of
 			 * it.
@@ -562,10 +541,10 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 
 			if (process_sample(p, data[i])) {
 				/* A new peak was found. */
-				reset_pulse_end(p, env);
+				reset_pulse_end(p, e);
 			}
 
-			if (check_pulse_end(p, env)) {
+			if (check_pulse_end(p, e)) {
 				p->state = STATE_NONPULSE;
 				process_end_pulse(p);
 			}
@@ -592,6 +571,9 @@ void pulse_exit(struct consumer * consumer)
 
 	if (p->tol)
 		tol_exit(p->tol);
+
+	if (p->env)
+		env_estimate_exit(p->env);
 
 	bufhold_exit(p->held_buffers);
 	csv_close(p->csv);
@@ -640,20 +622,25 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	/* Convert parameters. */
 	Tw_w = (uint) floor(p->params->Tw * sample_rate);
 	Td_w = (uint) floor(p->params->Td * sample_rate);
-	p->decay = expf(-1.0f / (p->params->Tc * sample_rate));
 	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
 	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
+
+	p->env = env_estimate_init(p->params->Tc, sample_rate, p->params->sample_limit);
+	if (!p->env) {
+		error("pulse: Failed to initialise envelope estimator");
+		return -1;
+	}
 
 	p->minima = minima_init(Tw_w);
 	if (!p->minima) {
 		error("pulse: Failed to allocate memory for minima tracking");
-		return -ENOMEM;
+		return -1;
 	}
 
 	p->delay_line = cbuf_init(Td_w);
 	if (!p->delay_line) {
 		error("pulse: Failed to allocate memory for delay line");
-		return -ENOMEM;
+		return -1;
 	}
 
 	p->fft_length = p->pulse_max_duration_w; /* 1 s long FFT. */
@@ -673,7 +660,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		error("pulse: Failed to allocate memory for results");
 		return -ENOMEM;
 	}
-
 
 	r = csv_write_start(p->csv, ts);
 	if (r < 0) {
@@ -698,6 +684,7 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 
 	/* Reset detector. */
 	p->state = STATE_NONPULSE;
+	env_estimate_reset(p->env);
 	minima_reset(p->minima);
 
 	r = csv_write_resync(p->csv, ts);
@@ -754,6 +741,7 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 
 	p->params = params;
 	p->fft = f;
+	p->env = NULL;
 	p->minima = NULL;
 	p->delay_line = NULL;
 	p->fft_data = NULL;
@@ -763,11 +751,6 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 	 */
 	p->threshold_limit = SAMPLE_MAX / params->threshold_ratio;
 	p->decay_threshold_limit = SAMPLE_MAX / params->decay_threshold_ratio;
-
-	/* Set scaling applied when converting a floating point energy level
-	 * back to a sample_t.
-	 */
-	p->scale = 1.0f / params->sample_limit;
 
 	consumer_set_module(consumer, pulse_write, pulse_start, pulse_resync,
 			pulse_exit, p);

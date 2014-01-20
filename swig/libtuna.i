@@ -27,6 +27,7 @@
         #include "cbuf.h"
         #include "consumer.h"
         #include "csv.h"
+        #include "env_estimate.h"
         #include "fft.h"
 #ifdef ENABLE_ADS1672
         #include "input_ads1672.h"
@@ -53,6 +54,7 @@
 %include "cbuf.h"
 %include "consumer.h"
 %include "csv.h"
+%include "env_estimate.h"
 %include "fft.h"
 #ifdef ENABLE_ADS1672
 %include "input_ads1672.h"

@@ -30,6 +30,7 @@ OBJS_$(d) := $(d)/buffer.lo \
 	$(d)/cbuf.lo \
 	$(d)/consumer.lo \
 	$(d)/csv.lo \
+	$(d)/env_estimate.lo \
 	$(d)/fft.lo \
 	$(d)/input_alsa.lo \
 	$(d)/input_sndfile.lo \
