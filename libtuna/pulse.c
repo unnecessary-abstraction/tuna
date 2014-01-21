@@ -475,6 +475,7 @@ void pulse_exit(struct consumer * consumer)
 	if (p->env)
 		env_estimate_exit(p->env);
 
+	bufhold_release_all(p->held_buffers);
 	bufhold_exit(p->held_buffers);
 	csv_close(p->csv);
 	free(p->csv_name);
