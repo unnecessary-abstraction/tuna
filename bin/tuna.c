@@ -141,13 +141,21 @@ static error_t parse(int key, char * param, struct argp_state * state)
 	    case 'i':
 		/* Replace default/previous input specifier. */
 		free(args->input);
-		args->input = param;
+		args->input = strdup(param);
+		if (!args->input) {
+			error("tuna: Failed to allocate memory to handle input argument");
+			return -ENOMEM;
+		}
 		break;
 
 	    case 'o':
 		/* Replace default/previous output specifier. */
 		free(args->output);
-		args->output = param;
+		args->output = strdup(param);
+		if (!args->output) {
+			error("tuna: Failed to allocate memory to handle output argument");
+			return -ENOMEM;
+		}
 		break;
 
 	    case 'r':
