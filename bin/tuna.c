@@ -36,6 +36,7 @@
 #include "output_null.h"
 #include "output_sndfile.h"
 #include "producer.h"
+#include "pulse.h"
 #include "time_slice.h"
 
 #ifdef ENABLE_ADS1672
@@ -201,6 +202,34 @@ int output_init(struct arguments * args)
 		}
 
 		r = time_slice_init(out, sink, fft);
+	} else if (strcmp(args->output, "pulse") == 0) {
+		struct pulse_processor_params * params;
+
+		params = (struct pulse_processor_params *)
+			malloc(sizeof(struct pulse_processor_params));
+		if (!params) {
+			error("tuna: Failed to allocate memory for pulse processor parameters");
+			return -1;
+		}
+
+		/* TODO: Make configurable. */
+		params->Tw = 0.1;
+		params->Tc = 0.1;
+		params->Td = 0.1;
+		params->sample_limit = (float)(1<<15);
+		params->pulse_max_duration = 1.0;
+		params->pulse_min_decay = 0.1;
+		params->threshold_ratio = 16;
+		params->decay_threshold_ratio = 2;
+
+		fft = fft_init();
+		if (!fft) {
+			error("tuna: Failed to initialize fft module");
+
+			return -ENOMEM;
+		}
+
+		r = pulse_init(out, sink, fft, params);
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
