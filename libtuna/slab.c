@@ -48,7 +48,7 @@ struct slab * slab_init(size_t element_size, size_t list_entry_offset)
 {
 	struct slab * s;
 
-	s = (struct slab *) malloc(sizeof(struct slab *));
+	s = (struct slab *) malloc(sizeof(struct slab));
 	if (!s) {
 		error("slab: Failed to allocate memory");
 		return NULL;
