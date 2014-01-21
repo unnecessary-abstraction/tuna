@@ -252,7 +252,7 @@ static int process_time_slice(struct time_slice * t)
 
 	fft_data = fft_open(t->fft);
 
-	memset(&t->results, 0,
+	memset(t->results, 0,
 		sizeof(struct time_slice_results) + t->n_tol * sizeof(float));
 
 	t->index = 0;
