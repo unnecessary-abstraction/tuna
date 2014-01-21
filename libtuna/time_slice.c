@@ -427,7 +427,7 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 		goto err;
 	}
 
-	bufhold_init(&t->held_buffers);
+	t->held_buffers = bufhold_init();
 	if (!t->held_buffers) {
 		error("time_slice: Failed to allocate memory for held buffers");
 		r = -1;
