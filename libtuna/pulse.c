@@ -32,6 +32,7 @@
 #include "fft.h"
 #include "log.h"
 #include "onset_threshold.h"
+#include "offset_threshold.h"
 #include "pulse.h"
 #include "tol.h"
 #include "types.h"
@@ -76,9 +77,6 @@ struct pulse_processor {
 	/* Parameters passed during initialisation. */
 	const struct pulse_processor_params *	params;
 
-	/* Delay line of length params->Td. */
-	struct cbuf *				delay_line;
-
 	/* Output stream for writing results in csv format. */
 	FILE *					csv;
 
@@ -95,6 +93,9 @@ struct pulse_processor {
 
 	/* Onset threshold tracker. */
 	struct onset_threshold *		onset;
+
+	/* Offset threshold tracker. */
+	struct offset_threshold *		offset;
 
 	/* Envelope estimation. */
 	struct env_estimate *			env;
@@ -129,30 +130,6 @@ struct pulse_processor {
 	 * TODO: Compute this only when the minimum changes, not every sample.
 	 */
 	sample_t				threshold;
-
-	/* Threshold for detection of a pulse end. If current_min is above this
-	 * value, the pulse will end. This value is calculated from delayed_min
-	 * every time delayed_min is updated, rather than every sample.
-	 *
-	 * TODO: Can we merge this with threshold if only one is actively used
-	 * at any time?
-	 */
-	sample_t				decay_threshold;
-
-	/* Highest minima value as a sample_t that can be multiplied by
-	 * params->decay_threshold_ratio without causing overflow. Calculated
-	 * from the value of params->decay_threshold_ratio.
-	 */
-	sample_t				decay_threshold_limit;
-
-	/* Current minimum envelope value, tracked during pulse end detection.
-	 */
-	sample_t				current_min;
-
-	/* Minimum envelope value delayed via delay_line, tracked during pulse
-	 * end detection.
-	 */
-	sample_t				delayed_min;
 };
 
 static int write_results(struct pulse_processor * p)
@@ -385,31 +362,15 @@ static sample_t calc_envelope(struct pulse_processor * p, sample_t x)
 	return e;
 }
 
-static void reset_pulse_end(struct pulse_processor * p, sample_t env)
-{
-	assert(p);
-
-	p->delayed_min = env;
-	p->current_min = env;
-	if (env <= p->decay_threshold_limit)
-		p->decay_threshold = env * p->params->decay_threshold_ratio;
-	else
-		/* Set decay_threshold so that delayed_min is never less than
-		 * the threshold.
-		 *
-		 * TODO: Check the thinking around all of this!
-		 */
-		p->decay_threshold = 0;
-}
-
 /* Returns 0 to remain in pulse, 1 to exit pulse. */
 static int check_pulse_end(struct pulse_processor * p, sample_t env)
 {
 	assert(p);
 
-	sample_t old;
+	sample_t decay_threshold, delayed_min;
 
-	old = cbuf_rotate(p->delay_line, env);
+	decay_threshold = offset_threshold_next(p->offset, env);
+	delayed_min = offset_threshold_delayed_min(p->offset);
 
 	/* Check for min/max pulse duration. */
 	if (p->index > p->pulse_max_duration_w)
@@ -418,29 +379,11 @@ static int check_pulse_end(struct pulse_processor * p, sample_t env)
 		/* TODO: Do we still need to update delayed_min in this case? */
 		return 0;
 
-	/* Update delayed minimum. */
-	if (old < p->delayed_min)
-		p->delayed_min = old;
-
-	/* Update current minimum and threshold. */
-	if (env < p->current_min) {
-		p->current_min = env;
-		if (env <= p->decay_threshold_limit)
-			p->decay_threshold = env * p->params->decay_threshold_ratio;
-		else
-			/* Set decay_threshold so that current_min is never less
-			 * than the threshold.
-			 *
-			 * TODO: Check the thinking around all of this!
-			 */
-			p->decay_threshold = 0;
-	}
-
 	/* The delayed minimum should be greater than or equal to the calculated
 	 * threshold if the signal envelope is decaying faster than the desired
 	 * rate.
 	 */
-	if (p->delayed_min < p->decay_threshold)
+	if (delayed_min < decay_threshold)
 		return 1;
 
 	return 0;
@@ -490,7 +433,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			process_data(p, &data[start_offset], i - start_offset);
 
 			/* Setup the pulse end detector. */
-			reset_pulse_end(p, e);
+			offset_threshold_reset(p->offset, e);
 		} else if (p->state == STATE_PULSE) {
 			/* We're in a pulse but this isn't the first sample of
 			 * it.
@@ -498,7 +441,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 
 			if (process_sample(p, data[i])) {
 				/* A new peak was found. */
-				reset_pulse_end(p, e);
+				offset_threshold_reset(p->offset, e);
 			}
 
 			if (check_pulse_end(p, e)) {
@@ -520,8 +463,8 @@ void pulse_exit(struct consumer * consumer)
 	if (p->onset)
 		onset_threshold_exit(p->onset);
 
-	if (p->delay_line)
-		cbuf_exit(p->delay_line);
+	if (p->offset)
+		offset_threshold_exit(p->offset);
 
 	if (p->results)
 		free(p->results);
@@ -568,7 +511,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	assert(ts);
 
 	int r;
-	uint Td_w;
 	struct pulse_processor * p;
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
@@ -577,7 +519,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	p->state = STATE_NONPULSE;
 
 	/* Convert parameters. */
-	Td_w = (uint) floor(p->params->Td * sample_rate);
 	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
 	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
 
@@ -593,9 +534,9 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -1;
 	}
 
-	p->delay_line = cbuf_init(Td_w);
-	if (!p->delay_line) {
-		error("pulse: Failed to initialise delay line");
+	p->offset = offset_threshold_init(p->params->Td, sample_rate, p->params->decay_threshold_ratio);
+	if (!p->offset) {
+		error("pulse: Failed to initialise offset threshold tracking");
 		return -1;
 	}
 
@@ -699,13 +640,8 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 	p->fft = f;
 	p->env = NULL;
 	p->onset = NULL;
-	p->delay_line = NULL;
+	p->offset = NULL;
 	p->fft_data = NULL;
-
-	/* Set highest value which we can multiply by decay_threshold_ratio
-	 * without overflow.
-	 */
-	p->decay_threshold_limit = SAMPLE_MAX / params->decay_threshold_ratio;
 
 	consumer_set_module(consumer, pulse_write, pulse_start, pulse_resync,
 			pulse_exit, p);

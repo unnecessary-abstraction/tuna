@@ -38,6 +38,7 @@ OBJS_$(d) := $(d)/buffer.lo \
 	$(d)/log.lo \
 	$(d)/minima.lo \
 	$(d)/onset_threshold.lo \
+	$(d)/offset_threshold.lo \
 	$(d)/output_null.lo \
 	$(d)/output_sndfile.lo \
 	$(d)/producer.lo \
