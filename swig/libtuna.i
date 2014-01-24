@@ -21,6 +21,7 @@
 %module libtuna
 
 %{
+        #include "analysis.h"
         #include "buffer.h"
         #include "bufhold.h"
         #include "bufq.h"
@@ -50,6 +51,7 @@
 
 #define __noreturn
 
+%include "analysis.h"
 %include "buffer.h"
 %include "bufhold.h"
 %include "bufq.h"
