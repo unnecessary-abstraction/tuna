@@ -54,9 +54,8 @@ void cbuf_reset(struct cbuf * c)
 {
 	assert(c);
 
-	size_t sz = sizeof(struct cbuf) + c->len * sizeof(sample_t);
-
-	memset(c, 0, sz);
+	c->index = 0;
+	memset(c->data, 0, c->len * sizeof(sample_t));
 }
 
 sample_t cbuf_index(struct cbuf * c, uint i)
