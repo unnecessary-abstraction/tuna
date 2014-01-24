@@ -75,7 +75,7 @@ struct pulse_processor {
 	struct bufhold *			held_buffers;
 
 	/* Parameters passed during initialisation. */
-	const struct pulse_processor_params *	params;
+	const struct pulse_params *	params;
 
 	/* Output stream for writing results in csv format. */
 	FILE *					csv;
@@ -599,7 +599,7 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 *******************************************************************************/
 
 int pulse_init(struct consumer * consumer, const char * csv_name,
-		struct fft * f, const struct pulse_processor_params * params)
+		struct fft * f, const struct pulse_params * params)
 {
 	assert(consumer);
 	assert(csv_name);

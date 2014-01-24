@@ -203,10 +203,10 @@ int output_init(struct arguments * args)
 
 		r = time_slice_init(out, sink, fft);
 	} else if (strcmp(args->output, "pulse") == 0) {
-		struct pulse_processor_params * params;
+		struct pulse_params * params;
 
-		params = (struct pulse_processor_params *)
-			malloc(sizeof(struct pulse_processor_params));
+		params = (struct pulse_params *)
+			malloc(sizeof(struct pulse_params));
 		if (!params) {
 			error("tuna: Failed to allocate memory for pulse processor parameters");
 			return -1;

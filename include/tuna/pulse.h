@@ -26,7 +26,7 @@
 #include "types.h"
 
 /* Parameters for pulse detection and processing. */
-struct pulse_processor_params {
+struct pulse_params {
 	/* Width in seconds of the analysis window applied to the detection
 	 * function to detect pulses.
 	 */
@@ -77,6 +77,6 @@ struct pulse_processor_params {
  * after this function has been called until the module is exited.
  */
 int pulse_init(struct consumer * consumer, const char * csv_name,
-		struct fft * f, const struct pulse_processor_params * params);
+		struct fft * f, const struct pulse_params * params);
 
 #endif /* !__TUNA_PULSE_H_INCLUDED__ */
