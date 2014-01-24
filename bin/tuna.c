@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "analysis.h"
 #include "bufq.h"
 #include "compiler.h"
 #include "consumer.h"
@@ -230,6 +231,39 @@ int output_init(struct arguments * args)
 		}
 
 		r = pulse_init(out, sink, fft, params);
+	} else if (strcmp(args->output, "analysis") == 0) {
+		struct pulse_params * params;
+		char * pulse_sink, * time_slice_sink;
+
+		/* Split parameter again to get two sink files. */
+		pulse_sink = sink;
+		time_slice_sink = split_param(sink);
+
+		params = (struct pulse_params *)
+			malloc(sizeof(struct pulse_params));
+		if (!params) {
+			error("tuna: Failed to allocate memory for pulse processor parameters");
+			return -1;
+		}
+
+		/* TODO: Make configurable. */
+		params->Tw = 0.1;
+		params->Tc = 0.1;
+		params->Td = 0.1;
+		params->sample_limit = (float)(1<<15);
+		params->pulse_max_duration = 1.0;
+		params->pulse_min_decay = 0.1;
+		params->threshold_ratio = 16;
+		params->decay_threshold_ratio = 2;
+
+		fft = fft_init();
+		if (!fft) {
+			error("tuna: Failed to initialize fft module");
+
+			return -ENOMEM;
+		}
+
+		r = analysis_init(out, pulse_sink, time_slice_sink, fft, params);
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
