@@ -36,7 +36,7 @@ INTERMEDIATES += $(OBJS_$(d)) $(DEPS_$(d)) $(d)/libtuna_wrap.c
 INSTALL_DEPS += install-$(d)
 
 # Rules for this directory
-$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk $(OBJS_$(d))
+$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so $(OBJS_$(d))
 $(TGTS_$(d)): LDLIBRARIES_TGT := -Llibtuna -ltuna
 
 $(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
