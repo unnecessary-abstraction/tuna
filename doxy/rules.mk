@@ -54,7 +54,7 @@ install-$(d): $(TGTS_$(d))
 INSTALL_DEPS += install-$(d)
 
 # Make everything depend on this rules file
-$(TGTS_$(d)): $(d)/rules.mk
+$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk
 
 # Pop directory stack
 d := $(dirstack_$(sp))

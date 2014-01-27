@@ -81,7 +81,7 @@ install-$(d): $(TGTS_$(d))
 -include $(DEPS_$(d))
 
 # Make everything depend on this rules file
-$(OBJS_$(d)): $(d)/rules.mk
+$(OBJS_$(d)): $(SRCDIR)/$(d)/rules.mk
 
 # Pop directory stack
 d := $(dirstack_$(sp))

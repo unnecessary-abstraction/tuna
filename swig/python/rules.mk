@@ -55,7 +55,7 @@ $(d)/libtuna_wrap.c: $(SWIGFILE)
 -include $(DEPS_$(d))
 
 # Make everything depend on this rules file
-$(OBJS_$(d)) $(d)/libtuna_wrap.c: $(d)/rules.mk
+$(OBJS_$(d)) $(d)/libtuna_wrap.c: $(SRCDIR)/$(d)/rules.mk
 
 # Pop directory stack
 d := $(dirstack_$(sp))
