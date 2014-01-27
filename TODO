@@ -1,15 +1,8 @@
 - Add doxygen comments to all headers.
 
-- Standardise init functions so that they all allocate memory and return a
-  pointer to the appropriate object.
-
 - Standardise exit functions so they all gracefully ignore NULL pointer
   arguments. This will simplify error handling and exit code as we won't need to
   check whether objects have been initialised yet.
-
-- Compile libtuna with -fPIC and produce shared and static libraries.
-
-- Use SWIG to generate Python bindings.
 
 - Write unit tests using Python bindings.
 
