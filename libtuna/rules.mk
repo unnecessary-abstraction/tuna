@@ -52,7 +52,7 @@ OBJS_$(d) := $(d)/analysis.lo \
 
 # Only include ADS1672 input module if it was enabled by 'configure'
 ifdef enable-ads1672
-OBJS_$(d) += $(d)/input_ads1672.o
+OBJS_$(d) += $(d)/input_ads1672.lo
 endif
 
 DEPS_$(d) := $(OBJS_$(d):%.lo=%.d)
