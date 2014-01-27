@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <stddef.h>
 
+#include "compiler.h"
 #include "list.h"
 #include "log.h"
 #include "slab.h"

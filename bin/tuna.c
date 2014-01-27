@@ -27,7 +27,6 @@
 
 #include "analysis.h"
 #include "bufq.h"
-#include "compiler.h"
 #include "consumer.h"
 #include "fft.h"
 #include "input_alsa.h"
