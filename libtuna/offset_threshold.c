@@ -89,7 +89,7 @@ sample_t offset_threshold_next(struct offset_threshold * o, sample_t env)
 		if (env <= o->limit)
 			o->threshold = env * o->ratio;
 		else
-			/* Set threshold such that current_min is never less
+			/* Set threshold such that delayed_min is never less
 			 * than the threshold.
 			 */
 			o->threshold = 0;
@@ -110,7 +110,7 @@ void offset_threshold_reset(struct offset_threshold * o, sample_t env)
 	if (env <= o->limit)
 		o->threshold = env * o->ratio;
 	else
-		/* Set threshold such that current_min is never less than the
+		/* Set threshold such that delayed_min is never less than the
 		 * threshold.
 		 */
 		o->threshold = 0;
