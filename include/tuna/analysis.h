@@ -27,7 +27,7 @@
 #include "time_slice.h"
 
 int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
-		const char * time_slice_csv_name, struct fft * fft,
+		const char * time_slice_csv_name,
 		const struct pulse_params * pulse_params);
 
 #endif /* !__TUNA_ANALYSIS_H_INCLUDED__ */

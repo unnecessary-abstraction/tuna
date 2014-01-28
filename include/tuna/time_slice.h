@@ -67,15 +67,8 @@
  * \param csv_name The filename of the output file which will be created.
  * Analysis results will be written to this file in CSV format.
  *
- * \param fft Pre-created FFT object used to handle Fourier transforms within
- * the analysis. This FFT object may be shared between other analysis modules to
- * save memory and processing time. fft_exit() should not be called on this
- * object until consumer_exit() has been called on all consumer objects which
- * use it.
- *
  * \return >=0 on success, <0 on failure.
  */
-int time_slice_init(struct consumer * consumer, const char * csv_name,
-		struct fft * fft);
+int time_slice_init(struct consumer * consumer, const char * csv_name);
 
 #endif /* !__TUNA_TIME_SLICE_H_INCLUDED__ */

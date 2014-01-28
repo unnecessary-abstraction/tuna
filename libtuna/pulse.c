@@ -223,7 +223,6 @@ void process_start_pulse(struct pulse_processor * p)
 
         memset(p->results, 0, sizeof(struct pulse_results) + p->n_tol * sizeof(float));
 
-	p->fft_data = fft_open(p->fft);
 	p->index = 0;
 }
 
@@ -239,7 +238,6 @@ static void process_end_pulse(struct pulse_processor * p)
 	fft_transform(p->fft);
 	tol_calculate(p->tol, p->fft_data, p->results->tols);
 
-	fft_close(p->fft);
 	write_results(p);
 }
 
@@ -475,6 +473,9 @@ void pulse_exit(struct consumer * consumer)
 	if (p->env)
 		env_estimate_exit(p->env);
 
+	if (p->fft)
+		fft_exit(p->fft);
+
 	bufhold_release_all(p->held_buffers);
 	bufhold_exit(p->held_buffers);
 	csv_close(p->csv);
@@ -542,7 +543,13 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	}
 
 	p->fft_length = p->pulse_max_duration_w; /* 1 s long FFT. */
-	fft_set_length(p->fft, p->fft_length);
+	p->fft = fft_init(p->fft_length);
+	if (!p->fft) {
+		error("pulse: Failed to initialise FFT");
+		return -1;
+	}
+	p->fft_data = fft_get_data(p->fft);
+
 	p->tol = tol_init(sample_rate, p->fft_length, 0.4, 3);
 	if (!p->tol) {
 		error("pulse: Failed to initialise third octave level calculation");
@@ -599,11 +606,10 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 *******************************************************************************/
 
 int pulse_init(struct consumer * consumer, const char * csv_name,
-		struct fft * f, const struct pulse_params * params)
+		const struct pulse_params * params)
 {
 	assert(consumer);
 	assert(csv_name);
-	assert(f);
 	assert(params);
 
 	int r;
@@ -638,10 +644,10 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 	}
 
 	p->params = params;
-	p->fft = f;
 	p->env = NULL;
 	p->onset = NULL;
 	p->offset = NULL;
+	p->fft = NULL;
 	p->fft_data = NULL;
 
 	consumer_set_module(consumer, pulse_write, pulse_start, pulse_resync,

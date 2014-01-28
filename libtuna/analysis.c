@@ -107,7 +107,7 @@ int analysis_resync(struct consumer * consumer, struct timespec * ts)
 *******************************************************************************/
 
 int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
-		const char * time_slice_csv_name, struct fft * fft,
+		const char * time_slice_csv_name,
 		const struct pulse_params * pulse_params)
 {
 	assert(consumer);
@@ -129,7 +129,7 @@ int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
 		goto err;
 	}
 
-	r = pulse_init(a->pulse, pulse_csv_name, fft, pulse_params);
+	r = pulse_init(a->pulse, pulse_csv_name, pulse_params);
 	if (r < 0) {
 		error("analysis: Failed to initialise pulse processing");
 		goto err;
@@ -142,7 +142,7 @@ int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
 		goto err;
 	}
 
-	r = time_slice_init(a->time_slice, time_slice_csv_name, fft);
+	r = time_slice_init(a->time_slice, time_slice_csv_name);
 	if (r < 0) {
 		error("analysis: Failed to initialise time slice processing");
 		goto err;

@@ -38,42 +38,43 @@ struct fft {
 		float *			data;
 		float complex *		cdata;
 	};
-
-	pthread_mutex_t			mutex;
 };
 
 /*******************************************************************************
 	Public functions
 *******************************************************************************/
 
-struct fft * fft_init()
+struct fft * fft_init(uint length)
 {
-	int r;
-	pthread_mutexattr_t attr;
 	struct fft * fft;
 
-	fft = (struct fft *) calloc(1, sizeof(struct fft));
+	fft = (struct fft *) malloc(sizeof(struct fft));
 	if (!fft) {
-		error("fft: Failed to allocated memory");
+		error("fft: Failed to allocate memory");
 		return NULL;
 	}
 
-	/* Create a recursive mutex. */
-	r = pthread_mutexattr_init(&attr);
-	if (r != 0) {
-		error("fft: Failed to create mutexattr");
+	fft->length = length;
+	fft->data = (float *)malloc((length + 4) * sizeof(float));
+	if (!fft->data) {
+		error("fft: Failed to allocate memory");
+		free(fft);
 		return NULL;
 	}
 
-	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-
-	r = pthread_mutex_init(&fft->mutex, &attr);
-	pthread_mutexattr_destroy(&attr);
-	if (r != 0) {
-		error("fft: Failed to create mutex");
+	/* Ignore errors in reading or writing fftw wisdom as it is only a time
+	 * saving mechanism.
+	 */
+	fftwf_import_wisdom_from_filename("fftw.wisdom");
+	fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
+	if (fft->plan == NULL) {
+		error("fft: Failed to plan FFT");
+		free(fft->data);
+		free(fft);
 		return NULL;
 	}
-	
+	fftwf_export_wisdom_to_filename("fftw.wisdom");
+
 	return fft;
 }
 
@@ -81,54 +82,22 @@ void fft_exit(struct fft * fft)
 {
 	assert(fft);
 
-	pthread_mutex_destroy(&fft->mutex);
+	free(fft->data);
 	free(fft);
 }
 
-int fft_set_length(struct fft * fft, uint length)
+float * fft_get_data(struct fft * fft)
 {
 	assert(fft);
 
-	/* This can be called multiple times if different uses are sharing the
-	 * same fft buffer. We need to reallocate if the new length is longer
-	 * than the old length.
-	 */
-	if (length > fft->length) {
-		pthread_mutex_lock(&fft->mutex);
-
-		fft->length = length;
-		fft->data = (float *)realloc(fft->data, (length + 4) * sizeof(float));
-		if (!fft->data) {
-			error("fft: Failed to allocate memory");
-			return -ENOMEM;
-		}
-
-		/* Ignore errors in reading or writing fftw wisdom as it is only
-		 * a time saving mechanism.
-		 */
-		fftwf_import_wisdom_from_filename("fftw.wisdom");
-		fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
-		fftwf_export_wisdom_to_filename("fftw.wisdom");
-
-		pthread_mutex_unlock(&fft->mutex);
-	}
-
-	return 0;
-}
-
-float * fft_open(struct fft * fft)
-{
-	assert(fft);
-
-	pthread_mutex_lock(&fft->mutex);
 	return fft->data;
 }
 
-void fft_close(struct fft * fft)
+uint fft_get_length(struct fft * fft)
 {
 	assert(fft);
 
-	pthread_mutex_unlock(&fft->mutex);
+	return fft->length;
 }
 
 int fft_transform(struct fft * fft)
@@ -138,23 +107,19 @@ int fft_transform(struct fft * fft)
 	uint i;
 	double re, im;
 
-	pthread_mutex_lock(&fft->mutex);
-
 	fftwf_execute(fft->plan);
 
 	/* Find the magnitude of each complex frequency sample. */
 	for (i = 0; i < fft->length / 2; i++) {
-		/* Read in a complex double. */
-		re = creal(fft->cdata[i]);
-		im = cimag(fft->cdata[i]);
+		/* Read in a complex value. */
+		re = crealf(fft->cdata[i]);
+		im = cimagf(fft->cdata[i]);
 
-		/* Write out a single double. The output will take up half the
+		/* Write out a single float. The output will take up half the
 		 * space that the input did.
 		 */
-		fft->data[i] = sqrt(re * re + im * im) / fft->length;
+		fft->data[i] = sqrtf(re * re + im * im) / fft->length;
 	}
-
-	pthread_mutex_unlock(&fft->mutex);
 
 	return 0;
 }

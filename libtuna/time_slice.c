@@ -49,6 +49,7 @@ struct time_slice {
 	FILE *				csv;
 	char *				csv_name;
 	struct fft *			fft;
+	float *				fft_data;
 
 	/* The following fields are initialised in time_slice_start(). */
 	struct tol *			tol;
@@ -148,11 +149,10 @@ error:
 	return r;
 }
 
-static void process_buffer(struct time_slice * t, struct held_buffer * h, float * fft_data)
+static void process_buffer(struct time_slice * t, struct held_buffer * h)
 {
 	assert(t);
 	assert(h);
-	assert(fft_data);
 
 	/* We split processing into quarters as we need overlapped windowed
 	 * analysis in the frequency domain and non-overlapped non-windowed
@@ -189,7 +189,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 			v = data[i];
 			x = (float)v;
 
-			fft_data[t->index] = x * t->window[t->index];
+			t->fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
 		avail -= c;
@@ -218,7 +218,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 				t->results->peak_negative_offset = t->index - len/4;
 			}
 			
-			fft_data[t->index] = x * t->window[t->index];
+			t->fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
 		avail -= c;
@@ -234,7 +234,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h, float 
 			v = data[offset + i];
 			x = (float)v;
 
-			fft_data[t->index] = x * t->window[t->index];
+			t->fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
 		avail -= c;
@@ -247,10 +247,7 @@ static int process_time_slice(struct time_slice * t)
 	assert(t);
 
 	struct held_buffer * h;
-	float * fft_data;
 	uint start, offset;
-
-	fft_data = fft_open(t->fft);
 
 	memset(t->results, 0,
 		sizeof(struct time_slice_results) + t->n_tol * sizeof(float));
@@ -261,7 +258,7 @@ static int process_time_slice(struct time_slice * t)
 	while (h) {
 		struct held_buffer * next = bufhold_next(h);
 		start = t->index;
-		process_buffer(t, h, fft_data);
+		process_buffer(t, h);
 
 		/* Check whether this buffer extends into the second half of
 		 * this time slice, if not then we can discard it.
@@ -281,9 +278,8 @@ static int process_time_slice(struct time_slice * t)
 	}
 
 	fft_transform(t->fft);
-	tol_calculate(t->tol, fft_data, t->results->tols);
+	tol_calculate(t->tol, t->fft_data, t->results->tols);
 
-	fft_close(t->fft);
 	return write_results(t);
 }
 
@@ -359,7 +355,13 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 
 	window_init_sine(t->window, t->slice_period * 2);
 
-	fft_set_length(t->fft, sample_rate);
+	t->fft = fft_init(sample_rate);
+	if (!t->fft) {
+		error("time_slice: Failed to initialise FFT");
+		return -1;
+	}
+	t->fft_data = fft_get_data(t->fft);
+
 	t->tol = tol_init(sample_rate, sample_rate, 0.4, 3);
 	if (!t->tol) {
 		error("time_slice: Failed to initialise third octave level calculation");
@@ -412,11 +414,9 @@ int time_slice_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-int time_slice_init(struct consumer * consumer, const char * csv_name,
-		struct fft * f)
+int time_slice_init(struct consumer * consumer, const char * csv_name)
 {
 	assert(csv_name);
-	assert(f);
 	int r;
 
 	struct time_slice * t = (struct time_slice *)
@@ -448,8 +448,6 @@ int time_slice_init(struct consumer * consumer, const char * csv_name,
 		r = -1;
 		goto err;
 	}
-
-	t->fft = f;
 
 	consumer_set_module(consumer, time_slice_write, time_slice_start,
 			time_slice_resync, time_slice_exit, t);

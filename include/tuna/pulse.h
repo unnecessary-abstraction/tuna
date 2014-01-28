@@ -96,12 +96,6 @@ struct pulse_params {
  * \param csv_name The filename of the output file which will be created.
  * Analysis results will be written to this file in CSV format.
  *
- * \param fft Pre-created FFT object used to handle Fourier transforms within
- * the analysis. This FFT object may be shared between other analysis modules to
- * save memory and processing time. fft_exit() should not be called on this
- * object until consumer_exit() has been called on all consumer objects which
- * use it.
- *
  * \param params The various mathematical parameters to be used in the pulse
  * detection. The structure pointed to by this argument is used in-place by the
  * pulse processing module and therefore the data it points to should be valid
@@ -111,6 +105,6 @@ struct pulse_params {
  * \return >=0 on success, <0 on failure.
  */
 int pulse_init(struct consumer * consumer, const char * csv_name,
-		struct fft * fft, const struct pulse_params * params);
+		const struct pulse_params * params);
 
 #endif /* !__TUNA_PULSE_H_INCLUDED__ */

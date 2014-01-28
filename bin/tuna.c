@@ -28,7 +28,6 @@
 #include "analysis.h"
 #include "bufq.h"
 #include "consumer.h"
-#include "fft.h"
 #include "input_alsa.h"
 #include "input_sndfile.h"
 #include "input_zero.h"
@@ -47,7 +46,6 @@
 struct producer * in = NULL;
 struct consumer * bufq = NULL;
 struct consumer * out = NULL;
-struct fft * fft = NULL;
 
 /* Defaults. */
 const char * default_input = "alsa:hw:0";
@@ -194,14 +192,7 @@ int output_init(struct arguments * args)
 	}
 
 	if (strcmp(args->output, "time_slice") == 0) {
-		fft = fft_init();
-		if (!fft) {
-			error("tuna: Failed to initialize fft module");
-
-			return -ENOMEM;
-		}
-
-		r = time_slice_init(out, sink, fft);
+		r = time_slice_init(out, sink);
 	} else if (strcmp(args->output, "pulse") == 0) {
 		struct pulse_params * params;
 
@@ -222,14 +213,7 @@ int output_init(struct arguments * args)
 		params->threshold_ratio = 16;
 		params->decay_threshold_ratio = 2;
 
-		fft = fft_init();
-		if (!fft) {
-			error("tuna: Failed to initialize fft module");
-
-			return -ENOMEM;
-		}
-
-		r = pulse_init(out, sink, fft, params);
+		r = pulse_init(out, sink, params);
 	} else if (strcmp(args->output, "analysis") == 0) {
 		struct pulse_params * params;
 		char * pulse_sink, * time_slice_sink;
@@ -255,14 +239,7 @@ int output_init(struct arguments * args)
 		params->threshold_ratio = 16;
 		params->decay_threshold_ratio = 2;
 
-		fft = fft_init();
-		if (!fft) {
-			error("tuna: Failed to initialize fft module");
-
-			return -ENOMEM;
-		}
-
-		r = analysis_init(out, pulse_sink, time_slice_sink, fft, params);
+		r = analysis_init(out, pulse_sink, time_slice_sink, params);
 	} else if (strcmp(args->output, "sndfile") == 0) {
 		/* TODO: These should be configurable. */
 		format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
@@ -351,8 +328,6 @@ void output_exit()
 {
 	if (out)
 		consumer_exit(out);
-	if (fft)
-		fft_exit(fft);
 }
 
 void sigterm_handler(int sig)
