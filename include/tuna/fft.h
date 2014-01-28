@@ -23,6 +23,8 @@
 
 #include "types.h"
 
+struct fft;
+
 struct fft * fft_init();
 void fft_exit(struct fft * fft);
 int fft_set_length(struct fft * fft, uint length);
