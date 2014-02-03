@@ -25,6 +25,8 @@
 
 #include "types.h"
 
+struct slab;
+
 struct slab * slab_init(size_t element_size, size_t list_entry_offset);
 void slab_exit(struct slab * s);
 int slab_prealloc(struct slab * s, uint n_pages);

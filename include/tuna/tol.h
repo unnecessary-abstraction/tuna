@@ -23,6 +23,8 @@
 
 #include "types.h"
 
+struct tol;
+
 struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uint phi_L);
 void tol_exit(struct tol * t);
 uint tol_get_num_levels(struct tol * t);

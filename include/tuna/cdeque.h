@@ -23,6 +23,8 @@
 
 #include "types.h"
 
+struct cdeque;
+
 struct cdeque * cdeque_init(uint len);
 void cdeque_reset(struct cdeque * c);
 void cdeque_exit(struct cdeque * c);
