@@ -4,6 +4,9 @@
   arguments. This will simplify error handling and exit code as we won't need to
   check whether objects have been initialised yet.
 
+- Rename _init functions which allocate new objects to _new and _exit functions
+  which destroy objects to _delete as this will make much more sense.
+
 - Write unit tests using Python bindings.
 
 - Write integration tests in Python.
