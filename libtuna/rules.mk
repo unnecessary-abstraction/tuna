@@ -45,7 +45,6 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/output_sndfile.lo \
 	$(d)/producer.lo \
 	$(d)/pulse.lo \
-	$(d)/slab.lo \
 	$(d)/time_slice.lo \
 	$(d)/timespec.lo \
 	$(d)/tol.lo \

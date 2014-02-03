@@ -27,12 +27,10 @@
 #include "compiler.h"
 #include "list.h"
 #include "log.h"
-#include "slab.h"
 #include "types.h"
 
 struct bufhold {
 	struct list		buffers;
-	struct slab *		allocator;
 };
 
 struct held_buffer {
@@ -134,7 +132,7 @@ void bufhold_release(struct bufhold * bh, struct held_buffer * h)
 
 	list_remove(&h->e);
 	buffer_release(h->base);
-	slab_free(bh->allocator, h);
+	free(h);
 }
 
 void bufhold_release_all(struct bufhold * bh)
@@ -147,7 +145,7 @@ void bufhold_release_all(struct bufhold * bh)
 	while ((e = list_pop(&bh->buffers))) {
 		h = container_of(e, struct held_buffer, e);
 		buffer_release(h->base);
-		slab_free(bh->allocator, h);
+		free(h);
 	}
 }
 
@@ -156,7 +154,8 @@ void bufhold_add(struct bufhold * bh, sample_t * buf, uint count)
 	assert(bh);
 	assert(buf);
 
-	struct held_buffer * h = (struct held_buffer *)slab_alloc(bh->allocator);
+	struct held_buffer * h = (struct held_buffer *)
+		malloc(sizeof(struct held_buffer));
 
 	h->base = buf;
 	h->data = buf;
@@ -175,13 +174,6 @@ struct bufhold * bufhold_init()
 		return NULL;
 	}
 
-	bh->allocator = slab_init(sizeof(struct held_buffer), offsetof(struct held_buffer, e));
-	if (!bh->allocator) {
-		error("bufhold: Failed to initialise slab allocator");
-		free(bh);
-		return NULL;
-	}
-
 	list_init(&bh->buffers);
 
 	return bh;
@@ -195,6 +187,5 @@ void bufhold_exit(struct bufhold * bh)
 		error("bufhold: Destroying a non-empty bufhold will leak memory");
 
 	list_exit(&bh->buffers);
-	slab_exit(bh->allocator);
 	free(bh);
 }
