@@ -26,7 +26,7 @@
 /**
  * \file <tuna/log.h>
  *
- * Logging subsystem.
+ * \brief Logging subsystem.
  */
 
 /**

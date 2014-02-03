@@ -34,7 +34,7 @@
  */
 
 /**
- * Parameters for pulse detection and processing.
+ * \brief Parameters for pulse detection and processing.
  */
 struct pulse_params {
 	/**

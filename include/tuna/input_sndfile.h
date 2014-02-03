@@ -24,6 +24,28 @@
 #include "consumer.h"
 #include "producer.h"
 
+/**
+ * \file <tuna/input_sndfile.h>
+ *
+ * \brief Input driver for sound files.
+ *
+ * This producer reads data from sound files of any format supported by
+ * libsndfile.
+ */
+
+/**
+ * \brief Initialise the sndfile producer.
+ *
+ * \param producer The producer object to initialise. The call to
+ * input_sndfile_init() should immediately follow the creation of a producer object
+ * with producer_new().
+ *
+ * \param consumer The consumer to which this producer will write data.
+ *
+ * \param source The name of the sound file from which to read data.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int input_sndfile_init(struct producer * producer, struct consumer * consumer,
 		const char * source);
 

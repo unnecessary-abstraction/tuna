@@ -25,6 +25,28 @@
 #include "producer.h"
 #include "types.h"
 
+/**
+ * \file <tuna/input_zero.h>
+ *
+ * \brief Producer equivalent of `/dev/zero`.
+ *
+ * This is a really simple test producer where every sample produced has the
+ * value zero.
+ */
+
+/**
+ * \brief Initialise a zero-input producer.
+ *
+ * \param producer The producer object to initialise. The call to
+ * input_zero_init() should immediately follow the creation of a producer object
+ * with producer_new().
+ *
+ * \param consumer The consumer to which this producer will write data.
+ *
+ * \param sample_rate The sampling frequency of the data which will be produced.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int input_zero_init(struct producer * producer, struct consumer * consumer,
 		uint sample_rate);
 

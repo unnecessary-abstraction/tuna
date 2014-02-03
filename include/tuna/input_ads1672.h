@@ -24,6 +24,26 @@
 #include "consumer.h"
 #include "producer.h"
 
+/**
+ * \file <tuna/input_ads1672.h>
+ *
+ * \brief Input driver for the ads1672 kernel module.
+ *
+ * This producer captures data from the ads1672 kernel driver written for the
+ * UDAQ hardware platform.
+ */
+
+/**
+ * \brief Initialise the ads1672 producer.
+ *
+ * \param producer The producer object to initialise. The call to
+ * input_ads1672_init() should immediately follow the creation of a producer object
+ * with producer_new().
+ *
+ * \param consumer The consumer to which this producer will write data.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int input_ads1672_init(struct producer * producer, struct consumer * consumer);
 
 #endif /* !__TUNA_INPUT_ADS1672_H_INCLUDED__ */

@@ -29,7 +29,7 @@
 /**
  * \file <tuna/timespec.h>
  *
- * Timespec manipulation functions.
+ * \brief Timespec manipulation functions.
  */
 
 /**

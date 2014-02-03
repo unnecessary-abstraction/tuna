@@ -26,6 +26,37 @@
 #include "pulse.h"
 #include "time_slice.h"
 
+/**
+ * \file <tuna/analysis.h>
+ *
+ * \brief Process data with both pulse and time_slice consumers.
+ *
+ * This consumer hands data in turn to the pulse and time_slice consumers. See
+ * the documentation for <tuna/pulse.h> and <tuna/time_slice.h> for detils of
+ * these consumers.
+ */
+
+/**
+ * Initialise dual analysis consumer.
+ *
+ * \param consumer The consumer object to initialise. The call to
+ * analysis_init() should immediately follow the creation of a consumer object
+ * with consumer_new().
+ *
+ * \param pulse_csv_name The filename of the output file which will be created
+ * by the pulse consumer. Analysis results will be written to this file in CSV
+ * format.
+ *
+ * \param time_slice_csv_name The filename of the output file which will be
+ * created by the time_slice consumer. Analysis results will be written to this
+ * file in CSV format.
+ *
+ * \param pulse_params The various mathematical parameters to be used in the
+ * pulse consumer. See the documentation for pulse_init() for how this argument
+ * is used.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
 		const char * time_slice_csv_name,
 		const struct pulse_params * pulse_params);

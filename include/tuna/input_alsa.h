@@ -25,6 +25,31 @@
 #include "producer.h"
 #include "types.h"
 
+/**
+ * \file <tuna/input_alsa.h>
+ *
+ * \brief Input driver for ALSA sound cards.
+ *
+ * This producer captures data from an ALSA sound card.
+ */
+
+/**
+ * \brief Initialise the alsa producer.
+ *
+ * \param producer The producer object to initialise. The call to
+ * input_alsa_init() should immediately follow the creation of a producer object
+ * with producer_new().
+ *
+ * \param consumer The consumer to which this producer will write data.
+ *
+ * \param device_name The name of the ALSA device from which to capture data.
+ *
+ * \param sample_rate The sampling rate at which to capture data from the
+ * sepcified ALSA device. This sampling rate must be supported by the ALSA
+ * device.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
 int input_alsa_init(struct producer * producer, struct consumer * consumer,
 		const char * device_name, uint sample_rate);
 

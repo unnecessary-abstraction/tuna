@@ -26,7 +26,7 @@
 /**
  * \file <tuna/output_null.h>
  *
- * \brief Dummy consumer module, the equivalent of /dev/null.
+ * \brief Consumer equivalent of `/dev/null`.
  */
 
 /**

@@ -23,8 +23,52 @@
 
 #include "types.h"
 
+/**
+ * \file <tuna/buffer.h>
+ *
+ * \brief Buffer management.
+ */
+
+/**
+ * \brief Acquire a buffer with space for at least a given number of samples.
+ *
+ * This function may allocate a buffer with more storage space than is required
+ * if that would be more efficient. If additional space is allocated, the given
+ * number of frames will be updated.
+ *
+ * Note that buffer_addref() doesn't need to be called after this function - the
+ * reference count for the newly allocated buffer is initialised to 1.
+ *
+ * \param frames A pointer to the number of frames for which space is required.
+ * If additional space is allocated, the value that this parameter points to
+ * will be updated.
+ *
+ * \return A pointer to a new buffer or NULL on error.
+ */
 sample_t * buffer_acquire(uint * frames);
+
+/**
+ * \brief Add a reference to an existing buffer.
+ *
+ * Buffer objects are reference counted so that they can have multiple users and
+ * can be freed when the last user releases them. Any code which duplicates a
+ * pointer to a buffer should call this function and then call buffer_release()
+ * when it is finished with the duplicate.
+ *
+ * \param p The buffer to which a reference will be added.
+ */
 void buffer_addref(sample_t * p);
+
+/**
+ * \brief Release a reference to an existing buffer.
+ *
+ * This function decrements the reference count of the given buffer. It should
+ * be called whenever a pointer to a buffer is no longer needed. If this was the
+ * last reference to the given buffer the associated memory may be freed or
+ * recycled for use in future buffers.
+ *
+ * \param p The buffer to which a reference will be released.
+ */
 void buffer_release(sample_t * p);
 
 #endif /* !__TUNA_BUFFER_H_INCLUDED__ */

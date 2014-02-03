@@ -23,6 +23,21 @@
 
 #include "types.h"
 
+/**
+ * \file <tuna/window.h>
+ *
+ * \brief Windowing functions for FFT analysis.
+ */
+
+/**
+ * Create a sine function window in a given buffer.
+ *
+ * \param window A pointer to a buffer which will be filled with window
+ * coefficients.
+ *
+ * \param length The length of the window function which will be initialised.
+ * This is therefore the length of the provided buffer in floats (not in bytes).
+ */
 void window_init_sine(float * window, uint length);
 
 #endif /* !__TUNA_WINDOW_H_INCLUDED__ */
