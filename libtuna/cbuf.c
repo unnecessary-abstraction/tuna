@@ -62,7 +62,7 @@ sample_t cbuf_index(struct cbuf * c, uint i)
 {
 	assert(c);
 
-	return c->data[(c->index + i) % c->len];
+	return c->data[(c->len + c->index - i) % c->len];
 }
 
 sample_t cbuf_get(struct cbuf * c)
