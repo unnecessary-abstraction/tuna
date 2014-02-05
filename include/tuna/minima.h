@@ -29,7 +29,6 @@ struct minima_tracker * minima_init(uint windowlen);
 void minima_exit(struct minima_tracker * t);
 sample_t minima_current(struct minima_tracker * t);
 int minima_current_age(struct minima_tracker * t);
-uint minima_len(struct minima_tracker * t);
 sample_t minima_next(struct minima_tracker * t, sample_t next);
 void minima_reset(struct minima_tracker * t);
 

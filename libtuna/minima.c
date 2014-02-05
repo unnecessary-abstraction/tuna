@@ -109,13 +109,6 @@ int minima_current_age(struct minima_tracker * t)
 	return t->windowlen - (t->mins[t->left].expiry - t->ticker);
 }
 
-uint minima_len(struct minima_tracker * t)
-{
-	assert(t);
-
-	return t->len;
-}
-
 sample_t minima_next(struct minima_tracker * t, sample_t next)
 {
 	assert(t);
