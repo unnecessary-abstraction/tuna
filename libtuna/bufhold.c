@@ -149,19 +149,25 @@ void bufhold_release_all(struct bufhold * bh)
 	}
 }
 
-void bufhold_add(struct bufhold * bh, sample_t * buf, uint count)
+int bufhold_add(struct bufhold * bh, sample_t * buf, uint count)
 {
 	assert(bh);
 	assert(buf);
 
 	struct held_buffer * h = (struct held_buffer *)
 		malloc(sizeof(struct held_buffer));
+	if (!h) {
+		error("bufhold: Failed to allocate memory");
+		return -1;
+	}
 
 	h->base = buf;
 	h->data = buf;
 	h->count = count;
 	buffer_addref(buf);
 	list_enqueue(&bh->buffers, &h->e);
+
+	return 0;
 }
 
 struct bufhold * bufhold_init()

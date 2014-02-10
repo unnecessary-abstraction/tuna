@@ -35,7 +35,7 @@ uint bufhold_count(struct held_buffer * h);
 int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset);
 void bufhold_release(struct bufhold * bh, struct held_buffer * h);
 void bufhold_release_all(struct bufhold * bh);
-void bufhold_add(struct bufhold * bh, sample_t * buf, uint count);
+int bufhold_add(struct bufhold * bh, sample_t * buf, uint count);
 struct bufhold * bufhold_init();
 void bufhold_exit(struct bufhold * bh);
 

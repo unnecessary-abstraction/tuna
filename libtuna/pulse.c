@@ -488,6 +488,7 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 	assert(consumer);
 	assert(buf);
 
+	int r;
 	struct pulse_processor * p;
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
@@ -501,7 +502,11 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 	if (start_offset < 0)
 		discard_leading_data(p, -start_offset);
 
-	bufhold_add(p->held_buffers, buf, count);
+	r = bufhold_add(p->held_buffers, buf, count);
+	if (r < 0) {
+		error("pulse: Failed to hold buffer");
+		return r;
+	}
 
 	return 0;
 }

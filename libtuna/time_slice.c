@@ -318,7 +318,11 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 		consumer_get_data(consumer);
 	
 	t->available += count;
-	bufhold_add(t->held_buffers, buf, count);
+	r = bufhold_add(t->held_buffers, buf, count);
+	if (r < 0) {
+		error("time_slice: Failed to hold buffer");
+		return r;
+	}
 
 	while (t->available >= t->slice_period) {
 		r = process_time_slice(t);
