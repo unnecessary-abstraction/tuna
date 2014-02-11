@@ -29,7 +29,6 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/bufhold.lo \
 	$(d)/bufq.lo \
 	$(d)/cbuf.lo \
-	$(d)/cdeque.lo \
 	$(d)/consumer.lo \
 	$(d)/csv.lo \
 	$(d)/env_estimate.lo \
