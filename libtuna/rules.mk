@@ -30,6 +30,7 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/bufq.lo \
 	$(d)/cbuf.lo \
 	$(d)/consumer.lo \
+	$(d)/counter.lo \
 	$(d)/csv.lo \
 	$(d)/env_estimate.lo \
 	$(d)/fft.lo \
