@@ -114,7 +114,7 @@ int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset)
 {
 	assert(h);
 
-	if (offset <= h->count) {
+	if (offset < h->count) {
 		h->count -= offset;
 		h->data += offset;
 		return h->count;
