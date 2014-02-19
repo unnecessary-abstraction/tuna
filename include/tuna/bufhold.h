@@ -137,6 +137,10 @@ uint bufhold_count(struct held_buffer * h);
  *
  * \param offset The number of samples by which to advance the start of the
  * given buffer.
+ *
+ * \return The number of samples remaining in the given held buffer. If this
+ * value is zero, the given held buffer will have been released via a call to
+ * bufhold_release().
  */
 int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset);
 

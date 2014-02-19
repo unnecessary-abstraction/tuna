@@ -121,7 +121,7 @@ int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset)
 	} else {
 		/* This buffer is no longer needed. */
 		bufhold_release(bh, h);
-		return -1;
+		return 0;
 	}
 }
 
