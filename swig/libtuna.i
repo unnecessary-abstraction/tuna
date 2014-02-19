@@ -46,6 +46,7 @@
         #include "pulse.h"
         #include "time_slice.h"
         #include "tol.h"
+        #include "types.h"
         #include "window.h"
 %}
 
@@ -76,4 +77,5 @@
 %include "pulse.h"
 %include "time_slice.h"
 %include "tol.h"
+%include "types.h"
 %include "window.h"
