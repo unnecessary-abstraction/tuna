@@ -6,5 +6,26 @@
   which destroy objects to _delete as this will make much more sense.
 
 - Write unit tests using Python bindings.
+	- cbuf
+	- csv
+	- timespec
+	- offset_threshold
+	- onset_threshold
 
-- Write integration tests in Python.
+- Write plotting scripts using Python binding and use these to validate the
+  implementation of various mathematical operations.
+	- env_estimate
+	- minima
+	- offset_threshold
+	- onset_threshold
+
+- Write integration tests in Python. These will generally cover the producers
+  and consumers.
+	- analysis
+	- bufq
+	- consumer
+	- input_ads1672
+	- input_sndfile
+	- output_sndfile
+	- producer
+	- pulse
