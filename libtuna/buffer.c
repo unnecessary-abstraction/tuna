@@ -74,3 +74,11 @@ int buffer_release(sample_t * p)
 
 	return 0;
 }
+
+uint buffer_refcount(sample_t * p)
+{
+	assert(p);
+	struct buffer_head * h = container_of(p, struct buffer_head, data);
+
+	return h->refs;
+}

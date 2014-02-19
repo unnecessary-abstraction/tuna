@@ -74,4 +74,15 @@ void buffer_addref(sample_t * p);
  */
 int buffer_release(sample_t * p);
 
+/**
+ * \brief Get a count of the number of refs held on a buffer.
+ *
+ * This function is mainly intended for use in testing libtuna.
+ *
+ * \param p The buffer of which to get the reference count.
+ *
+ * \return The number of references held on the given buffer.
+ */
+uint buffer_refcount(sample_t * p);
+
 #endif /* !__TUNA_BUFFER_H_INCLUDED__ */
