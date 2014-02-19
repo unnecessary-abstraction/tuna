@@ -166,6 +166,7 @@ static error_t parse(int key, char * param, struct argp_state * state)
 			args->use_bufq = (int) strtol(param, NULL, 10);
 		else
 			args->use_bufq = 1;
+		break;
 
 	    default:
 		return ARGP_ERR_UNKNOWN;
