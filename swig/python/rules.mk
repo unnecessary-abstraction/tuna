@@ -47,7 +47,7 @@ install-$(d): $(TGTS_$(d))
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(python_sitedir)
 	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(python_sitedir)
 
-$(d)/libtuna_wrap.c: $(SWIGFILE)
+$(d)/libtuna_wrap.c: $(d)/libtuna.i
 	@echo SWIG $<
 	$(Q)$(SWIG) -python -py3 -O -MD -MP -MF swig/python/libtuna.d -o $@ $(INCLUDE_ALL) $(INCLUDE_TGT) $<
 
