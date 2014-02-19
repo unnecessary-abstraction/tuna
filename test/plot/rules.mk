@@ -1,7 +1,7 @@
 ################################################################################
-#	rules.mk for TUNA tests.
+#	rules.mk for TUNA test graph plots.
 #
-#	Copyright (C) 2013 Paul Barker, Loughborough University
+#	Copyright (C) 2014 Paul Barker, Loughborough University
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -23,33 +23,20 @@ sp := $(sp).x
 dirstack_$(sp) := $(d)
 d := $(dir)
 
-# Targets and intermediates in this directory
-OBJS_$(d) :=
+PLOTS_$(d) := $(d)/window.py
+RUN_PLOTS_$(d) := $(PLOTS_$(d):$(d)/%.py=runplot-%.py)
 
-DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
+runplot-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
+	@echo PLOT $<
+	$(Q)$(PYTHON) $<
 
-TGTS_$(d) := 
+# Set paths when running python scripts
+runplot-%.py: export PYTHONPATH := swig/python
+runplot-%.py: export LD_LIBRARY_PATH := libtuna
 
-TARGETS_TEST += $(TGTS_$(d))
-
-INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
-
-# Rules for this directory
-#$(TGTS_$(d)): LDLIBRARIES_TGT := libtuna/libtuna.a
-#$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.a
-
-#$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
-
-# Include dependencies
--include $(DEPS_$(d))
-
-# Make everything depend on this rules file
-$(OBJS_$(d)): $(SRCDIR)/$(d)/rules.mk
-
-ifdef enable-plots
-dir := test/plot
-include $(SRCDIR)/$(dir)/rules.mk
-endif
+# There's probably nowhere better to define this
+.PHONY: plots
+plots: $(RUN_PLOTS_$(d))
 
 # Pop directory stack
 d := $(dirstack_$(sp))

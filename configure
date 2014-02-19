@@ -35,6 +35,7 @@ var_set("PYTHON", "python")
 var_set("INSTALL", "install")
 var_set("enable-python-bindings", "1")
 var_set("enable-docs", "1")
+var_set("enable-plots", "1")
 
 parse_cmdline()
 
