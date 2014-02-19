@@ -28,6 +28,7 @@
 #include "analysis.h"
 #include "bufq.h"
 #include "consumer.h"
+#include "counter.h"
 #include "input_alsa.h"
 #include "input_sndfile.h"
 #include "input_zero.h"
@@ -44,6 +45,7 @@
 
 /* Globals. */
 struct producer * in = NULL;
+struct consumer * counter = NULL;
 struct consumer * bufq = NULL;
 struct consumer * out = NULL;
 
@@ -64,6 +66,7 @@ static const struct argp_option options[] = {
 	{"output", 'o', "SINK", 0, "Configure output module", 0},
 	{"sample-rate", 'r', "RATE", 0, "Set sample rate for input module if supported", 0},
 	{"bufq", 'q', "BOOL", OPTION_ARG_OPTIONAL, "Enable (BOOL=1) or disable (BOOL=0) buffer queueing", 0},
+	{"count", 'c', "COUNT", 0, "Process only COUNT samples before exiting", 0},
 	{0, 0, 0, 0, 0, 0}
 };
 
@@ -72,6 +75,8 @@ struct arguments {
 	char * output;
 	uint sample_rate;
 	int use_bufq;
+	uint count;
+	int use_count;
 };
 
 struct arguments * args_init()
@@ -101,6 +106,7 @@ struct arguments * args_init()
 
 	args->sample_rate = 44100;
 	args->use_bufq = 0;
+	args->use_count = 0;
 
 	return args;
 }
@@ -168,6 +174,11 @@ static error_t parse(int key, char * param, struct argp_state * state)
 			args->use_bufq = 1;
 		break;
 
+	    case 'c':
+		args->count = (uint) strtoul(param, NULL, 10);
+		args->use_count = 1;
+		break;
+
 	    default:
 		return ARGP_ERR_UNKNOWN;
 	}
@@ -176,6 +187,25 @@ static error_t parse(int key, char * param, struct argp_state * state)
 }
 
 static struct argp argp = {options, parse, NULL, docstring, NULL, NULL, NULL};
+
+/* Callback function for '-c' argument: called when the given number of samples
+ * have passed through the counter module.
+ */
+int count_callback(void * arg)
+{
+	__unused(arg);
+
+	int r;
+
+	msg("tuna: Terminating as requested sample count has been reached");
+
+	r = producer_stop(in, 1);
+	if (r < 0)
+		fatal("tuna: Failed to stop input module");
+
+	/* Return >0 to indicate success but stop further processing of data. */
+	return 1;
+}
 
 int output_init(struct arguments * args)
 {
@@ -271,6 +301,8 @@ int input_init(struct arguments * args)
 	int r;
 	struct consumer * target;
 
+	target = out;
+
 	if (args->use_bufq) {
 		bufq = consumer_new();
 		if (!bufq) {
@@ -278,15 +310,31 @@ int input_init(struct arguments * args)
 			return -1;
 		}
 
-		r = bufq_init(bufq, out);
+		r = bufq_init(bufq, target);
 		if (r < 0) {
 			error("tuna: Failed to initialise bufq module");
 			return r;
 		}
 
 		target = bufq;
-	} else
-		target = out;
+	}
+
+	if (args->use_count) {
+		counter = consumer_new();
+		if (!counter) {
+			error("tuna: Failed to create consumer object for counter");
+			return -1;
+		}
+
+		r = counter_init(counter, target, args->count, count_callback,
+				NULL);
+		if (r < 0) {
+			error("tuna: Failed to initialise counter module");
+			return r;
+		}
+
+		target = counter;
+	}
 
 	in = producer_new();
 	if (!in) {
@@ -323,6 +371,8 @@ void input_exit()
 		producer_exit(in);
 	if (bufq)
 		consumer_exit(bufq);
+	if (counter)
+		consumer_exit(counter);
 }
 
 void output_exit()
