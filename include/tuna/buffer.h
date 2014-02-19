@@ -68,7 +68,10 @@ void buffer_addref(sample_t * p);
  * recycled for use in future buffers.
  *
  * \param p The buffer to which a reference will be released.
+ *
+ * \return 0 if the buffer remains referenced elsewhere, 1 if the buffer was
+ * free'd back to the system.
  */
-void buffer_release(sample_t * p);
+int buffer_release(sample_t * p);
 
 #endif /* !__TUNA_BUFFER_H_INCLUDED__ */

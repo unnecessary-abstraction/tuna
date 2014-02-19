@@ -60,13 +60,17 @@ void buffer_addref(sample_t * p)
 	h->refs++;
 }
 
-void buffer_release(sample_t * p)
+int buffer_release(sample_t * p)
 {
 	assert(p);
 	struct buffer_head * h = container_of(p, struct buffer_head, data);
 
 	h->refs--;
 
-	if (!h->refs)
+	if (!h->refs) {
 		free(h);
+		return 1;
+	}
+
+	return 0;
 }
