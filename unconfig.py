@@ -114,7 +114,7 @@ def get_sitedir(prefix, exec_prefix):
 	# dependency tracking. Basically, it's a load of nonsense.
 	#
 	# To install python packages by hand, we just need to know where to put
-	# them. This will vary systesm to system, but we can query the 'site'
+	# them. This will vary system to system, but we can query the 'site'
 	# module to get this info. We will need to temporarily modify the
 	# prefixes to those given by our arguments to ensure things are put in
 	# the right place.
