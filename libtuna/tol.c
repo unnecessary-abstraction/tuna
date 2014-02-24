@@ -191,6 +191,48 @@ uint tol_get_num_levels(struct tol * t)
 	return t->n_tol;
 }
 
+int tol_get_coeffs(struct tol * t, uint level, float * dest, uint length)
+{
+	assert(t);
+	assert(dest);
+
+	if (level >= t->n_tol)
+		return -1;
+
+	struct tol_transition * tr_upper = &t->desc[level];
+	uint dest_offset = 0;
+	uint i;
+
+	if (level > 0) {
+		struct tol_transition * tr_lower = &t->desc[level - 1];
+
+		/* All coeffs are zero before the onset of the lower transition. */
+		memset(dest, 0, tr_lower->t_onset * sizeof(float));
+		dest_offset = tr_lower->t_onset;
+
+		/* Copy coeffs from the lower transition. */
+		for (i = 0; i < tr_lower->t_width; i++)
+			dest[dest_offset + i] = tr_lower->coeffs[1 + 2 * i];
+		dest_offset += tr_lower->t_width;
+	}
+
+	/* All coeffs between the end of the lower transition and the start of
+	 * the upper transition are unity.
+	 */
+	for (i = 0; i < (tr_upper->t_onset - dest_offset); i++)
+		dest[dest_offset + i] = 1.0f;
+	dest_offset = tr_upper->t_onset;;
+
+	/* Copy coeffs from the upper transition. */
+	for (i = 0; i < tr_upper->t_width; i++)
+		dest[dest_offset + i] = tr_upper->coeffs[2 * i];
+	dest_offset += tr_upper->t_width;
+
+	/* All remaining coeffs are zero. */
+	memset(&dest[dest_offset], 0, (length - dest_offset) * sizeof(float));
+	return 0;
+}
+
 struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uint phi_L)
 {
 	struct tol * t;

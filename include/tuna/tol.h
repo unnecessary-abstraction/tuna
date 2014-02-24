@@ -85,6 +85,25 @@ void tol_exit(struct tol * t);
 uint tol_get_num_levels(struct tol * t);
 
 /**
+ * Extract the frequency domain coefficients for a particular third-octave band.
+ *
+ * \param t The third octave level calculation context to extract coefficients
+ * from.
+ *
+ * \param level The index of the third octave level for which to extract
+ * coefficients.
+ *
+ * \param dest A buffer into which coefficients will be written in float format.
+ *
+ * \param length The length of the given dest buffer. This should correspond to
+ * the analysis_length parameter passed to tol_init() in order to ensure
+ * coefficients are extracted accurately.
+ *
+ * \return >=0 on success, <0 on failure.
+ */
+int tol_get_coeffs(struct tol * t, uint level, float * dest, uint length);
+
+/**
  * Perform a third octave level calculation.
  *
  * \param t The third octave level calculation context to use.
