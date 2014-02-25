@@ -102,8 +102,8 @@ static const float freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
 	Private functions
 *******************************************************************************/
 
-/* Unweighted power sum. */
-static inline float psum(float *x, uint N)
+/* Unweighted sum. */
+static inline float sum(float *x, uint N)
 {
 	assert(x);
 
@@ -112,32 +112,28 @@ static inline float psum(float *x, uint N)
 
 	sum = 0;
 
-	for (i = 0; i < N; i++) {
-		sum += x[i] * x[i];
-	}
+	for (i = 0; i < N; i++)
+		sum += x[i];
 
 	return sum;
 }
 
-/* Dual band weighted power sum. */
+/* Dual band weighted sum. */
 /* Weighting coefficients are interleaved to speed up memory loads. */
-static inline void wpsum2(float *x, float *w, uint N, float *e)
+static inline void wsum2(float *x, float *w, uint N, float *e)
 {
 	assert(x);
 	assert(w);
 	assert(e);
 
 	float sum0, sum1;
-	float x_sq;
 	uint i;
 
 	sum0 = sum1 = 0;
 
 	for (i = 0; i < N; i++) {
-		x_sq = x[i] * x[i];
-
-		sum0 += x_sq * w[2 * i];
-		sum1 += x_sq * w[(2 * i) + 1];
+		sum0 += x[i] * w[2 * i];
+		sum1 += x[i] * w[(2 * i) + 1];
 	}
 
 	/* Write back results. */
@@ -174,10 +170,10 @@ void tol_calculate(struct tol * t, float * data, float * results)
 
 	for (i = 0; i < t->n_tol; i++) {
 		/* Unweighted sum from current position to start of transition, this is added to band i. */
-		results[i] += psum(&data[j], (t->desc[i].t_onset - j));
+		results[i] += sum(&data[j], (t->desc[i].t_onset - j));
 
 		/* Weighted sum over the transition, added to bands i and i+1. */
-		wpsum2(&data[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &results[i]);
+		wsum2(&data[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &results[i]);
 
 		/* Update j to end of transition. */
 		j = t->desc[i].t_onset + t->desc[i].t_width;
