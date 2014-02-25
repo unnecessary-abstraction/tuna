@@ -23,7 +23,8 @@ sp := $(sp).x
 dirstack_$(sp) := $(d)
 d := $(dir)
 
-PLOTS_$(d) := $(d)/window.py
+PLOTS_$(d) := $(d)/window.py \
+	$(d)/tol.py
 RUN_PLOTS_$(d) := $(PLOTS_$(d):$(d)/%.py=runplot-%.py)
 
 runplot-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
