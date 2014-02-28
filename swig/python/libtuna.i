@@ -19,4 +19,7 @@
 /* Mapping for window_init_sine(w) where w is a pre-allocated numpy array. */
 %apply (float* INPLACE_ARRAY1, unsigned int DIM1) {(float *window, uint length)}
 
+/* Mapping for `frames_out = buffer_acquire(frames_in)`. */
+%apply (unsigned int *INOUT) {(uint *frames)}
+
 %include "swig/libtuna.i"
