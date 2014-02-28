@@ -1,7 +1,7 @@
 ################################################################################
-#	rules.mk for TUNA tests.
+#	rules.mk for TUNA unit tests.
 #
-#	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
+#	Copyright (C) 2014 Paul Barker, Loughborough University
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -23,15 +23,17 @@ sp := $(sp).x
 dirstack_$(sp) := $(d)
 d := $(dir)
 
-ifdef enable-unit-tests
-dir := test/unit
-include $(SRCDIR)/$(dir)/rules.mk
-endif
+TESTS_$(d) :=
+RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=run-%.py)
 
-ifdef enable-plots
-dir := test/plot
-include $(SRCDIR)/$(dir)/rules.mk
-endif
+run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
+	$(Q)$(PYTHON) $<
+
+# Set paths when running python scripts
+run-%.py: export PYTHONPATH := swig/python
+run-%.py: export LD_LIBRARY_PATH := libtuna
+
+CHECK_DEPS += $(RUN_TESTS_$(d))
 
 # Pop directory stack
 d := $(dirstack_$(sp))

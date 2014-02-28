@@ -33,6 +33,7 @@ TARGETS_TEST :=
 TARGETS_DOCS :=
 INTERMEDIATES :=
 INSTALL_DEPS :=
+CHECK_DEPS :=
 
 # Set VPATH incase we're building outside the source tree
 VPATH := $(SRCDIR)
@@ -108,6 +109,10 @@ clean-intermediates:
 # Install rules
 .PHONY: install 
 install: $(INSTALL_DEPS)
+
+# Check rules
+.PHONY: check
+check: $(CHECK_DEPS)
 
 # Ensure everything is rebuilt if top-level rules or config change
 TOPLEVEL_DEPS := $(SRCDIR)/rules.mk $(SRCDIR)/Makefile unconfig.mk
