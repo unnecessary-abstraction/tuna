@@ -24,7 +24,8 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 TESTS_$(d) := $(d)/000_import.py \
-	$(d)/001_log.py
+	$(d)/001_log.py \
+	$(d)/002_buffer.py
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=run-%.py)
 
 run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
