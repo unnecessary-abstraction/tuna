@@ -31,6 +31,7 @@ TARGETS_BIN :=
 TARGETS_LIB :=
 TARGETS_TEST :=
 TARGETS_DOCS :=
+TARGETS_EXTRA :=
 INTERMEDIATES :=
 INSTALL_DEPS :=
 CHECK_DEPS :=
@@ -100,11 +101,12 @@ targets: $(TARGETS_ALL)
 .PHONY: clean clean-intermediates
 clean: clean-intermediates
 	@echo CLEAN
-	$(Q)rm -rf $(TARGETS_ALL)
+	$(Q)rm -rf $(TARGETS_ALL) $(TARGETS_EXTRA)
 
 clean-intermediates:
 	@echo CLEAN INTERMEDIATES
 	$(Q)rm -rf $(INTERMEDIATES)
+	$(Q)find -name __pycache__ -prune -exec rm -rf {} \;
 
 # Install rules
 .PHONY: install 
