@@ -52,8 +52,9 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_00_init(self):
         sample_rate = 400000
+        analysis_length = int(floor(sample_rate/2))
 
-        tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
+        tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
 
         libtuna.tol_exit(tol)
@@ -61,16 +62,16 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_01_coefficient_values(self):
         sample_rate = 400000
+        analysis_length = int(floor(sample_rate/2))
 
-        tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
+        tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
 
         n_tol = libtuna.tol_get_num_levels(tol)
         self.assertEqual(n_tol, libtuna.MAX_THIRD_OCTAVE_LEVELS)
 
-        coeffs_len = int(floor(sample_rate/2))
         for i in range(n_tol):
-            w = np.empty([coeffs_len,], dtype=np.float32)
+            w = np.empty([analysis_length,], dtype=np.float32)
             r = libtuna.tol_get_coeffs(tol, i, w)
             self.assertGreaterEqual(r, 0)
 
@@ -84,17 +85,17 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_02_coefficient_sum(self):
         sample_rate = 400000
+        analysis_length = int(floor(sample_rate/2))
 
-        tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
+        tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
 
         n_tol = libtuna.tol_get_num_levels(tol)
         self.assertEqual(n_tol, libtuna.MAX_THIRD_OCTAVE_LEVELS)
 
-        coeffs_len = int(floor(sample_rate/2))
-        w_sum = np.zeros([coeffs_len,], dtype=np.float32)
+        w_sum = np.zeros([analysis_length,], dtype=np.float32)
         for i in range(n_tol):
-            w = np.empty([coeffs_len,], dtype=np.float32)
+            w = np.empty([analysis_length,], dtype=np.float32)
             r = libtuna.tol_get_coeffs(tol, i, w)
             self.assertGreaterEqual(r, 0)
 
@@ -111,15 +112,15 @@ class tunaTOLTests(tunaTestCase):
         # Place a single sample at the centre of a third-octave band and ensure
         # that the third octave level analysis shows a value in the correct band
         sample_rate = 400000
+        analysis_length = int(floor(sample_rate/2))
 
-        tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
+        tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
 
         n_tol = libtuna.tol_get_num_levels(tol)
         self.assertEqual(n_tol, libtuna.MAX_THIRD_OCTAVE_LEVELS)
 
-        coeffs_len = int(floor(sample_rate/2))
-        w = np.zeros([coeffs_len,], dtype=np.float32)
+        w = np.zeros([analysis_length,], dtype=np.float32)
         for i in range(n_tol):
             results = np.zeros([n_tol + 1,], dtype=np.float32)
             index = round(libtuna.tol_get_band_centre(i))
@@ -144,17 +145,16 @@ class tunaTOLTests(tunaTestCase):
         # Place a single sample at the midpoint between adjacent third-octave
         # band centres and ensure that the third octave level analysis shows a
         # value in each of the adjacent bands only.
-
         sample_rate = 400000
+        analysis_length = int(floor(sample_rate/2))
 
-        tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
+        tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
 
         n_tol = libtuna.tol_get_num_levels(tol)
         self.assertEqual(n_tol, libtuna.MAX_THIRD_OCTAVE_LEVELS)
 
-        coeffs_len = int(floor(sample_rate/2))
-        w = np.zeros([coeffs_len,], dtype=np.float32)
+        w = np.zeros([analysis_length,], dtype=np.float32)
         for i in range(n_tol - 1):
             results = np.zeros([n_tol + 1,], dtype=np.float32)
             index = round(libtuna.tol_get_band_edge(i))

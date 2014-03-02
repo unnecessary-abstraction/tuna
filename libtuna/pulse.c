@@ -555,7 +555,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	}
 	p->fft_data = fft_get_data(p->fft);
 
-	p->tol = tol_init(sample_rate, p->fft_length, 0.4, 3);
+	p->tol = tol_init(sample_rate, p->fft_length/2, 0.4, 3);
 	if (!p->tol) {
 		error("pulse: Failed to initialise third octave level calculation");
 		return -1;
