@@ -23,51 +23,6 @@ import math
 
 sample_rate = 400000
 
-band_centres = (
-        10,
-        12.5,
-        16,
-        20,
-        25,
-        31.5,
-        40,
-        50,
-        63,
-        80,
-        100,
-        125,
-        160,
-        200,
-        250,
-        315,
-        400,
-        500,
-        630,
-        800,
-        1000,
-        1250,
-        1600,
-        2000,
-        2500,
-        3150,
-        4000,
-        5000,
-        6300,
-        8000,
-        10000,
-        12500,
-        16000,
-        20000,
-        25000,
-        31500,
-        40000,
-        50000,
-        63000,
-        80000,
-        100000,
-        125000,
-        160000)
-
 tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
 if not tol:
     print("ERROR: Failed to create tol object")
@@ -101,6 +56,10 @@ def plot_coeffs():
     fig.savefig("test/plot/tol-coeffs.pdf")
 
 def plot_white_noise():
+    band_centres = np.empty([libtuna.MAX_THIRD_OCTAVE_LEVELS, ], dtype=np.float32)
+    for i in range(libtuna.MAX_THIRD_OCTAVE_LEVELS):
+        band_centres[i] = libtuna.tol_get_band_centre(i)
+
     fig, ax = plt.subplots(figsize=(8,4), dpi=1200)
 
     # A flat spectrum should give linearly increasing third octave levels
@@ -117,6 +76,10 @@ def plot_white_noise():
     fig.savefig("test/plot/tol-white-noise.pdf")
 
 def plot_pink_noise():
+    band_centres = np.empty([libtuna.MAX_THIRD_OCTAVE_LEVELS, ], dtype=np.float32)
+    for i in range(libtuna.MAX_THIRD_OCTAVE_LEVELS):
+        band_centres[i] = libtuna.tol_get_band_centre(i)
+
     fig, ax = plt.subplots(figsize=(8,4), dpi=1200)
 
     # A 1/f spectrum should give flat third octave levels
