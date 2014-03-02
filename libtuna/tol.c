@@ -329,9 +329,9 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 		if (!t->desc[i].coeffs) {
 			error("tol: Failed to allocate memory for tol coefficients");
 
-                        /* Free previously allocated coefficient arrays. */
-                        for (j = 0; j < i; j++)
-                                free(t->desc[j].coeffs);
+			/* Free previously allocated coefficient arrays. */
+			for (j = 0; j < i; j++)
+				free(t->desc[j].coeffs);
 			free(t);
 			return NULL;
 		}
