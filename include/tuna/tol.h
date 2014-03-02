@@ -47,6 +47,11 @@ struct tol {};
 #endif
 
 /**
+ * The maximum number of third-octave levels which are supported.
+ */
+#define MAX_THIRD_OCTAVE_LEVELS 43
+
+/**
  * \brief Initialise a third octave level calculation context.
  *
  * \param sample_rate The sampling frequency of the data which will be analysed.
@@ -83,6 +88,28 @@ void tol_exit(struct tol * t);
  * \return The number of third octave levels calculated by the given context.
  */
 uint tol_get_num_levels(struct tol * t);
+
+/**
+ * Get the centre frequency in Hz of a given third-octave band.
+ *
+ * \param band The index of the third-octave band to retrieve. This is
+ * zero-based where band zero has a centre frequency of 10 Hz. This parameter
+ * must be less than MAX_THIRD_OCTAVE_LEVELS.
+ *
+ * \return The centre frequency of the requested band.
+ */
+float tol_get_band_centre(uint band);
+
+/**
+ * Get the upper band edge frequency in Hz of a given third-octave band.
+ *
+ * \param band The index of the third-octave band to retrieve. This is
+ * zero-based where band zero has a centre frequency of 10 Hz. This parameter
+ * must be less than MAX_THIRD_OCTAVE_LEVELS + 1.
+ *
+ * \return The upper band-edge frequency of the requested band.
+ */
+float tol_get_band_edge(uint band);
 
 /**
  * Extract the frequency domain coefficients for a particular third-octave band.

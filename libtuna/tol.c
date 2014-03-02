@@ -28,8 +28,6 @@
 #include "tol.h"
 #include "types.h"
 
-#define MAX_THIRD_OCTAVE_LEVELS 43
-
 struct tol_transition {
 	uint				t_onset;
 	uint				t_width;
@@ -51,51 +49,97 @@ struct tol {
 	Private declarations
 *******************************************************************************/
 
-static const float freq[MAX_THIRD_OCTAVE_LEVELS + 1] = {
-	11.2,
-	14.1,
-	17.8,
-	22.4,
-	28.2,
-	35.5,
-	44.7,
-	56.2,
-	70.8,
-	89.1,
-	112.0,
-	141.0,
-	178.0,
-	224.0,
-	282.0,
-	355.0,
-	447.0,
-	562.0,
-	708.0,
-	891.0,
-	1120.0,
-	1410.0,
-	1780.0,
-	2240.0,
-	2820.0,
-	3550.0,
-	4470.0,
-	5620.0,
-	7080.0,
-	8910.0,
-	11200.0,
-	14100.0,
-	17800.0,
-	22400.0,
-	28200.0,
-	35500.0,
-	44700.0,
-	56200.0,
-	70800.0,
-	89100.0,
-	112000.0,
-	141000.0,
-	178000.0,
-	224000.0
+static const float band_centres[MAX_THIRD_OCTAVE_LEVELS] = {
+	10,
+	12.5,
+	16,
+	20,
+	25,
+	31.5,
+	40,
+	50,
+	63,
+	80,
+	100,
+	125,
+	160,
+	200,
+	250,
+	315,
+	400,
+	500,
+	630,
+	800,
+	1000,
+	1250,
+	1600,
+	2000,
+	2500,
+	3150,
+	4000,
+	5000,
+	6300,
+	8000,
+	10000,
+	12500,
+	16000,
+	20000,
+	25000,
+	31500,
+	40000,
+	50000,
+	63000,
+	80000,
+	100000,
+	125000,
+	160000
+};
+
+static const float band_edges[MAX_THIRD_OCTAVE_LEVELS + 1] = {
+	11.22,
+	14.13,
+	17.78,
+	22.39,
+	28.18,
+	35.48,
+	44.67,
+	56.23,
+	70.79,
+	89.13,
+	112.2,
+	141.3,
+	177.8,
+	223.9,
+	281.8,
+	354.8,
+	446.7,
+	562.3,
+	707.9,
+	891.3,
+	1122,
+	1413,
+	1778,
+	2239,
+	2818,
+	3548,
+	4467,
+	5623,
+	7079,
+	8913,
+	11220,
+	14130,
+	17780,
+	22390,
+	28180,
+	35480,
+	44670,
+	56230,
+	70790,
+	89130,
+	112200,
+	141300,
+	177800,
+	223900
 };
 
 /*******************************************************************************
@@ -187,6 +231,22 @@ uint tol_get_num_levels(struct tol * t)
 	return t->n_tol;
 }
 
+float tol_get_band_centre(uint band)
+{
+	if (band >= MAX_THIRD_OCTAVE_LEVELS)
+		return NAN;
+
+	return band_centres[band];
+}
+
+float tol_get_band_edge(uint band)
+{
+	if (band >= (MAX_THIRD_OCTAVE_LEVELS + 1))
+		return NAN;
+
+	return band_edges[band];
+}
+
 int tol_get_coeffs(struct tol * t, uint level, float * dest, uint length)
 {
 	assert(t);
@@ -251,10 +311,10 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 	/* Prepare each transition region. */
 	for (i = 0; i < MAX_THIRD_OCTAVE_LEVELS; i++) {
 		/* Calculate exact transition width. */
-		delta = 2 * overlap * (sqrt(freq[i] * freq[i + 1]) - freq[i]);
+		delta = 2 * overlap * (sqrt(band_edges[i] * band_edges[i + 1]) - band_edges[i]);
 
-		t->desc[i].t_onset = (uint) ceil((freq[i] - delta) / step);
-		t_end = (uint) floor((freq[i] + delta) / step);
+		t->desc[i].t_onset = (uint) ceil((band_edges[i] - delta) / step);
+		t_end = (uint) floor((band_edges[i] + delta) / step);
 		t->desc[i].t_width = 1 + t_end - t->desc[i].t_onset;
 
 		if (t_end > sample_rate / 2) {
@@ -280,7 +340,7 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 		for (j = 0; j < t->desc[i].t_width; j++) {
 			if (delta) {
 				cur_freq = t->desc[i].t_onset + j * step;
-				offset = cur_freq - freq[i];
+				offset = cur_freq - band_edges[i];
 				p = offset / delta;
 			} else {
 				p = 0;
