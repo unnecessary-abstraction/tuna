@@ -30,7 +30,7 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/004_tol.py
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=run-%.py)
 
-run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
+run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
