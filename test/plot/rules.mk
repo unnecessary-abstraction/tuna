@@ -23,21 +23,25 @@ sp := $(sp).x
 dirstack_$(sp) := $(d)
 d := $(dir)
 
-PLOTS_$(d) := $(d)/window.py \
-	$(d)/tol.py
-RUN_PLOTS_$(d) := $(PLOTS_$(d):$(d)/%.py=runplot-%.py)
+PLOTS_$(d) := $(d)/window.pdf \
+	$(d)/tol-coeffs.pdf \
+	$(d)/tol-white-noise.pdf \
+	$(d)/tol-pink-noise.pdf
 
-runplot-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py
-	@echo PLOT $<
+$(d)/%.pdf: $(d)/%.py libtuna/libtuna.so swig/python/_libtuna.so swig/python/libtuna.py
+	@echo PLOT $@
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
-runplot-%.py: export PYTHONPATH := swig/python
-runplot-%.py: export LD_LIBRARY_PATH := libtuna
+$(d)/%.pdf: export PYTHONPATH := swig/python
+$(d)/%.pdf: export LD_LIBRARY_PATH := libtuna
 
 # There's probably nowhere better to define this
 .PHONY: plots
-plots: $(RUN_PLOTS_$(d))
+plots: $(PLOTS_$(d))
+
+# Ensure plots are removed during 'make clean'
+TARGETS_EXTRA += $(PLOTS_$(d))
 
 # Pop directory stack
 d := $(dirstack_$(sp))

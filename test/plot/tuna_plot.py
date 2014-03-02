@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 ################################################################################
-#   window.py: Plot graphs for functions in <tuna/window.h>
+#   common.py: Common functions for graph plotting
 #
 #   Copyright (C) 2014 Paul Barker
 #
@@ -18,21 +18,11 @@
 import libtuna
 import matplotlib.pyplot as plt
 import numpy as np
-import tuna_plot
 
-tuna_plot.init()
+def init():
+    plt.rc('font', family='serif', serif='Palatino')
+    plt.rc('text', usetex='True')
+    plt.rc('figure', autolayout='True')
 
-length = 1000
-w = np.empty([length,], dtype=np.float32)
-r = libtuna.window_init_sine(w)
-
-fig, ax = plt.subplots(figsize=(8,6), dpi=1200)
-ax.plot(w)
-ax.set_title("Sine window with 1000 samples")
-ax.set_xlabel("Sample number")
-ax.set_ylabel("Window coefficient")
-ax.set_xlim(0, 1000)
-ax.set_ylim(0, 2.1)
-fig.savefig("test/plot/window.pdf")
-
-tuna_plot.exit()
+def exit():
+    pass
