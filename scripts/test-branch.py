@@ -50,6 +50,7 @@ def do_test():
 	rsh("./configure %s" % TUNA_CONFIGURE_OPTIONS)
 	rsh("make %s" % TUNA_MAKE_OPTIONS)
 	rsh("make check")
+	rsh("make plots")
 	rsh("make DESTDIR=%s install" % install_dir)
 	print("\n")
 
