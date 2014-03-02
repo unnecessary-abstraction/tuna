@@ -27,7 +27,8 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/001_log.py \
 	$(d)/002_buffer.py \
 	$(d)/003_bufhold.py \
-	$(d)/004_tol.py
+	$(d)/004_tol.py \
+	$(d)/005_window.py
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=run-%.py)
 
 run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
