@@ -28,9 +28,16 @@ void window_init_sine(float * window, uint length)
 {
 	uint i;
 
+	/* We need to preserve the total energy content of the window - that is,
+	 * for some constant input x[i] and our window w[i], the sum of
+	 * (x[i] * w[i])^2 should be equal to the sum of (x[i])^2. The scale
+	 * value is chosen to meet this condition.
+	 */
+	float scale = sqrtf(2.0f);
+
 	assert(window);
 
 	for (i = 0; i < length; i++) {
-		window[i] = 2 * sin(M_PI * i / length);
+		window[i] = scale * sin(M_PI * i / length);
 	}
 }

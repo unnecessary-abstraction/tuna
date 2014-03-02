@@ -32,7 +32,7 @@ ax.set_title("Sine window with 1000 samples")
 ax.set_xlabel("Sample number")
 ax.set_ylabel("Window coefficient")
 ax.set_xlim(0, 1000)
-ax.set_ylim(0, 2.1)
+#ax.set_ylim(0, 2.0)
 fig.savefig("test/plot/window.pdf")
 
 tuna_plot.exit()
