@@ -30,14 +30,15 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/004_tol.py \
 	$(d)/005_window.py \
 	$(d)/006_fft.py
-RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=run-%.py)
 
-run-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
+RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=rununit-%.py)
+
+rununit-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
-run-%.py: export PYTHONPATH := swig/python:test
-run-%.py: export LD_LIBRARY_PATH := libtuna
+rununit-%.py: export PYTHONPATH := swig/python:test
+rununit-%.py: export LD_LIBRARY_PATH := libtuna
 
 CHECK_DEPS += $(RUN_TESTS_$(d))
 
