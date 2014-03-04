@@ -38,6 +38,7 @@ struct input_alsa {
 	snd_pcm_t *		capture;
 	int16_t *		alsa_buf;
 	volatile int		stop;
+	int			stop_condition;
 
 	/* ALSA parameters */
 	const char *		device_name;
@@ -334,7 +335,7 @@ int input_alsa_run(struct producer * producer)
 		/* Check for termination signal. */
 		if (a->stop) {
 			msg("input_alsa: Stop");
-			return a->stop;
+			return a->stop_condition;
 		}
 
 		r = snd_pcm_wait(a->capture, -1);
@@ -408,7 +409,8 @@ int input_alsa_stop(struct producer * producer, int condition)
 	struct input_alsa * a = (struct input_alsa *)
 		producer_get_data(producer);
 
-	a->stop = condition;
+	a->stop = 1;
+	a->stop_condition = condition;
 
 	return 0;
 }
