@@ -26,7 +26,8 @@ d := $(dir)
 PLOTS_$(d) := $(d)/window.pdf \
 	$(d)/tol-coeffs.pdf \
 	$(d)/tol-white-noise.pdf \
-	$(d)/tol-pink-noise.pdf
+	$(d)/tol-pink-noise.pdf \
+	$(d)/fft-sine.pdf
 
 $(d)/%.pdf: $(d)/%.py libtuna/libtuna.so swig/python/_libtuna.so swig/python/libtuna.py
 	@echo PLOT $@
