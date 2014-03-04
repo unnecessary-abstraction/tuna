@@ -50,7 +50,7 @@ class tunaTestResult(unittest.TestResult):
 
     def addExpectedFailure(self, test, err):
         super(tunaTestResult, self).addExpectedFailure(test, err)
-        self.runner.write("XFAIL: %s: %s\n" % (str(test), str(err[1])))
+        self.runner.write("XFAIL: %s\n" % (str(test)))
 
     def addUnexpectedSuccess(self, test):
         super(tunaTestResult, self).addUnexpectedSuccess(test)
