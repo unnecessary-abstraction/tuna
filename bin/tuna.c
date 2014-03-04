@@ -199,7 +199,7 @@ int count_callback(void * arg)
 
 	msg("tuna: Terminating as requested sample count has been reached");
 
-	r = producer_stop(in, 1);
+	r = producer_stop(in, 0);
 	if (r < 0)
 		fatal("tuna: Failed to stop input module");
 
