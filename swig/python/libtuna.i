@@ -25,6 +25,11 @@
 /* Mapping for `tol_get_coeffs(w)` where w is a pre-allocated numpy array. */
 %apply (float * INPLACE_ARRAY1, unsigned int DIM1) {(float *dest, uint length)}
 
+/* Ignore fft_get_data so that we can later add a wrapper with an identical
+ * signature.
+ */
+%ignore fft_get_data;
+
 %include "swig/libtuna.i"
 
 /* Wrapper for `tol_calculate(t, data, results)` where both data and results are
@@ -43,5 +48,20 @@ void tol_calculate_wrapper(struct tol * t, float * data, uint data_length,
         __unused data_length;
         __unused results_length;
         tol_calculate(t, data, results);
+}
+%}
+
+/* Wrapper for 'w = fft_get_data(fft)' where w is to be returned as a numpy
+ * array.
+ */
+%apply (float ** ARGOUTVIEW_ARRAY1, unsigned int * DIM1) {(float ** data, uint * data_length)}
+
+%rename (fft_get_data) fft_get_data_wrapper;
+
+%inline %{
+void fft_get_data_wrapper(struct fft * fft, float ** data, uint * data_length)
+{
+        *data = fft_get_data(fft);
+        *data_length = fft_get_length(fft);
 }
 %}
