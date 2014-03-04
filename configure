@@ -37,6 +37,7 @@ var_set("enable-python-bindings", "1")
 var_set("enable-docs", "1")
 var_set("enable-plots", "1")
 var_set("enable-unit-tests", "1")
+var_set("enable-integration-tests", "1")
 
 parse_cmdline()
 
