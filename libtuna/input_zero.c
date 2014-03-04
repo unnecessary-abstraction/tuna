@@ -40,6 +40,7 @@ struct input_zero {
 
 	uint			sample_rate;
 	volatile int		stop;
+	int			stop_condition;
 };
 
 int input_zero_run(struct producer * producer)
@@ -66,7 +67,7 @@ int input_zero_run(struct producer * producer)
 		/* Check for termination signal. */
 		if (z->stop) {
 			msg("input_zero: Stop");
-			return z->stop;
+			return z->stop_condition;
 		}
 
 		frames = 1<<16;
@@ -105,7 +106,8 @@ int input_zero_stop(struct producer * producer, int condition)
 	struct input_zero * z = (struct input_zero *)
 		producer_get_data(producer);
 
-	z->stop = condition;
+	z->stop = 1;
+	z->stop_condition = condition;
 
 	return 0;
 }
