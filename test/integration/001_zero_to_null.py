@@ -20,7 +20,6 @@ import unittest
 import tuna
 
 class tunaZeroNullTests(tunaTestCase):
-    @unittest.expectedFailure
     def test_run(self):
         # Throw away output
         #tuna.stdout = open("/dev/null")
@@ -28,7 +27,6 @@ class tunaZeroNullTests(tunaTestCase):
         # Process 64k samples from input_zero to output_null
         r = tuna.run("-i zero -o null -c 64000")
 
-        # TODO: Fix the return value!
         self.assertEqual(r, 0)
 
 if __name__ == '__main__':
