@@ -42,6 +42,7 @@ struct input_sndfile {
 	SF_INFO			sf_info;
 	const char *		sf_name;
 	volatile int		stop;
+	int			stop_condition;
 };
 
 /*******************************************************************************
@@ -135,7 +136,7 @@ int run_single_channel(struct input_sndfile * snd)
 		/* Check for termination signal. */
 		if (snd->stop) {
 			msg("input_sndfile: Stop");
-			return snd->stop;
+			return snd->stop_condition;
 		}
 
 		frames = 1<<16;
@@ -198,7 +199,7 @@ int run_multi_channel(struct input_sndfile * snd)
 		/* Check for termination signal. */
 		if (snd->stop) {
 			msg("input_sndfile: Stop");
-			return snd->stop;
+			return snd->stop_condition;
 		}
 
 		frames = 1<<16;
@@ -280,7 +281,8 @@ int input_sndfile_stop(struct producer * producer, int condition)
 	struct input_sndfile * snd = (struct input_sndfile *)
 		producer_get_data(producer);
 
-	snd->stop = condition;
+	snd->stop = 1;
+	snd->stop_condition = condition;
 
 	return 0;
 }
