@@ -43,6 +43,7 @@ struct input_ads1672 {
 	struct consumer *	consumer;
 
 	volatile int		stop;
+	int			stop_condition;
 
 	int			fh;
 
@@ -228,7 +229,7 @@ int input_ads1672_run(struct producer * producer)
 		if (a->stop) {
 			msg("input_ads1672: Stop");
 			stop(a);
-			return a->stop;
+			return a->stop_condition;
 		}
 
 		/* Life is easiest if we try to read blocks of length 1 s. */
@@ -288,7 +289,8 @@ int input_ads1672_stop(struct producer * producer, int condition)
 
 	struct input_ads1672 * a = (struct input_ads1672 *)
 		producer_get_data(producer);
-	a->stop = condition;
+	a->stop = 1;
+	a->stop_condition = condition;
 
 	return 0;
 }
