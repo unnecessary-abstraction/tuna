@@ -77,7 +77,7 @@ int input_zero_run(struct producer * producer)
 			return -ENOMEM;
 		}
 
-		memset(buf, 0, sizeof(*buf));
+		memset(buf, 0, frames * sizeof(sample_t));
 		
 		r = consumer_write(z->consumer, buf, frames);
 		if (r < 0) {
