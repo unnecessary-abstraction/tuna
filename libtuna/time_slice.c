@@ -322,7 +322,7 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 		return r;
 	}
 
-	while (t->available >= t->slice_period) {
+	while (t->available >= (t->slice_period * 2)) {
 		r = process_time_slice(t);
 		if (r < 0) {
 			error("time_slice: Failed to process time slice");
