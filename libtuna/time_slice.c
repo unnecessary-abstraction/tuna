@@ -193,7 +193,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			t->index++;
 		}
 		avail -= c;
-		offset = i;
+		offset = c;
 	}
 	if (avail && t->index < len*3/4) {
 		c = min(len*3/4 - t->index, avail);
@@ -222,7 +222,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			t->index++;
 		}
 		avail -= c;
-		offset += i;
+		offset += c;
 	}
 
 	/* We know (t->index < len) as we wouldn't have been called otherwise
@@ -237,8 +237,6 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			t->fft_data[t->index] = x * t->window[t->index];
 			t->index++;
 		}
-		avail -= c;
-		offset += i;
 	}
 }
 
