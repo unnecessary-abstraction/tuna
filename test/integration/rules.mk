@@ -24,7 +24,8 @@ dirstack_$(sp) := $(d)
 d := $(dir)
 
 TESTS_$(d) := $(d)/000_run.py \
-	$(d)/001_zero_to_null.py
+	$(d)/001_zero_to_null.py \
+	$(d)/002_zero_to_time_slice.py
 
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=runintegration-%.py)
 
