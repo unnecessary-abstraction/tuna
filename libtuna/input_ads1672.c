@@ -39,7 +39,6 @@
 *******************************************************************************/
 
 struct input_ads1672 {
-	struct producer		producer;
 	struct consumer *	consumer;
 
 	volatile int		stop;
