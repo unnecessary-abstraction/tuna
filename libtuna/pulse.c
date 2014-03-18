@@ -255,8 +255,9 @@ static void process_end_pulse(struct pulse_processor * p)
 	calc_offsets(p);
 
 	/* Add padding, perform FFT and third octave analysis. */
-	memset(&p->fft_data[p->index], 0,
-			(p->fft_length - p->index) * sizeof(float));
+	if (p->results->duration < p->fft_length)
+		memset(&p->fft_data[p->results->duration], 0,
+				(p->fft_length - p->results->duration) * sizeof(float));
 	fft_transform(p->fft);
 	tol_calculate(p->tol, p->fft_data, p->results->tols);
 
