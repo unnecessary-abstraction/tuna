@@ -395,6 +395,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 
 	uint i;
 	int start_offset;
+	uint age;
 	sample_t e;
 
 	for (i = 0; i < count; i++) {
@@ -414,7 +415,8 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			 * age of the current minimum from our current offset
 			 * into the buffer.
 			 */
-			start_offset = i - onset_threshold_age(p->onset);
+			age = onset_threshold_age(p->onset);
+			start_offset = i - age;
 
 			/* Process the data between the minimum point and the
 			 * start of the buffer passed to this function.
