@@ -51,7 +51,8 @@ struct minima_tracker {
 	 */
 	uint			windowlen;
 
-	/* Incrementing counter used to determine when a minima expires.
+	/* Incrementing counter used to determine when a minima expires. This
+	 * counts modulo $windowlen.
 	 */
 	uint			ticker;
 
@@ -100,13 +101,19 @@ sample_t minima_current(struct minima_tracker * t)
 int minima_current_age(struct minima_tracker * t)
 {
 	assert(t);
+	uint life;
 
 	/* As age is by definition always positive, we can return -1 on error.
 	 */
 	if (t->len == 0)
 		return -1;
 
-	return t->windowlen - (t->mins[t->left].expiry - t->ticker);
+	/* Determine the remaining lifetime of the current minima and then
+	 * subtract this from the window length.
+	 */
+	life = ((t->windowlen + t->mins[t->left].expiry) - t->ticker)
+		% t->windowlen;
+	return t->windowlen - life;
 }
 
 sample_t minima_next(struct minima_tracker * t, sample_t next)
@@ -114,7 +121,7 @@ sample_t minima_next(struct minima_tracker * t, sample_t next)
 	assert(t);
 
 	/* Advance ticker and pop from left if expired. */
-	t->ticker++;
+	t->ticker = (t->ticker + 1) % t->windowlen;
 	if (t->len && (t->mins[t->left].expiry == t->ticker)) {
 		t->left = (t->left + 1) % t->windowlen;
 		t->len--;
@@ -131,7 +138,7 @@ sample_t minima_next(struct minima_tracker * t, sample_t next)
 		t->right = (t->right + 1) % t->windowlen;
 	t->len++;
 	t->mins[t->right].value = next;
-	t->mins[t->right].expiry = t->ticker + t->windowlen;
+	t->mins[t->right].expiry = t->ticker;
 
 	/* Return new minimum. */
 	return t->mins[t->left].value;
