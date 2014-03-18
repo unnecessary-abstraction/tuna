@@ -261,6 +261,11 @@ static void process_end_pulse(struct pulse_processor * p)
 	tol_calculate(p->tol, p->fft_data, p->results->tols);
 
 	write_results(p);
+
+	/* Reset the pulse onset detector so that we don't report overlapping
+	 * pulses.
+	 */
+	onset_threshold_reset(p->onset);
 }
 
 /* Returns 1 if a new positive peak was found, 0 otherwise. This allows the
