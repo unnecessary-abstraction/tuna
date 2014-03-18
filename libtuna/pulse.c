@@ -305,7 +305,7 @@ static struct held_buffer * discard_leading_data(struct pulse_processor * p, uin
 			/* This should never happen, make sure we catch it if it
 			 * does though.
 			 */
-			error("pulse: Internal error - expected data is not present");
+			fatal("pulse: Internal error - expected data is not present");
 		}
 		i += bufhold_count(h);
 	}
