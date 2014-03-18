@@ -47,6 +47,9 @@ enum pulse_state {
 };
 
 struct pulse_results {
+	uint					onset;
+	uint					duration;
+
 	sample_t				peak_positive;
 	sample_t				peak_negative;
 	uint					peak_positive_offset;
@@ -130,6 +133,14 @@ struct pulse_processor {
 	 * TODO: Compute this only when the minimum changes, not every sample.
 	 */
 	sample_t				threshold;
+
+	/* Counter to track how much data has been written to the pulse
+	 * consumer. This counter is reset after a START or RESYNC so the onset
+	 * time of a pulse can be found from the onset value in the results by
+	 * advancing that many sample periods from the last timespec given in
+	 * the results file.
+	 */
+	uint					write_counter;
 };
 
 static int write_results(struct pulse_processor * p)
@@ -138,6 +149,14 @@ static int write_results(struct pulse_processor * p)
 
 	int r;
 	uint i;
+
+	r = csv_write_uint(p->csv, p->results->onset);
+	if (r < 0)
+		goto err;
+
+	r = csv_write_uint(p->csv, p->results->duration);
+	if (r < 0)
+		goto err;
 
 	r = csv_write_sample(p->csv, p->results->peak_positive);
 	if (r < 0)
@@ -217,11 +236,12 @@ void calc_offsets(struct pulse_processor * p)
 	}
 }
 
-void process_start_pulse(struct pulse_processor * p)
+void process_start_pulse(struct pulse_processor * p, uint onset)
 {
 	assert(p);
 
         memset(p->results, 0, sizeof(struct pulse_results) + p->n_tol * sizeof(float));
+	p->results->onset = onset;
 
 	p->index = 0;
 }
@@ -229,6 +249,8 @@ void process_start_pulse(struct pulse_processor * p)
 static void process_end_pulse(struct pulse_processor * p)
 {
 	assert(p);
+
+	p->results->duration = p->index;
 
 	calc_offsets(p);
 
@@ -406,7 +428,6 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 		 */
 		if ((p->state == STATE_NONPULSE) && (e > p->threshold)) {
 			p->state = STATE_PULSE;
-			process_start_pulse(p);
 
 			/* Mark the pulse as beginning from the minimum point.
 			 *
@@ -417,6 +438,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			 */
 			age = onset_threshold_age(p->onset);
 			start_offset = i - age;
+			process_start_pulse(p, p->write_counter + start_offset);
 
 			/* Process the data between the minimum point and the
 			 * start of the buffer passed to this function.
@@ -510,6 +532,9 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 		return r;
 	}
 
+	/* Update the amount of data we have handled. */
+	p->write_counter += count;
+
 	return 0;
 }
 
@@ -526,6 +551,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 
 	/* Reset detector. */
 	p->state = STATE_NONPULSE;
+	p->write_counter = 0;
 
 	/* Convert parameters. */
 	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
@@ -596,6 +622,7 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 
 	/* Reset detector. */
 	p->state = STATE_NONPULSE;
+	p->write_counter = 0;
 	env_estimate_reset(p->env);
 	onset_threshold_reset(p->onset);
 
