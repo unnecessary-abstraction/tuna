@@ -30,7 +30,6 @@
 struct env_estimate {
 	float		decay;
 	float		cur;
-	float		scale;
 };
 
 static inline float maxf(float a, float b)
@@ -38,7 +37,7 @@ static inline float maxf(float a, float b)
 	return (a > b) ? a : b;
 }
 
-struct env_estimate * env_estimate_init(float Tc, uint sample_rate, float sample_limit)
+struct env_estimate * env_estimate_init(float Tc, uint sample_rate)
 {
 	struct env_estimate * e;
 
@@ -50,7 +49,6 @@ struct env_estimate * env_estimate_init(float Tc, uint sample_rate, float sample
 
 	e->decay = expf(-1.0f / (Tc * sample_rate));
 	e->cur = 0;
-	e->scale = 1.0f / sample_limit;
 
 	return e;
 }
@@ -73,7 +71,7 @@ sample_t env_estimate_next(struct env_estimate * e, sample_t x)
 {
 	assert(e);
 
-	float f = (float) x;
-	e->cur = maxf(e->decay * e->cur, f * f);
-	return (sample_t)(e->cur * e->scale);
+	float f = fabs(x);
+	e->cur = maxf(e->decay * e->cur, f);
+	return (sample_t)e->cur;
 }

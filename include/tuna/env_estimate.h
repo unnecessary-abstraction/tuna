@@ -29,14 +29,18 @@
  * \brief Signal envelope estimation.
  *
  * The peak envelope of a signal is estimated for each sample of that signal. At
- * any point in time, the envelope is either the current sample energy or the
+ * any point in time, the envelope is either the current sample magnitude or the
  * previous envelope estimate multiplied by a decay factor, whichever is larger.
  * The decay factor is exponential and is calculated from a given time constant
  * and from the sampling rate of the signal to be processed.
  *
+ * Sample magnitude is used rather than sample energy to simplify the necessary
+ * calculations and to ensure that we don't have scaling issues when the sample
+ * energy may require more bits than are used to store sample values.
+ *
  * That is to say:
  * \f[
- * 	E [n] = \max(e^{-1/(T_c F_s)} E [n-1], x^2 [n])
+ * 	E [n] = \max \left(e^{-1/(T_c F_s)} E [n-1], \left|x[n]\right| \right)
  * \f]
  */
 
@@ -57,14 +61,9 @@ struct env_estimate {};
  * \param sample_rate The sampling frequency of the signal which will be
  * processed by this envelope estimator.
  *
- * \param sample_limit The highest value which may be taken by the series of
- * samples which will be processed by this envelope estimator, cast to a
- * floating point value.
- *
  * \return A pointer to the new envelope estimator or NULL if an error occured.
  */
-struct env_estimate * env_estimate_init(float Tc, uint sample_rate,
-		float sample_limit);
+struct env_estimate * env_estimate_init(float Tc, uint sample_rate);
 
 /**
  * \brief Destroy an envelope estimator that is no longer needed.

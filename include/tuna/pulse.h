@@ -54,12 +54,6 @@ struct pulse_params {
 	float					Td;
 
 	/**
-	 * Highest absolute value taken by an input sample, cast to a floating
-	 * point number.
-	 */
-	float					sample_limit;
-
-	/**
 	 * Maximum duration of a pulse in seconds. Pulses which exceed this
 	 * duration will be cut short.
 	 */

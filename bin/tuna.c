@@ -238,10 +238,9 @@ int output_init(struct arguments * args)
 		params->Tw = 0.1;
 		params->Tc = 0.1;
 		params->Td = 0.1;
-		params->sample_limit = (float)(1<<15);
 		params->pulse_max_duration = 1.0;
 		params->pulse_min_decay = 0.1;
-		params->threshold_ratio = 16;
+		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 2;
 
 		r = pulse_init(out, sink, params);
@@ -264,10 +263,9 @@ int output_init(struct arguments * args)
 		params->Tw = 0.1;
 		params->Tc = 0.1;
 		params->Td = 0.1;
-		params->sample_limit = (float)(1<<15);
 		params->pulse_max_duration = 1.0;
 		params->pulse_min_decay = 0.1;
-		params->threshold_ratio = 16;
+		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 2;
 
 		r = analysis_init(out, pulse_sink, time_slice_sink, params);

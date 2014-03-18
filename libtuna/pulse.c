@@ -529,7 +529,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
 	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
 
-	p->env = env_estimate_init(p->params->Tc, sample_rate, p->params->sample_limit);
+	p->env = env_estimate_init(p->params->Tc, sample_rate);
 	if (!p->env) {
 		error("pulse: Failed to initialise envelope estimator");
 		return -1;
