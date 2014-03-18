@@ -399,7 +399,7 @@ static int check_pulse_end(struct pulse_processor * p, sample_t env)
 	delayed_min = offset_threshold_delayed_min(p->offset);
 
 	/* Check for min/max pulse duration. */
-	if (p->index > p->pulse_max_duration_w)
+	if (p->index >= p->pulse_max_duration_w)
 		return 1;
 	else if ((p->index - p->results->peak_positive_offset) < p->pulse_min_decay_w)
 		/* TODO: Do we still need to update delayed_min in this case? */
