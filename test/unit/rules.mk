@@ -29,7 +29,8 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/003_bufhold.py \
 	$(d)/004_tol.py \
 	$(d)/005_window.py \
-	$(d)/006_fft.py
+	$(d)/006_fft.py \
+	$(d)/007_env_estimate.py
 
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=rununit-%.py)
 
