@@ -32,7 +32,7 @@
 #include "types.h"
 
 struct minima {
-	sample_t		value;
+	env_t			value;
 	uint			expiry;
 };
 
@@ -83,7 +83,7 @@ void minima_exit(struct minima_tracker * t)
 	free(t);
 }
 
-sample_t minima_current(struct minima_tracker * t)
+env_t minima_current(struct minima_tracker * t)
 {
 	assert(t);
 
@@ -116,7 +116,7 @@ int minima_current_age(struct minima_tracker * t)
 	return t->windowlen - life;
 }
 
-sample_t minima_next(struct minima_tracker * t, sample_t next)
+env_t minima_next(struct minima_tracker * t, env_t next)
 {
 	assert(t);
 

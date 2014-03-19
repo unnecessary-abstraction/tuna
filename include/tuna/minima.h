@@ -64,7 +64,7 @@ void minima_exit(struct minima_tracker * t);
  *
  * \return The current output of the given moving minimum filter.
  */
-sample_t minima_current(struct minima_tracker * t);
+env_t minima_current(struct minima_tracker * t);
 
 /**
  * \brief Get the age of the current output of a moving minimum filter.
@@ -90,7 +90,7 @@ int minima_current_age(struct minima_tracker * t);
  *
  * \return The output of the moving minimum filter after the given sample.
  */
-sample_t minima_next(struct minima_tracker * t, sample_t next);
+env_t minima_next(struct minima_tracker * t, env_t next);
 
 /**
  * \brief Reset a moving minimum filter.
