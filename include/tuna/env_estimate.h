@@ -94,6 +94,6 @@ void env_estimate_reset(struct env_estimate * e);
  *
  * \return The estimated envelope at the time position of the new sample.
  */
-sample_t env_estimate_next(struct env_estimate * e, sample_t x);
+env_t env_estimate_next(struct env_estimate * e, sample_t x);
 
 #endif /* !__TUNA_ENV_ESTIMATE_H_INCLUDED__ */

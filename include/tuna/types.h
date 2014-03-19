@@ -30,4 +30,11 @@ typedef int sample_t;
 #define SAMPLE_MAX INT_MAX
 #define SAMPLE_MIN INT_MIN
 
+/* Envelope estimates have their own type incase it needs to be different from
+ * the sample type.
+ */
+typedef int env_t;
+#define ENV_MAX INT_MAX
+#define ENV_MIN INT_MIN
+
 #endif /* !__TUNA_TYPES_H_INCLUDED__ */

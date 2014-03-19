@@ -67,11 +67,11 @@ void env_estimate_reset(struct env_estimate * e)
 	e->cur = 0;
 }
 
-sample_t env_estimate_next(struct env_estimate * e, sample_t x)
+env_t env_estimate_next(struct env_estimate * e, sample_t x)
 {
 	assert(e);
 
 	float f = fabs(x);
 	e->cur = maxf(e->decay * e->cur, f);
-	return (sample_t)e->cur;
+	return (env_t)e->cur;
 }
