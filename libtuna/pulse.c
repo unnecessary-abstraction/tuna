@@ -132,7 +132,7 @@ struct pulse_processor {
 	 *
 	 * TODO: Compute this only when the minimum changes, not every sample.
 	 */
-	sample_t				threshold;
+	env_t					threshold;
 
 	/* Counter to track how much data has been written to the pulse
 	 * consumer. This counter is reset after a START or RESYNC so the onset
@@ -375,11 +375,11 @@ static void process_leading_data(struct pulse_processor * p, uint offset)
 	}
 }
 
-static sample_t calc_envelope(struct pulse_processor * p, sample_t x)
+static env_t calc_envelope(struct pulse_processor * p, sample_t x)
 {
 	assert(p);
 
-	sample_t e;
+	env_t e;
 
 	/* Calculate envelope estimate and detection threshold. */
 	e = env_estimate_next(p->env, x);
@@ -389,7 +389,7 @@ static sample_t calc_envelope(struct pulse_processor * p, sample_t x)
 }
 
 /* Returns 0 to remain in pulse, 1 to exit pulse. */
-static int check_pulse_end(struct pulse_processor * p, sample_t env)
+static int check_pulse_end(struct pulse_processor * p, env_t env)
 {
 	assert(p);
 
@@ -424,7 +424,7 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 	uint i;
 	int start_offset;
 	uint age;
-	sample_t e;
+	env_t e;
 
 	for (i = 0; i < count; i++) {
 		e = calc_envelope(p, data[i]);
