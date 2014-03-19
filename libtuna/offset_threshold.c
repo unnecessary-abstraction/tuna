@@ -33,7 +33,6 @@ struct offset_threshold {
 
 	env_t				current_min;
 	env_t				delayed_min;
-	env_t				limit;
 	env_t				ratio;
 	env_t				threshold;
 };
@@ -59,7 +58,6 @@ struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
 	}
 
 	o->ratio = ratio;
-	o->limit = ENV_MAX / ratio;
 
 	return o;
 }
@@ -86,13 +84,7 @@ env_t offset_threshold_next(struct offset_threshold * o, env_t env)
 	/* Update current minimum and threshold. */
 	if (env < o->current_min) {
 		o->current_min = env;
-		if (env <= o->limit)
-			o->threshold = env * o->ratio;
-		else
-			/* Set threshold such that delayed_min is never less
-			 * than the threshold.
-			 */
-			o->threshold = 0;
+		o->threshold = env * o->ratio;
 	}
 
 	return o->threshold;
@@ -107,13 +99,7 @@ void offset_threshold_reset(struct offset_threshold * o, env_t env)
 	o->delayed_min = env;
 	o->current_min = env;
 
-	if (env <= o->limit)
-		o->threshold = env * o->ratio;
-	else
-		/* Set threshold such that delayed_min is never less than the
-		 * threshold.
-		 */
-		o->threshold = 0;
+	o->threshold = env * o->ratio;
 }
 
 env_t offset_threshold_delayed_min(struct offset_threshold * o)

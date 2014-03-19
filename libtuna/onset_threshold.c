@@ -31,7 +31,6 @@
 struct onset_threshold {
 	struct minima_tracker *		min;
 
-	env_t				limit;
 	env_t				ratio;
 };
 
@@ -54,7 +53,6 @@ struct onset_threshold * onset_threshold_init(float Tw, uint sample_rate,
 	}
 
 	onset->ratio = ratio;
-	onset->limit = ENV_MAX / ratio;
 
 	return onset;
 }
@@ -76,10 +74,7 @@ env_t onset_threshold_next(struct onset_threshold * onset, env_t env)
 
 	/* Track minima and calculate new threshold. */
 	min = minima_next(onset->min, env);
-	if (min <= onset->limit)
-		return min * onset->ratio;
-	else
-		return SAMPLE_MAX;
+	return min * onset->ratio;
 }
 
 void onset_threshold_reset(struct onset_threshold * onset)
