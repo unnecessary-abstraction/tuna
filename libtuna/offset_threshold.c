@@ -31,15 +31,15 @@
 struct offset_threshold {
 	struct cbuf *			delay_line;
 
-	sample_t			current_min;
-	sample_t			delayed_min;
-	sample_t			limit;
-	sample_t			ratio;
-	sample_t			threshold;
+	env_t				current_min;
+	env_t				delayed_min;
+	env_t				limit;
+	env_t				ratio;
+	env_t				threshold;
 };
 
 struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
-		sample_t ratio)
+		env_t ratio)
 {
 	uint Td_w;
 
@@ -59,7 +59,7 @@ struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
 	}
 
 	o->ratio = ratio;
-	o->limit = SAMPLE_MAX / ratio;
+	o->limit = ENV_MAX / ratio;
 
 	return o;
 }
@@ -73,11 +73,11 @@ void offset_threshold_exit(struct offset_threshold * o)
 	free(o);
 }
 
-sample_t offset_threshold_next(struct offset_threshold * o, sample_t env)
+env_t offset_threshold_next(struct offset_threshold * o, env_t env)
 {
 	assert(o);
 
-	sample_t old = cbuf_rotate(o->delay_line, env);
+	env_t old = cbuf_rotate(o->delay_line, env);
 
 	/* Update delayed minimum. */
 	if (old < o->delayed_min)
@@ -98,7 +98,7 @@ sample_t offset_threshold_next(struct offset_threshold * o, sample_t env)
 	return o->threshold;
 }
 
-void offset_threshold_reset(struct offset_threshold * o, sample_t env)
+void offset_threshold_reset(struct offset_threshold * o, env_t env)
 {
 	assert(o);
 
@@ -116,7 +116,7 @@ void offset_threshold_reset(struct offset_threshold * o, sample_t env)
 		o->threshold = 0;
 }
 
-sample_t offset_threshold_delayed_min(struct offset_threshold * o)
+env_t offset_threshold_delayed_min(struct offset_threshold * o)
 {
 	assert(o);
 

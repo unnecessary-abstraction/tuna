@@ -67,7 +67,7 @@ struct offset_threshold {};
  * \return The new offset threshold tracker or NULL on error.
  */
 struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
-		sample_t ratio);
+		env_t ratio);
 
 /**
  * \brief Destroy a pulse offset threshold tracker which is no longer needed.
@@ -86,7 +86,7 @@ void offset_threshold_exit(struct offset_threshold * o);
  *
  * \return The next offset threshold value.
  */
-sample_t offset_threshold_next(struct offset_threshold * o, sample_t env);
+env_t offset_threshold_next(struct offset_threshold * o, env_t env);
 
 /**
  * \brief Reset a pulse offset threshold tracker.
@@ -100,7 +100,7 @@ sample_t offset_threshold_next(struct offset_threshold * o, sample_t env);
  * \param env The envelope estimate of the signal to be processed by the given
  * offset threshold tracker at the time of reset.
  */
-void offset_threshold_reset(struct offset_threshold * o, sample_t env);
+void offset_threshold_reset(struct offset_threshold * o, env_t env);
 
 /**
  * \brief Obtain the delayed minimum value tracked by an offset threshold
@@ -115,6 +115,6 @@ void offset_threshold_reset(struct offset_threshold * o, sample_t env);
  * \return The delayed minimum value calculated by the given pulse offset
  * threshold tracker.
  */
-sample_t offset_threshold_delayed_min(struct offset_threshold * o);
+env_t offset_threshold_delayed_min(struct offset_threshold * o);
 
 #endif /* !__TUNA_OFFSET_THRESHOLD_H_INCLUDED__ */
