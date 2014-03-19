@@ -31,7 +31,7 @@ struct cbuf {
 	uint index;
 	uint len;
 
-	sample_t data[];
+	env_t data[];
 };
 
 struct cbuf * cbuf_init(uint len)
@@ -39,7 +39,7 @@ struct cbuf * cbuf_init(uint len)
 	/* Use calloc so that the index and all data values are initialised to
 	 * zero.
 	 */
-	struct cbuf * c = calloc(1, sizeof(struct cbuf) + len * sizeof(sample_t));
+	struct cbuf * c = calloc(1, sizeof(struct cbuf) + len * sizeof(env_t));
 	if (!c) {
 		error("cbuf_init: Failed to allocate memory");
 		return NULL;
@@ -55,24 +55,24 @@ void cbuf_reset(struct cbuf * c)
 	assert(c);
 
 	c->index = 0;
-	memset(c->data, 0, c->len * sizeof(sample_t));
+	memset(c->data, 0, c->len * sizeof(env_t));
 }
 
-sample_t cbuf_index(struct cbuf * c, uint i)
+env_t cbuf_index(struct cbuf * c, uint i)
 {
 	assert(c);
 
 	return c->data[(c->len + c->index - i) % c->len];
 }
 
-sample_t cbuf_get(struct cbuf * c)
+env_t cbuf_get(struct cbuf * c)
 {
 	assert(c);
 
 	return c->data[c->index];
 }
 
-void cbuf_put(struct cbuf * c, sample_t s)
+void cbuf_put(struct cbuf * c, env_t s)
 {
 	assert(c);
 
@@ -80,11 +80,11 @@ void cbuf_put(struct cbuf * c, sample_t s)
 	c->index = (c->index + 1) % c->len;
 }
 
-sample_t cbuf_rotate(struct cbuf *c, sample_t s)
+env_t cbuf_rotate(struct cbuf *c, env_t s)
 {
 	assert(c);
 
-	sample_t tmp;
+	env_t tmp;
 
 	tmp = c->data[c->index];
 	c->data[c->index] = s;

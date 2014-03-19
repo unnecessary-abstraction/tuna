@@ -65,7 +65,7 @@ void cbuf_reset(struct cbuf * c);
  *
  * \return The desired sample value.
  */
-sample_t cbuf_index(struct cbuf * c, uint i);
+env_t cbuf_index(struct cbuf * c, uint i);
 
 /**
  * \brief Access the latest value added to a circular buffer.
@@ -76,7 +76,7 @@ sample_t cbuf_index(struct cbuf * c, uint i);
  *
  * \return The desired sample value.
  */
-sample_t cbuf_get(struct cbuf * c);
+env_t cbuf_get(struct cbuf * c);
 
 /**
  * \brief Add a value to the end of the circular buffer.
@@ -88,7 +88,7 @@ sample_t cbuf_get(struct cbuf * c);
  *
  * \param s The sample to append to the end of the circular buffer.
  */
-void cbuf_put(struct cbuf * c, sample_t s);
+void cbuf_put(struct cbuf * c, env_t s);
 
 /**
  * \brief Rotate a circluar buffer.
@@ -103,7 +103,7 @@ void cbuf_put(struct cbuf * c, sample_t s);
  *
  * \return The oldest sample in the buffer.
  */
-sample_t cbuf_rotate(struct cbuf *c, sample_t s);
+env_t cbuf_rotate(struct cbuf *c, env_t s);
 
 /**
  * \brief Destroy a circular buffer that is no longer needed.
