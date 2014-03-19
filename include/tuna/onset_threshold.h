@@ -64,7 +64,7 @@ struct onset_threshold {};
  * \return The new offset threshold tracker or NULL on error.
  */
 struct onset_threshold * onset_threshold_init(float Tw, uint sample_rate,
-		sample_t ratio);
+		env_t ratio);
 
 /**
  * \brief Destroy a pulse onset threshold tracker which is no longer needed.
@@ -83,7 +83,7 @@ void onset_threshold_exit(struct onset_threshold * onset);
  *
  * \return The next onset threshold value.
  */
-sample_t onset_threshold_next(struct onset_threshold * onset, sample_t env);
+env_t onset_threshold_next(struct onset_threshold * onset, env_t env);
 
 /**
  * \brief Reset a pulse onset threshold tracker.
