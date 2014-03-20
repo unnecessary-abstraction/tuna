@@ -116,6 +116,51 @@ static void close_sndfile(struct input_sndfile * snd)
 	snd->sf = NULL;
 }
 
+static int convert_frames(struct input_sndfile * snd, sample_t * buf, uint frames)
+{
+	assert(snd);
+	assert(buf);
+
+	uint i;
+	sample_t divisor = 1;
+
+	switch (snd->sf_info.format & 0x7) {
+	case 1: /* int8 */
+		divisor = 1<<24;
+		break;
+	case 2: /* int16 */
+		divisor = 1<<16;
+		break;
+	case 3: /* int24 */
+		divisor = 1<<8;
+		break;
+
+	case 5: /* uint8 */
+		/* We need to shift rather than divide */
+		for (i = 0; i < frames; i++)
+			buf[i] >>= 24;
+		return 0;
+
+	case 4: /* int32 */
+	case 6: /* float */
+	case 7: /* double */
+		/* Nothing to do */
+		return 0;
+
+	default:
+		error("input_sndfile: Unknown sample type");
+		return -1;
+	}
+
+	/* For signed sample types, we divide rather than shift so that the sign
+	 * bit is preserved.
+	 */
+	for (i = 0; i < frames; i++)
+		buf[i] /= divisor;
+
+	return 0;
+}
+
 int run_single_channel(struct input_sndfile * snd)
 {
 	assert(snd);
@@ -158,6 +203,13 @@ int run_single_channel(struct input_sndfile * snd)
 		/* Got r frames. */
 		frames = (uint)r;
 		
+		r = convert_frames(snd, buf, frames);
+		if (r < 0) {
+			error("input_sndfile: Unable to convert samples");
+			buffer_release(buf);
+			return r;
+		}
+
 		r = consumer_write(snd->consumer, buf, frames);
 		if (r < 0) {
 			error("input_sndfile: Failed to write to consumer");
@@ -226,6 +278,13 @@ int run_multi_channel(struct input_sndfile * snd)
 
 		for (i = 0; i < frames; i++)
 			buf[i] = buf[i*channels + selected_channel];
+
+		r = convert_frames(snd, buf, frames);
+		if (r < 0) {
+			error("input_sndfile: Unable to convert samples");
+			buffer_release(buf);
+			return r;
+		}
 
 		r = consumer_write(snd->consumer, buf, frames);
 		if (r < 0) {
