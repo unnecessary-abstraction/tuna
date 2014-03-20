@@ -111,9 +111,9 @@ int minima_current_age(struct minima_tracker * t)
 	/* Determine the remaining lifetime of the current minima and then
 	 * subtract this from the window length.
 	 */
-	life = ((t->windowlen + t->mins[t->left].expiry) - t->ticker)
+	life = ((t->windowlen + t->mins[t->left].expiry) - (t->ticker + 1))
 		% t->windowlen;
-	return t->windowlen - life;
+	return t->windowlen - (life + 1);
 }
 
 env_t minima_next(struct minima_tracker * t, env_t next)
