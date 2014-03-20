@@ -240,7 +240,7 @@ void process_start_pulse(struct pulse_processor * p, uint onset)
 {
 	assert(p);
 
-        memset(p->results, 0, sizeof(struct pulse_results) + p->n_tol * sizeof(float));
+	memset(p->results, 0, sizeof(struct pulse_results) + p->n_tol * sizeof(float));
 	p->results->onset = onset;
 
 	p->index = 0;
