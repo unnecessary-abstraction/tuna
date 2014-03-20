@@ -133,9 +133,15 @@ env_t minima_next(struct minima_tracker * t, env_t next)
 		t->len--;
 	}
 
-	/* Add to right. */
-	if (t->len)
+	/* If the deque of ascending minima has been emptied, reset right and
+	 * left to be equal. Otherwise, we need to advance the right index.
+	 */
+	if (!t->len)
+		t->right = t->left;
+	else if (t->len)
 		t->right = (t->right + 1) % t->windowlen;
+
+	/* Add to the right of the deque. */
 	t->len++;
 	t->mins[t->right].value = next;
 	t->mins[t->right].expiry = t->ticker;
