@@ -78,6 +78,11 @@ struct pulse_params {
 	 * when the decrease drops below this ratio.
 	 */
 	sample_t				decay_threshold_ratio;
+
+	/**
+	 * Output mode - controls whether the output is in CSV or DAT format.
+	 */
+	int					out_mode;
 };
 
 /**
@@ -87,8 +92,9 @@ struct pulse_params {
  * should immediately follow the creation of a consumer object with
  * consumer_new().
  *
- * \param csv_name The filename of the output file which will be created.
- * Analysis results will be written to this file in CSV format.
+ * \param out_name The filename of the output file which will be created.
+ * Analysis results will be written to this file in CSV or DAT format depending
+ * on the value of params->out_mode.
  *
  * \param params The various mathematical parameters to be used in the pulse
  * detection. The structure pointed to by this argument is used in-place by the
@@ -98,7 +104,7 @@ struct pulse_params {
  *
  * \return >=0 on success, <0 on failure.
  */
-int pulse_init(struct consumer * consumer, const char * csv_name,
+int pulse_init(struct consumer * consumer, const char * out_name,
 		const struct pulse_params * params);
 
 #endif /* !__TUNA_PULSE_H_INCLUDED__ */

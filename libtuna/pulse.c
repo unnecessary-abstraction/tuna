@@ -28,6 +28,7 @@
 #include "cbuf.h"
 #include "consumer.h"
 #include "csv.h"
+#include "dat.h"
 #include "env_estimate.h"
 #include "fft.h"
 #include "log.h"
@@ -80,11 +81,11 @@ struct pulse_processor {
 	/* Parameters passed during initialisation. */
 	const struct pulse_params *		params;
 
-	/* Output stream for writing results in csv format. */
-	FILE *					csv;
+	/* Output stream for writing results. */
+	FILE *					out;
 
-	/* Filename of csv output stream. */
-	char *					csv_name;
+	/* Filename of output stream. */
+	char *					out_name;
 
 	/* FFT: This is provided during initialisation and is not exited when
 	 * the pulse processor is exited.
@@ -143,60 +144,69 @@ struct pulse_processor {
 	uint					write_counter;
 };
 
-static int write_results(struct pulse_processor * p)
+static int write_results_csv(struct pulse_processor * p)
 {
 	assert(p);
 
 	int r;
 	uint i;
 
-	r = csv_write_uint(p->csv, p->results->onset);
+	r = csv_write_uint(p->out, p->results->onset);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results->duration);
+	r = csv_write_uint(p->out, p->results->duration);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_sample(p->csv, p->results->peak_positive);
+	r = csv_write_sample(p->out, p->results->peak_positive);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_sample(p->csv, p->results->peak_negative);
+	r = csv_write_sample(p->out, p->results->peak_negative);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results->peak_positive_offset);
+	r = csv_write_uint(p->out, p->results->peak_positive_offset);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results->peak_negative_offset);
+	r = csv_write_uint(p->out, p->results->peak_negative_offset);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results->offset_5);
+	r = csv_write_uint(p->out, p->results->offset_5);
 	if (r < 0)
 		goto err;
 
-	r = csv_write_uint(p->csv, p->results->offset_95);
+	r = csv_write_uint(p->out, p->results->offset_95);
 	if (r < 0)
 		goto err;
 
 	for (i = 0; i < p->n_tol; i++) {
-		r = csv_write_float(p->csv, p->results->tols[i]);
+		r = csv_write_float(p->out, p->results->tols[i]);
 		if (r < 0)
 			goto err;
 	}
 
-	r = csv_next(p->csv);
+	r = csv_next(p->out);
 	if (r < 0)
 		goto err;
 
 	return 0;
 
 err:
-	error("pulse: Failed to write to output file %s", p->csv_name);
+	error("pulse: Failed to write to output file %s", p->out_name);
 	return r;
+}
+
+static int write_results_dat(struct pulse_processor * p)
+{
+	assert(p);
+
+	size_t sz = sizeof(struct pulse_results) + p->n_tol * sizeof(float);
+
+	return dat_write_record(p->out, TUNA_DAT_PULSE, p->results, sz);
 }
 
 void calc_offsets(struct pulse_processor * p)
@@ -261,7 +271,10 @@ static void process_end_pulse(struct pulse_processor * p)
 	fft_transform(p->fft);
 	tol_calculate(p->tol, p->fft_data, p->results->tols);
 
-	write_results(p);
+	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
+		write_results_csv(p);
+	else
+		write_results_dat(p);
 
 	/* Reset the pulse onset detector so that we don't report overlapping
 	 * pulses.
@@ -506,10 +519,14 @@ void pulse_exit(struct consumer * consumer)
 	if (p->fft)
 		fft_exit(p->fft);
 
+	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
+		csv_close(p->out);
+	else
+		dat_close(p->out);
+
 	bufhold_release_all(p->held_buffers);
 	bufhold_exit(p->held_buffers);
-	csv_close(p->csv);
-	free(p->csv_name);
+	free(p->out_name);
 	free(p);
 }
 
@@ -605,9 +622,13 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -ENOMEM;
 	}
 
-	r = csv_write_start(p->csv, ts);
+	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
+		r = csv_write_start(p->out, ts);
+	else
+		r = dat_write_start(p->out, ts);
+
 	if (r < 0) {
-		error("pulse: Failed to write to output file %s", p->csv_name);
+		error("pulse: Failed to write to output file %s", p->out_name);
 		return r;
 	}
 
@@ -632,9 +653,13 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 	env_estimate_reset(p->env);
 	onset_threshold_reset(p->onset);
 
-	r = csv_write_resync(p->csv, ts);
+	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
+		r = csv_write_resync(p->out, ts);
+	else
+		r = dat_write_resync(p->out, ts);
+
 	if (r < 0) {
-		error("pulse: Failed to write to output file %s", p->csv_name);
+		error("pulse: Failed to write to output file %s", p->out_name);
 		return r;
 	}
 
@@ -645,11 +670,11 @@ int pulse_resync(struct consumer * consumer, struct timespec * ts)
 	Public functions
 *******************************************************************************/
 
-int pulse_init(struct consumer * consumer, const char * csv_name,
+int pulse_init(struct consumer * consumer, const char * out_name,
 		const struct pulse_params * params)
 {
 	assert(consumer);
-	assert(csv_name);
+	assert(out_name);
 	assert(params);
 
 	int r;
@@ -668,17 +693,21 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 		goto err;
 	}
 
-	/* Initialize csv file. */
-	p->csv_name = strdup(csv_name);
-	if (!p->csv_name) {
-		error("pulse: Failed to allocate memory for csv file name");
+	/* Initialize output file. */
+	p->out_name = strdup(out_name);
+	if (!p->out_name) {
+		error("pulse: Failed to allocate memory for output file name");
 		r = -1;
 		goto err;
 	}
 
-	p->csv = csv_open(p->csv_name);
-	if (!p->csv) {
-		error("pulse: Failed to open file %s", p->csv_name);
+	if (params->out_mode == TUNA_OUT_MODE_CSV)
+		p->out = csv_open(p->out_name);
+	else
+		p->out = dat_open(p->out_name);
+
+	if (!p->out) {
+		error("pulse: Failed to open file %s", p->out_name);
 		r = -1;
 		goto err;
 	}
@@ -697,10 +726,10 @@ int pulse_init(struct consumer * consumer, const char * csv_name,
 
 err:
 	if (p) {
-		if (p->csv)
-			fclose(p->csv);
-		if (p->csv_name)
-			free(p->csv_name);
+		if (p->out)
+			fclose(p->out);
+		if (p->out_name)
+			free(p->out_name);
 		if (p->held_buffers)
 			bufhold_exit(p->held_buffers);
 		free(p);

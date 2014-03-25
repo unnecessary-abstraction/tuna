@@ -242,6 +242,7 @@ int output_init(struct arguments * args)
 		params->pulse_min_decay = 0.1;
 		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 2;
+		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = pulse_init(out, sink, params);
 	} else if (strcmp(args->output, "analysis") == 0) {
@@ -267,6 +268,7 @@ int output_init(struct arguments * args)
 		params->pulse_min_decay = 0.1;
 		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 2;
+		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = analysis_init(out, pulse_sink, time_slice_sink, params);
 	} else if (strcmp(args->output, "sndfile") == 0) {
