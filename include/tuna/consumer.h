@@ -44,6 +44,12 @@ struct consumer;
 struct consumer {};
 #endif
 
+/* TODO: Find a better place for these. */
+enum tuna_out_modes {
+	TUNA_OUT_MODE_CSV,
+	TUNA_OUT_MODE_DAT
+};
+
 /**
  * Prototype for a callback function which implements consumer_write(). See the
  * documentation for that function for the meaning of parameters and return
