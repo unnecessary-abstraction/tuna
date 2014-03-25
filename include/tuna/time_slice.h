@@ -64,11 +64,15 @@
  * time_slice_init() should immediately follow the creation of a consumer object
  * with consumer_new().
  *
- * \param csv_name The filename of the output file which will be created.
- * Analysis results will be written to this file in CSV format.
+ * \param out_name The filename of the output file which will be created.
+ * Analysis results will be written to this file in CSV or DAT format depending
+ * on the value of out_mode.
+ *
+ * \param out_mode Output mode, either TUNA_OUT_MODE_CSV or TUNA_OUT_MODE_DAT.
  *
  * \return >=0 on success, <0 on failure.
  */
-int time_slice_init(struct consumer * consumer, const char * csv_name);
+int time_slice_init(struct consumer * consumer, const char * out_name,
+		int out_mode);
 
 #endif /* !__TUNA_TIME_SLICE_H_INCLUDED__ */

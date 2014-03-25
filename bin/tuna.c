@@ -223,7 +223,7 @@ int output_init(struct arguments * args)
 	}
 
 	if (strcmp(args->output, "time_slice") == 0) {
-		r = time_slice_init(out, sink);
+		r = time_slice_init(out, sink, TUNA_OUT_MODE_CSV);
 	} else if (strcmp(args->output, "pulse") == 0) {
 		struct pulse_params * params;
 

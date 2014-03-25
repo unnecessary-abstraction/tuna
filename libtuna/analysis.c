@@ -142,7 +142,7 @@ int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
 		goto err;
 	}
 
-	r = time_slice_init(a->time_slice, time_slice_csv_name);
+	r = time_slice_init(a->time_slice, time_slice_csv_name, pulse_params->out_mode);
 	if (r < 0) {
 		error("analysis: Failed to initialise time slice processing");
 		goto err;
