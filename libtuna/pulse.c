@@ -78,7 +78,7 @@ struct pulse_processor {
 	struct bufhold *			held_buffers;
 
 	/* Parameters passed during initialisation. */
-	const struct pulse_params *	params;
+	const struct pulse_params *		params;
 
 	/* Output stream for writing results in csv format. */
 	FILE *					csv;
