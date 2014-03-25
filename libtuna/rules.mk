@@ -32,6 +32,7 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/consumer.lo \
 	$(d)/counter.lo \
 	$(d)/csv.lo \
+	$(d)/dat.lo \
 	$(d)/env_estimate.lo \
 	$(d)/fft.lo \
 	$(d)/input_alsa.lo \
