@@ -88,13 +88,6 @@ static inline uint min(uint a, uint b)
 	return b;
 }
 
-static inline uint values_per_slice(struct time_slice * t)
-{
-	assert(t);
-
-	return 8 + t->n_tol;
-}
-
 static int write_results_csv(struct time_slice * t)
 {
 	int r;
