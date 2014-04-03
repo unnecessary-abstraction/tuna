@@ -98,4 +98,5 @@ void minima_reset(struct minima_tracker * t)
 	t->right = 0;
 	t->ticker = 0;
 	t->len = 0;
+	t->mins[t->left].expiry = 0;
 }

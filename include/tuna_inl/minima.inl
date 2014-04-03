@@ -60,34 +60,53 @@ TUNA_INLINE env_t minima_next(struct minima_tracker * t, env_t next)
 {
 	assert(t);
 
-	/* Advance ticker and pop from left if expired. */
-	t->ticker = (t->ticker + 1) % t->windowlen;
-	if (t->len && (t->mins[t->left].expiry == t->ticker)) {
-		t->left = (t->left + 1) % t->windowlen;
-		t->len--;
-	}
-
 	/* Pop from right while highest min > next. */
-	while (t->len && (t->mins[t->right].value > next)) {
-		t->right = (t->windowlen + t->right - 1) % t->windowlen;
+	while (t->len) {
+		if (t->mins[t->right].value <= next) {
+			/* Advance ticker and pop from left if expired. */
+			if (++t->ticker == t->windowlen)
+				t->ticker = 0;
+			if (t->mins[t->left].expiry == t->ticker) {
+				if (t->len == 1) {
+					t->right = 0;
+					t->left = 0;
+					t->mins[0].value = next;
+					t->mins[0].expiry = t->ticker;
+					return next;
+				}
+				if (++t->left == t->windowlen)
+					t->left = 0;
+				if (++t->right == t->windowlen)
+					t->right = 0;
+			} else {
+				t->len++;
+				if (++t->right == t->windowlen)
+					t->right = 0;
+			}
+
+			/* Add to the right of the deque. */
+			t->mins[t->right].value = next;
+			t->mins[t->right].expiry = t->ticker;
+
+			/* Return new minimum. */
+			return t->mins[t->left].value;
+		}
+		if (t->right == 0)
+			t->right = t->windowlen;
+		t->right--;
 		t->len--;
 	}
 
-	/* If the deque of ascending minima has been emptied, reset right and
-	 * left to be equal. Otherwise, we need to advance the right index.
-	 */
-	if (!t->len)
-		t->right = t->left;
-	else if (t->len)
-		t->right = (t->right + 1) % t->windowlen;
+	t->right = 0;
+	t->left = 0;
 
 	/* Add to the right of the deque. */
 	t->len++;
-	t->mins[t->right].value = next;
-	t->mins[t->right].expiry = t->ticker;
+	t->mins[0].value = next;
+	t->mins[0].expiry = t->ticker;
 
 	/* Return new minimum. */
-	return t->mins[t->left].value;
+	return next;
 }
 
 #if defined(ENABLE_INLINE) && defined(__TUNA_MINIMA_C__)
