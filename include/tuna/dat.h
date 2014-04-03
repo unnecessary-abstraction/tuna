@@ -32,8 +32,8 @@
 
 /* Magic numbers. */
 enum tuna_dat_magic {
-	TUNA_DAT_MAGIC = 0xBADDBEEF,
-	TUNA_DAT_ENDIAN_INDICATOR = 0xAABBCCDD
+	TUNA_DAT_MAGIC = 0x0BADBEEF,
+	TUNA_DAT_ENDIAN_INDICATOR = 0x11223344
 };
 
 /* Record types. */
