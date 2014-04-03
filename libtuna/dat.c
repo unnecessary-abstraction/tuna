@@ -23,11 +23,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
 #include "dat.h"
 #include "log.h"
+
+#define DAT_BUFFER_SIZE 4096
 
 static int dat_write_header(FILE * dat)
 {
@@ -97,29 +98,21 @@ int dat_write_null(FILE * dat, size_t count)
 
 	void * buf;
 	int r;
-	long lr;
-	size_t page_size;
+	size_t sz;
 
-	lr = sysconf(_SC_PAGESIZE);
-	if (lr < 0)
-		fatal("dat: Could not determine page size");
+	sz = (count > DAT_BUFFER_SIZE) ? DAT_BUFFER_SIZE : count;
 
-	page_size = (size_t)lr;
-
-	if (count > page_size)
-		buf = calloc(1, page_size);
-	else
-		buf = calloc(1, count);
+	buf = calloc(1, sz);
 	if (!buf) {
 		error("dat: Failed to allocate memory for write buffer");
 		return -1;
 	}
 
-	while (count > page_size) {
-		r = fwrite(buf, page_size, 1, dat);
+	while (count > DAT_BUFFER_SIZE) {
+		r = fwrite(buf, DAT_BUFFER_SIZE, 1, dat);
 		if (r < 0)
 			goto cleanup;
-		count -= page_size;
+		count -= DAT_BUFFER_SIZE;
 	}
 
 	r = fwrite(buf, count, 1, dat);
