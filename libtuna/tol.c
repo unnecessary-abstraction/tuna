@@ -190,7 +190,7 @@ static inline float phi(float p, uint l)
 	uint i;
 
 	for (i = 0; i < l; i++) {
-		p = sin(p * M_PI / 2);
+		p = sinf(p * M_PI / 2);
 	}
 
 	return p;
@@ -311,10 +311,10 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 	/* Prepare each transition region. */
 	for (i = 0; i < MAX_THIRD_OCTAVE_LEVELS; i++) {
 		/* Calculate exact transition width. */
-		delta = 2 * overlap * (sqrt(band_edges[i] * band_edges[i + 1]) - band_edges[i]);
+		delta = 2 * overlap * (sqrtf(band_edges[i] * band_edges[i + 1]) - band_edges[i]);
 
-		t->desc[i].t_onset = (uint) ceil((band_edges[i] - delta) / step);
-		t_end = (uint) floor((band_edges[i] + delta) / step);
+		t->desc[i].t_onset = (uint) ceilf((band_edges[i] - delta) / step);
+		t_end = (uint) floorf((band_edges[i] + delta) / step);
 		t->desc[i].t_width = 1 + t_end - t->desc[i].t_onset;
 
 		if (t_end > sample_rate / 2) {
@@ -346,8 +346,8 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 				p = 0;
 			}
 			tmp = (1 + phi(p, phi_L)) * M_PI / 4;
-			sin_tmp = sin(tmp);
-			cos_tmp = cos(tmp);
+			sin_tmp = sinf(tmp);
+			cos_tmp = cosf(tmp);
 			t->desc[i].coeffs[2 * j] = cos_tmp * cos_tmp;
 			t->desc[i].coeffs[1 + 2 * j] = sin_tmp * sin_tmp;
 		}
