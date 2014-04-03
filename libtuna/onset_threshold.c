@@ -18,6 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#define __TUNA_ONSET_THRESHOLD_C__
+
 #include <assert.h>
 #include <malloc.h>
 #include <math.h>
@@ -27,12 +29,6 @@
 #include "minima.h"
 #include "onset_threshold.h"
 #include "types.h"
-
-struct onset_threshold {
-	struct minima_tracker *		min;
-
-	env_t				ratio;
-};
 
 struct onset_threshold * onset_threshold_init(float Tw, uint sample_rate,
 		env_t ratio)
@@ -64,17 +60,6 @@ void onset_threshold_exit(struct onset_threshold * onset)
 	if (onset->min)
 		minima_exit(onset->min);
 	free(onset);
-}
-
-env_t onset_threshold_next(struct onset_threshold * onset, env_t env)
-{
-	assert(onset);
-
-	env_t min;
-
-	/* Track minima and calculate new threshold. */
-	min = minima_next(onset->min, env);
-	return min * onset->ratio;
 }
 
 void onset_threshold_reset(struct onset_threshold * onset)

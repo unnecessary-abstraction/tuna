@@ -21,6 +21,7 @@
 #ifndef __TUNA_ONSET_THRESHOLD_H_INCLUDED__
 #define __TUNA_ONSET_THRESHOLD_H_INCLUDED__
 
+#include "compiler.h"
 #include "types.h"
 
 /**
@@ -83,7 +84,8 @@ void onset_threshold_exit(struct onset_threshold * onset);
  *
  * \return The next onset threshold value.
  */
-env_t onset_threshold_next(struct onset_threshold * onset, env_t env);
+TUNA_INLINE env_t onset_threshold_next(struct onset_threshold * onset,
+		env_t env);
 
 /**
  * \brief Reset a pulse onset threshold tracker.
@@ -109,5 +111,7 @@ void onset_threshold_reset(struct onset_threshold * onset);
  * tracker.
  */
 uint onset_threshold_age(struct onset_threshold * onset);
+
+#include "tuna_inl/onset_threshold.inl"
 
 #endif /* !__TUNA_ONSET_THRESHOLD_H_INCLUDED__ */
