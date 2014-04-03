@@ -33,11 +33,9 @@
 #define __unused (void)
 #endif
 
-/* container_of macro taken from Linux Kernel. */
-#define container_of(ptr, type, member) ({				\
-                const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
-                (type *)( (char *)__mptr - offsetof(type,member) );	\
-	})
+/* ISO C99 compatible container_of macro, with thanks to Stack Overflow. */
+#define container_of(ptr, type, member)					\
+        ((type *) ((char *)(ptr) - offsetof(type, member)))
 
 #define ptr_offset(ptr, d) ({						\
 		char * __cptr = (char *)(ptr);				\
