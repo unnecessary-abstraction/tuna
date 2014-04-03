@@ -51,6 +51,7 @@
 %}
 
 #define __noreturn
+#define TUNA_INLINE
 
 %include "analysis.h"
 %include "buffer.h"

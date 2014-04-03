@@ -50,4 +50,12 @@
 		(void *)(__iptr & ~(__ir-1));				\
 	})
 
+/* Support inlines using c99 model. */
+#ifdef ENABLE_INLINE
+#define TUNA_INLINE inline
+#define TUNA_EXTERN_INLINE extern
+#else
+#define TUNA_INLINE
+#endif
+
 #endif /* !__TUNA_COMPILER_H_INCLUDED__ */
