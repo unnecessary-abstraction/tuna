@@ -27,8 +27,6 @@
 
 #include "dat.h"
 #include "log.h"
-#include "timespec.h"
-#include "types.h"
 
 static int dat_write_header(FILE * dat)
 {

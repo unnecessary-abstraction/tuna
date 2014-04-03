@@ -24,8 +24,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "types.h"
-
 /**
  * \file <tuna/dat.h>
  *
