@@ -44,9 +44,21 @@ struct consumer;
 struct consumer {};
 #endif
 
-/* TODO: Find a better place for these. */
+/**
+ * \brief Output format selection values.
+ *
+ * These values may be used as arguments to the init function for consumers
+ * which output analysis results to disk.
+ */
 enum tuna_out_modes {
+	/**
+	 * \brief Output data in CSV format, see <tuna/csv.h>.
+	 */
 	TUNA_OUT_MODE_CSV,
+
+	/**
+	 * \brief Output data in DAT format, see <tuna/dat.h>.
+	 */
 	TUNA_OUT_MODE_DAT
 };
 
