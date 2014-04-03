@@ -87,13 +87,13 @@ class tunaMinimaTests(tunaTestCase):
 
         for i in range(siglen):
             v = libtuna.minima_next(m, signal[i])
-            self.assertEqual(v, expected_output[i])
+            self.assertEqual(v, expected_output[i], "next @ %d" % (i))
 
             v = libtuna.minima_current(m)
-            self.assertEqual(v, expected_output[i])
+            self.assertEqual(v, expected_output[i], "current @ %d" % (i))
 
             age = libtuna.minima_current_age(m)
-            self.assertEqual(age, expected_ages[i])
+            self.assertEqual(age, expected_ages[i], "age @ %d" % (i))
 
         libtuna.minima_exit(m)
         self.assertNoErrors()
