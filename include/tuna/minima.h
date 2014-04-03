@@ -21,6 +21,7 @@
 #ifndef __TUNA_MINIMA_H_INCLUDED__
 #define __TUNA_MINIMA_H_INCLUDED__
 
+#include "compiler.h"
 #include "types.h"
 
 /**
@@ -90,7 +91,7 @@ int minima_current_age(struct minima_tracker * t);
  *
  * \return The output of the moving minimum filter after the given sample.
  */
-env_t minima_next(struct minima_tracker * t, env_t next);
+TUNA_INLINE env_t minima_next(struct minima_tracker * t, env_t next);
 
 /**
  * \brief Reset a moving minimum filter.
@@ -103,5 +104,7 @@ env_t minima_next(struct minima_tracker * t, env_t next);
  * \param t The moving minimum filter to reset.
  */
 void minima_reset(struct minima_tracker * t);
+
+#include "tuna_inl/minima.inl"
 
 #endif /* !__TUNA_MINIMA_H_INCLUDED__ */

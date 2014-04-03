@@ -23,6 +23,8 @@
  * http://richardhartersworld.com/cri/2001/slidingmin.html
  */
 
+#define __TUNA_MINIMA_C__
+
 #include <assert.h>
 #include <malloc.h>
 #include <stddef.h>
@@ -30,34 +32,6 @@
 #include "minima.h"
 #include "log.h"
 #include "types.h"
-
-struct minima {
-	env_t			value;
-	uint			expiry;
-};
-
-struct minima_tracker {
-	/* Indices of left and right ends of the queue. Data at mins[left] and
-	 * mins[right] is valid as long as len > 0.
-	 */
-	uint			left;
-	uint			right;
-
-	/* Number of valid minima in the deque. */
-	uint			len;
-
-	/* Length of the analysis window and therefore length of the circular
-	 * buffer allocated.
-	 */
-	uint			windowlen;
-
-	/* Incrementing counter used to determine when a minima expires. This
-	 * counts modulo $windowlen.
-	 */
-	uint			ticker;
-
-	struct minima		mins[];
-};
 
 struct minima_tracker * minima_init(uint windowlen)
 {
@@ -114,40 +88,6 @@ int minima_current_age(struct minima_tracker * t)
 	life = ((t->windowlen + t->mins[t->left].expiry) - (t->ticker + 1))
 		% t->windowlen;
 	return t->windowlen - (life + 1);
-}
-
-env_t minima_next(struct minima_tracker * t, env_t next)
-{
-	assert(t);
-
-	/* Advance ticker and pop from left if expired. */
-	t->ticker = (t->ticker + 1) % t->windowlen;
-	if (t->len && (t->mins[t->left].expiry == t->ticker)) {
-		t->left = (t->left + 1) % t->windowlen;
-		t->len--;
-	}
-
-	/* Pop from right while highest min > next. */
-	while (t->len && (t->mins[t->right].value > next)) {
-		t->right = (t->windowlen + t->right - 1) % t->windowlen;
-		t->len--;
-	}
-
-	/* If the deque of ascending minima has been emptied, reset right and
-	 * left to be equal. Otherwise, we need to advance the right index.
-	 */
-	if (!t->len)
-		t->right = t->left;
-	else if (t->len)
-		t->right = (t->right + 1) % t->windowlen;
-
-	/* Add to the right of the deque. */
-	t->len++;
-	t->mins[t->right].value = next;
-	t->mins[t->right].expiry = t->ticker;
-
-	/* Return new minimum. */
-	return t->mins[t->left].value;
 }
 
 void minima_reset(struct minima_tracker * t)
