@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <fftw3.h>
 #include <malloc.h>
-#include <math.h>
 #include <pthread.h>
 #include <string.h>
 
@@ -118,7 +117,7 @@ int fft_transform(struct fft * fft)
 		/* Write out a single float. The output will take up half the
 		 * space that the input did.
 		 */
-		fft->data[i] = sqrtf(re * re + im * im) / fft->length;
+		fft->data[i] = (re * re + im * im) / fft->length;
 	}
 
 	return 0;

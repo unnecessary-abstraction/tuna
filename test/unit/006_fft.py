@@ -106,7 +106,7 @@ class tunaFFTTests(tunaTestCase):
         self.assertSuccess(libtuna.fft_transform(fft))
 
         # Ensure the output data is all zeros except for the dc term
-        self.assertEqual(data[0], 1)
+        self.assertEqual(data[0], 8000)
         for i in range(1, length//2):
             self.assertEqual(data[i], 0)
 
@@ -131,7 +131,7 @@ class tunaFFTTests(tunaTestCase):
         # Ensure the output data is all zeros except for the 1 kHz term
         for i in range(1000):
             self.assertAlmostEqual(data[i], 0, msg="data[%d]" % i)
-        self.assertEqual(data[1000], 0.5, msg="data[%d]" % 1000)
+        self.assertEqual(data[1000], 2000, msg="data[%d]" % 1000)
         for i in range(1001, length//2):
             self.assertAlmostEqual(data[i], 0, msg="data[%d]" % i)
 
