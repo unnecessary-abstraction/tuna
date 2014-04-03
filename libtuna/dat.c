@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <malloc.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -30,7 +31,7 @@
 
 static int dat_write_header(FILE * dat)
 {
-	int buf[2];
+	int32_t buf[2];
 
 	assert(dat);
 
@@ -73,7 +74,7 @@ int dat_write_record(FILE * dat, int record_type, void * data, size_t count)
 	assert(dat);
 
 	int r;
-	int buf[2];
+	int32_t buf[2];
 
 	if (!record_type)
 		/* Write a single NULL byte. */
@@ -81,7 +82,7 @@ int dat_write_record(FILE * dat, int record_type, void * data, size_t count)
 
 	/* Write record header: type in big endian order followed by length. */
 	buf[0] = htonl(record_type);
-	buf[1] = count;
+	buf[1] = (int32_t)count;
 	r = fwrite(buf, 2 * sizeof(int), 1, dat);
 	if (r < 0)
 		return r;
