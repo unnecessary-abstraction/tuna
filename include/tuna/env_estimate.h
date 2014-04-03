@@ -21,6 +21,7 @@
 #ifndef __TUNA_ENV_ESTIMATE_H_INCLUDED__
 #define __TUNA_ENV_ESTIMATE_H_INCLUDED__
 
+#include "compiler.h"
 #include "types.h"
 
 /**
@@ -94,6 +95,8 @@ void env_estimate_reset(struct env_estimate * e);
  *
  * \return The estimated envelope at the time position of the new sample.
  */
-env_t env_estimate_next(struct env_estimate * e, sample_t x);
+TUNA_INLINE env_t env_estimate_next(struct env_estimate * e, sample_t x);
+
+#include "tuna_inl/env_estimate.inl"
 
 #endif /* !__TUNA_ENV_ESTIMATE_H_INCLUDED__ */

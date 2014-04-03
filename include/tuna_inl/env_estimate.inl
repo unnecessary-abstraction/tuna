@@ -1,5 +1,5 @@
 /*******************************************************************************
-	env_estimate.c: Sample-based peak envelope estimation.
+	env_estimate.inl: Sample-based peak envelope estimation.
 
 	Copyright (C) 2014 Paul Barker, Loughborough University
 
@@ -18,43 +18,34 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
-#define __TUNA_ENV_ESTIMATE_C__
+#ifndef __TUNA_ENV_ESTIMATE_INL_INCLUDED__
+#define __TUNA_ENV_ESTIMATE_INL_INCLUDED__
+
+#if defined(ENABLE_INLINE) || defined(__TUNA_ENV_ESTIMATE_C__)
 
 #include <assert.h>
-#include <malloc.h>
 #include <math.h>
-#include <stddef.h>
 
-#include "env_estimate.h"
-#include "log.h"
 #include "types.h"
 
-struct env_estimate * env_estimate_init(float Tc, uint sample_rate)
-{
-	struct env_estimate * e;
+struct env_estimate {
+	float		decay;
+	float		cur;
+};
 
-	e = (struct env_estimate *) malloc(sizeof(struct env_estimate));
-	if (!e) {
-		error("env_estimate: Failed to allocate memory");
-		return NULL;
-	}
-
-	e->decay = expf(-1.0f / (Tc * sample_rate));
-	e->cur = 0;
-
-	return e;
-}
-
-void env_estimate_exit(struct env_estimate * e)
+TUNA_INLINE env_t env_estimate_next(struct env_estimate * e, sample_t x)
 {
 	assert(e);
 
-	free(e);
+	float next = fabs(x);
+	float decayed = e->decay * e->cur;
+
+	e->cur = (decayed > next) ? decayed : next;
+	return (env_t)e->cur;
 }
 
-void env_estimate_reset(struct env_estimate * e)
-{
-	assert(e);
-
-	e->cur = 0;
-}
+#if defined(ENABLE_INLINE) && defined(__TUNA_ENV_ESTIMATE_C__)
+TUNA_EXTERN_INLINE env_t env_estimate_next(struct env_estimate * e, sample_t x);
+#endif /* ENABLE_INLINE && __TUNA_ENV_ESTIMATE_C__ */
+#endif /* ENABLE_INLINE || __TUNA_ENV_ESTIMATE_C__ */
+#endif /* !__TUNA_ENV_ESTIMATE_INL_INCLUDED__ */
