@@ -72,6 +72,7 @@ if var_get("enable-inline"):
 
 # Append other flags
 var_append("CFLAGS", "-Wall -Wextra -pthread")
+var_append("CFLAGS", "-std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700")
 var_append("LDFLAGS", "-pthread")
 var_append("LDLIBRARIES", "-lm -lrt")
 
