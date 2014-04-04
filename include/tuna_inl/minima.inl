@@ -61,32 +61,21 @@ TUNA_INLINE env_t minima_next(struct minima_tracker * t, env_t next)
 	assert(t);
 
 	/* Pop from right while highest min > next. */
-	while (t->len) {
+	while (t->len > 1) {
 		if (t->mins[t->right].value <= next) {
 			/* Advance ticker and pop from left if expired. */
-			if (++t->ticker == t->windowlen)
-				t->ticker = 0;
-			if (t->mins[t->left].expiry == t->ticker) {
-				if (t->len == 1) {
-					t->right = 0;
-					t->left = 0;
-					t->mins[0].value = next;
-					t->mins[0].expiry = t->ticker;
-					return next;
-				}
+			if (t->mins[t->left].expiry == ++t->ticker) {
 				if (++t->left == t->windowlen)
 					t->left = 0;
-				if (++t->right == t->windowlen)
-					t->right = 0;
-			} else {
+			} else
 				t->len++;
-				if (++t->right == t->windowlen)
-					t->right = 0;
-			}
+
+			if (++t->right == t->windowlen)
+				t->right = 0;
 
 			/* Add to the right of the deque. */
 			t->mins[t->right].value = next;
-			t->mins[t->right].expiry = t->ticker;
+			t->mins[t->right].expiry = t->ticker + t->windowlen;
 
 			/* Return new minimum. */
 			return t->mins[t->left].value;
@@ -97,13 +86,34 @@ TUNA_INLINE env_t minima_next(struct minima_tracker * t, env_t next)
 		t->len--;
 	}
 
+	if (t->mins[t->right].value <= next) {
+		/* Advance ticker and pop from left if expired. */
+		if (t->mins[t->left].expiry == ++t->ticker) {
+			t->right = 0;
+			t->left = 0;
+			t->mins[0].value = next;
+			t->mins[0].expiry = t->ticker + t->windowlen;
+			return next;
+		}
+
+		t->len = 2;
+		if (++t->right == t->windowlen)
+			t->right = 0;
+
+		/* Add to the right of the deque. */
+		t->mins[t->right].value = next;
+		t->mins[t->right].expiry = t->ticker + t->windowlen;
+
+		/* Return new minimum. */
+		return t->mins[t->left].value;
+	}
+
 	t->right = 0;
 	t->left = 0;
 
 	/* Add to the right of the deque. */
-	t->len++;
 	t->mins[0].value = next;
-	t->mins[0].expiry = t->ticker;
+	t->mins[0].expiry = t->ticker + t->windowlen;
 
 	/* Return new minimum. */
 	return next;
