@@ -29,6 +29,7 @@
         #include "consumer.h"
         #include "counter.h"
         #include "csv.h"
+        #include "dat.h"
         #include "env_estimate.h"
         #include "fft.h"
 #ifdef ENABLE_ADS1672
@@ -60,6 +61,7 @@
 %include "consumer.h"
 %include "counter.h"
 %include "csv.h"
+%include "dat.h"
 %include "env_estimate.h"
 %include "fft.h"
 #ifdef ENABLE_ADS1672
