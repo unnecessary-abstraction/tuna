@@ -396,7 +396,7 @@ static env_t calc_envelope(struct pulse_processor * p, sample_t x)
 
 	/* Calculate envelope estimate and detection threshold. */
 	e = env_estimate_next(p->env, x);
-	p->threshold = onset_threshold_next(p->onset, e);
+	onset_threshold_next(p->onset, e, &p->threshold);
 
 	return e;
 }

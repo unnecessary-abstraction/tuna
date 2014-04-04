@@ -31,7 +31,7 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/005_window.py \
 	$(d)/006_fft.py \
 	$(d)/007_env_estimate.py \
-	$(d)/008_minima.py
+	$(d)/008_onset_threshold.py
 
 RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=rununit-%.py)
 

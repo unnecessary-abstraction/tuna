@@ -39,7 +39,6 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/input_sndfile.lo \
 	$(d)/input_zero.lo \
 	$(d)/log.lo \
-	$(d)/minima.lo \
 	$(d)/onset_threshold.lo \
 	$(d)/offset_threshold.lo \
 	$(d)/output_null.lo \

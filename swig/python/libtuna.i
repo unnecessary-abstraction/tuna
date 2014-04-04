@@ -25,6 +25,10 @@
 /* Mapping for `tol_get_coeffs(w)` where w is a pre-allocated numpy array. */
 %apply (float * INPLACE_ARRAY1, unsigned int DIM1) {(float *dest, uint length)}
 
+/* Mapping for `threshold_out = onset_threshold_next(onset, next, threshold_in)`
+ */
+%apply (float *INOUT) {(env_t * threshold)}
+
 /* Ignore fft_get_data so that we can later add a wrapper with an identical
  * signature.
  */

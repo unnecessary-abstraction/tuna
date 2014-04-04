@@ -82,10 +82,11 @@ void onset_threshold_exit(struct onset_threshold * onset);
  * \param env The next envelope estimate to be provessed by the given onset
  * threshold tracker.
  *
- * \return The next onset threshold value.
+ * \param threshold The location in which to store the next onset threshold
+ * value. This value will only be updated if a new threshold is calculated.
  */
-TUNA_INLINE env_t onset_threshold_next(struct onset_threshold * onset,
-		env_t env);
+TUNA_INLINE void onset_threshold_next(struct onset_threshold * onset,
+		env_t next, env_t * threshold);
 
 /**
  * \brief Reset a pulse onset threshold tracker.
@@ -111,6 +112,10 @@ void onset_threshold_reset(struct onset_threshold * onset);
  * tracker.
  */
 uint onset_threshold_age(struct onset_threshold * onset);
+
+env_t onset_threshold_current_minimum(struct onset_threshold * onset);
+
+env_t onset_threshold_current(struct onset_threshold * onset);
 
 #include "tuna_inl/onset_threshold.inl"
 
