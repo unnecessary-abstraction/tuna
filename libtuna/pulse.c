@@ -388,19 +388,6 @@ static void process_leading_data(struct pulse_processor * p, uint offset)
 	}
 }
 
-static env_t calc_envelope(struct pulse_processor * p, sample_t x)
-{
-	assert(p);
-
-	env_t e;
-
-	/* Calculate envelope estimate and detection threshold. */
-	e = env_estimate_next(p->env, x);
-	onset_threshold_next(p->onset, e, &p->threshold);
-
-	return e;
-}
-
 /* Returns 0 to remain in pulse, 1 to exit pulse. */
 static int check_pulse_end(struct pulse_processor * p, env_t env)
 {
@@ -440,42 +427,46 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 	env_t e;
 
 	for (i = 0; i < count; i++) {
-		e = calc_envelope(p, data[i]);
+		e = env_estimate_next(p->env, data[i]);
 
 		/* Check against detection threshold if we're not already in a
 		 * pulse.
 		 */
-		if ((p->state == STATE_NONPULSE) && (e > p->threshold)) {
-			p->state = STATE_PULSE;
+		if (p->state == STATE_NONPULSE) {
+			onset_threshold_next(p->onset, e, &p->threshold);
 
-			/* Mark the pulse as beginning from the minimum point.
-			 *
-			 * We want start_offset to be the signed offset from the
-			 * start of the current data buffer so we subtract the
-			 * age of the current minimum from our current offset
-			 * into the buffer.
-			 */
-			age = onset_threshold_age(p->onset);
-			start_offset = i - age;
-			process_start_pulse(p, p->write_counter + start_offset);
+			if (e > p->threshold) {
+				p->state = STATE_PULSE;
 
-			/* Process the data between the minimum point and the
-			 * start of the buffer passed to this function.
-			 */
-			if (start_offset < 0) {
-				process_leading_data(p, -start_offset);
-				start_offset = 0;
+				/* Mark the pulse as beginning from the minimum point.
+				*
+				* We want start_offset to be the signed offset from the
+				* start of the current data buffer so we subtract the
+				* age of the current minimum from our current offset
+				* into the buffer.
+				*/
+				age = onset_threshold_age(p->onset);
+				start_offset = i - age;
+				process_start_pulse(p, p->write_counter + start_offset);
+
+				/* Process the data between the minimum point and the
+				* start of the buffer passed to this function.
+				*/
+				if (start_offset < 0) {
+					process_leading_data(p, -start_offset);
+					start_offset = 0;
+				}
+
+				/* Process the data in the buffer passed to this
+				* function between the minimum point and the current
+				* sample.
+				*/
+				process_data(p, &data[start_offset], i - start_offset);
+
+				/* Setup the pulse end detector. */
+				offset_threshold_reset(p->offset, e);
 			}
-
-			/* Process the data in the buffer passed to this
-			 * function between the minimum point and the current
-			 * sample.
-			 */
-			process_data(p, &data[start_offset], i - start_offset);
-
-			/* Setup the pulse end detector. */
-			offset_threshold_reset(p->offset, e);
-		} else if (p->state == STATE_PULSE) {
+		} else {
 			/* We're in a pulse but this isn't the first sample of
 			 * it.
 			 */
