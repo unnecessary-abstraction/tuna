@@ -421,18 +421,15 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 	assert(p);
 	assert(data);
 
-	uint i;
+	uint i = 0;
 	int start_offset;
 	uint age;
 	env_t e;
 
-	for (i = 0; i < count; i++) {
-		e = env_estimate_next(p->env, data[i]);
-
-		/* Check against detection threshold if we're not already in a
-		 * pulse.
-		 */
-		if (p->state == STATE_NONPULSE) {
+	if (p->state == STATE_NONPULSE) {
+state_nonpulse:
+		while (i < count) {
+			e = env_estimate_next(p->env, data[i]);
 			onset_threshold_next(p->onset, e, &p->threshold);
 
 			if (e > p->threshold) {
@@ -465,11 +462,20 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 
 				/* Setup the pulse end detector. */
 				offset_threshold_reset(p->offset, e);
+
+				i++;
+				goto state_pulse;
 			}
-		} else {
+
+			i++;
+		}
+	} else {
+state_pulse:
+		while (i < count) {
 			/* We're in a pulse but this isn't the first sample of
 			 * it.
 			 */
+			e = env_estimate_next(p->env, data[i]);
 
 			if (process_sample(p, data[i])) {
 				/* A new peak was found. */
@@ -479,7 +485,12 @@ static void detect_data(struct pulse_processor * p, sample_t * data,
 			if (check_pulse_end(p, e)) {
 				p->state = STATE_NONPULSE;
 				process_end_pulse(p);
+
+				i++;
+				goto state_nonpulse;
 			}
+
+			i++;
 		}
 	}
 }
