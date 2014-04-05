@@ -436,28 +436,28 @@ state_nonpulse:
 				p->state = STATE_PULSE;
 
 				/* Mark the pulse as beginning from the minimum point.
-				*
-				* We want start_offset to be the signed offset from the
-				* start of the current data buffer so we subtract the
-				* age of the current minimum from our current offset
-				* into the buffer.
-				*/
+				 *
+				 * We want start_offset to be the signed offset from the
+				 * start of the current data buffer so we subtract the
+				 * age of the current minimum from our current offset
+				 * into the buffer.
+				 */
 				age = onset_threshold_age(p->onset);
 				start_offset = i - age;
 				process_start_pulse(p, p->write_counter + start_offset);
 
 				/* Process the data between the minimum point and the
-				* start of the buffer passed to this function.
-				*/
+				 * start of the buffer passed to this function.
+				 */
 				if (start_offset < 0) {
 					process_leading_data(p, -start_offset);
 					start_offset = 0;
 				}
 
 				/* Process the data in the buffer passed to this
-				* function between the minimum point and the current
-				* sample.
-				*/
+				 * function between the minimum point and the current
+				 * sample.
+				 */
 				process_data(p, &data[start_offset], i - start_offset);
 
 				/* Setup the pulse end detector. */
