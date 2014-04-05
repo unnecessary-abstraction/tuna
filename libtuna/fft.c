@@ -20,10 +20,8 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <errno.h>
 #include <fftw3.h>
 #include <malloc.h>
-#include <pthread.h>
 #include <string.h>
 
 #include "fft.h"
