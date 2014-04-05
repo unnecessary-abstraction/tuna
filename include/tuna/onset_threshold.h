@@ -113,8 +113,24 @@ void onset_threshold_reset(struct onset_threshold * onset);
  */
 uint onset_threshold_age(struct onset_threshold * onset);
 
+/**
+ * \brief Retrieve the last output of the moving minimum tracker on which the
+ * onset threshold is based.
+ *
+ * \param onset The pulse onset threshold tracker to use.
+ *
+ * \return The last output of the moving minimum tracker within the onset
+ * threshold tracker.
+ */
 env_t onset_threshold_current_minimum(struct onset_threshold * onset);
 
+/**
+ * \brief Retrieve the last output of the onset threshold tracker.
+ *
+ * \param onset The pulse onset threshold tracker to use.
+ *
+ * \return The last output of the given onset threshold tracker.
+ */
 env_t onset_threshold_current(struct onset_threshold * onset);
 
 #include "tuna_inl/onset_threshold.inl"
