@@ -18,18 +18,6 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
-
-SWIGFILE := $(SRCDIR)/swig/libtuna.i
-
 ifdef enable-python-bindings
-dir := swig/python
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/swig/python/rules.mk
 endif
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))

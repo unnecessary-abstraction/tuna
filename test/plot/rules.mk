@@ -18,12 +18,9 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := test/plot
 
-PLOTS_$(d) := $(d)/window.pdf \
+plot_pdfs := $(d)/window.pdf \
 	$(d)/tol-coeffs.pdf \
 	$(d)/tol-white-noise.pdf \
 	$(d)/tol-pink-noise.pdf \
@@ -39,11 +36,7 @@ $(d)/%.pdf: export LD_LIBRARY_PATH := libtuna
 
 # There's probably nowhere better to define this
 .PHONY: plots
-plots: $(PLOTS_$(d))
+plots: $(plot_pdfs)
 
 # Ensure plots are removed during 'make clean'
-TARGETS_EXTRA += $(PLOTS_$(d))
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+TARGETS_EXTRA += $(plot_pdfs)

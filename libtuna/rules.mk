@@ -18,13 +18,10 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := libtuna
 
 # Targets and intermediates in this directory
-OBJS_$(d) := $(d)/analysis.lo \
+objs := $(d)/analysis.lo \
 	$(d)/buffer.lo \
 	$(d)/bufhold.lo \
 	$(d)/bufq.lo \
@@ -48,41 +45,37 @@ OBJS_$(d) := $(d)/analysis.lo \
 	$(d)/time_slice.lo \
 	$(d)/timespec.lo \
 	$(d)/tol.lo \
-	$(d)/window.lo \
+	$(d)/window.lo
 
 # Only include ADS1672 input module if it was enabled by 'configure'
 ifdef enable-ads1672
-OBJS_$(d) += $(d)/input_ads1672.lo
+objs += $(d)/input_ads1672.lo
 endif
 
-DEPS_$(d) := $(OBJS_$(d):%.lo=%.d)
+deps := $(objs:%.lo=%.d)
 
-TGTS_$(d) := $(d)/libtuna.so $(d)/libtuna.a
+tgts := $(d)/libtuna.so $(d)/libtuna.a
 
-TARGETS_LIB += $(TGTS_$(d))
+TARGETS_LIB += $(tgts)
 
-INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
+INTERMEDIATES += $(deps) $(objs)
 
-INSTALL_DEPS += install-$(d)
+INSTALL_DEPS += install-libtuna
 
 # Rules for this directory
-$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk $(OBJS_$(d))
-$(TGTS_$(d)): LDLIBRARIES_TGT :=
+$(tgts): $(SRCDIR)/$(d)/rules.mk $(objs)
+$(tgts): LDLIBRARIES_TGT :=
 
-$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
+$(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
-.PHONY: install-$(d)
-install-$(d): $(TGTS_$(d))
+.PHONY: install-libtuna
+install-libtuna: $(tgts)
 	@echo INSTALL $^
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
 	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(libdir)
 
 # Include dependencies
--include $(DEPS_$(d))
+-include $(deps)
 
 # Make everything depend on this rules file
-$(OBJS_$(d)): $(SRCDIR)/$(d)/rules.mk
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+$(objs): $(SRCDIR)/$(d)/rules.mk

@@ -18,26 +18,14 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
-
 ifdef enable-unit-tests
-dir := test/unit
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/test/unit/rules.mk
 endif
 
 ifdef enable-integration-tests
-dir := test/integration
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/test/integration/rules.mk
 endif
 
 ifdef enable-plots
-dir := test/plot
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/test/plot/rules.mk
 endif
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))

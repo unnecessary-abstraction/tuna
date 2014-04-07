@@ -44,24 +44,14 @@ VPATH := $(SRCDIR)
 all: targets
 
 # Pull in subdirectories
-dir := bin
-include $(SRCDIR)/$(dir)/rules.mk
-
-dir := libtuna
-include $(SRCDIR)/$(dir)/rules.mk
-
-dir := test
-include $(SRCDIR)/$(dir)/rules.mk
-
-dir := include
-include $(SRCDIR)/$(dir)/rules.mk
-
-dir := swig
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/bin/rules.mk
+include $(SRCDIR)/libtuna/rules.mk
+include $(SRCDIR)/test/rules.mk
+include $(SRCDIR)/include/rules.mk
+include $(SRCDIR)/swig/rules.mk
 
 ifdef enable-docs
-dir := doxy
-include $(SRCDIR)/$(dir)/rules.mk
+include $(SRCDIR)/doxy/rules.mk
 endif
 
 # Combined list of targets

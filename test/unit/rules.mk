@@ -18,12 +18,9 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := test/unit
 
-TESTS_$(d) := $(d)/000_import.py \
+tests := $(d)/000_import.py \
 	$(d)/001_log.py \
 	$(d)/002_buffer.py \
 	$(d)/003_bufhold.py \
@@ -33,17 +30,13 @@ TESTS_$(d) := $(d)/000_import.py \
 	$(d)/007_env_estimate.py \
 	$(d)/008_onset_threshold.py
 
-RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=rununit-%.py)
+run_tests := $(tests:$(d)/%.py=run-u%.py)
 
-rununit-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
+run-u%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
-rununit-%.py: export PYTHONPATH := swig/python:test
-rununit-%.py: export LD_LIBRARY_PATH := libtuna
+run-u%.py: export PYTHONPATH := swig/python:test
+run-u%.py: export LD_LIBRARY_PATH := libtuna
 
-CHECK_DEPS += $(RUN_TESTS_$(d))
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+CHECK_DEPS += $(run_tests)

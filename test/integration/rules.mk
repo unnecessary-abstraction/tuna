@@ -18,26 +18,19 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := test/integration
 
-TESTS_$(d) := $(d)/000_run.py \
+tests := $(d)/000_run.py \
 	$(d)/001_zero_to_null.py \
 	$(d)/002_zero_to_time_slice.py
 
-RUN_TESTS_$(d) := $(TESTS_$(d):$(d)/%.py=runintegration-%.py)
+run_tests := $(tests:$(d)/%.py=run-i%.py)
 
-runintegration-%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
+run-i%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libtuna.so
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
-runintegration-%.py: export PYTHONPATH := swig/python:test
-runintegration-%.py: export LD_LIBRARY_PATH := libtuna
+run-i%.py: export PYTHONPATH := swig/python:test
+run-i%.py: export LD_LIBRARY_PATH := libtuna
 
-CHECK_DEPS += $(RUN_TESTS_$(d))
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+CHECK_DEPS += $(run_tests)

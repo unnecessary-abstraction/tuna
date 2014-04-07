@@ -1,7 +1,7 @@
 ################################################################################
 #	rules.mk for TUNA binaries.
 #
-#	Copyright (C) 2013 Paul Barker, Loughborough University
+#	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 #
 #	This program is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -18,46 +18,39 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := bin
 
 # Targets and intermediates in this directory
-OBJS_tuna := $(d)/tuna.o
+objs_tuna := $(d)/tuna.o
 
-OBJS_$(d) := $(OBJS_tuna)
+objs := $(objs_tuna)
 
-DEPS_$(d) := $(OBJS_$(d):%.o=%.d)
+deps := $(objs:%.o=%.d)
 
-TGTS_$(d) := $(d)/tuna
+tgts := $(d)/tuna
 
-TARGETS_BIN += $(TGTS_$(d))
+TARGETS_BIN += $(tgts)
 
-INTERMEDIATES += $(DEPS_$(d)) $(OBJS_$(d))
+INTERMEDIATES += $(deps) $(objs)
 
-INSTALL_DEPS += install-$(d)
+INSTALL_DEPS += install-bin
 
 # Rules for this directory
-$(TGTS_$(d)): LDLIBRARIES_TGT := -Llibtuna -ltuna
-$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so
+$(tgts): LDLIBRARIES_TGT := -Llibtuna -ltuna
+$(tgts): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so
 
-$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
+$(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
 $(d)/tuna: $(OBJS_tuna)
 
-.PHONY: install-$(d)
-install-$(d): $(TGTS_$(d))
+.PHONY: install-bin
+install-bin: $(tgts)
 	@echo INSTALL $^
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
 	$(Q)$(INSTALL) -m 0755 $^ $(DESTDIR)$(bindir)
 
 # Include dependencies
--include $(DEPS_$(d))
+-include $(deps)
 
 # Make everything depend on this rules file
-$(OBJS_$(d)): $(SRCDIR)/$(d)/rules.mk
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+$(objs): $(SRCDIR)/$(d)/rules.mk

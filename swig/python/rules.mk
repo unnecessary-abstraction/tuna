@@ -18,31 +18,28 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ################################################################################
 
-# Push directory stack
-sp := $(sp).x
-dirstack_$(sp) := $(d)
-d := $(dir)
+d := swig/python
 
-OBJS_$(d) := $(d)/libtuna_wrap.lo
+objs := $(d)/libtuna_wrap.lo
 
-DEPS_$(d) := $(OBJS_$(d):%.lo=%.d) $(d)/libtuna.d
+deps := $(objs:%.lo=%.d) $(d)/libtuna.d
 
-TGTS_$(d) := $(d)/_libtuna.so $(d)/libtuna.py
+tgts := $(d)/_libtuna.so $(d)/libtuna.py
 
-TARGETS_LIB += $(TGTS_$(d))
+TARGETS_LIB += $(tgts)
 
-INTERMEDIATES += $(OBJS_$(d)) $(DEPS_$(d)) $(d)/libtuna_wrap.c
+INTERMEDIATES += $(objs) $(deps) $(d)/libtuna_wrap.c
 
-INSTALL_DEPS += install-$(d)
+INSTALL_DEPS += install-python-bindings
 
 # Rules for this directory
-$(TGTS_$(d)): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so $(OBJS_$(d))
-$(TGTS_$(d)): LDLIBRARIES_TGT := -Llibtuna -ltuna
+$(tgts): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so $(objs)
+$(tgts): LDLIBRARIES_TGT := -Llibtuna -ltuna
 
-$(OBJS_$(d)): INCLUDE_TGT := -I$(SRCDIR)/$(d)
+$(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
-.PHONY: install-$(d)
-install-$(d): $(TGTS_$(d))
+.PHONY: install-python-bindings
+install-python-bindings: $(tgts)
 	@echo INSTALL $^
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(python_sitedir)
 	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(python_sitedir)
@@ -52,11 +49,7 @@ $(d)/libtuna_wrap.c: $(d)/libtuna.i
 	$(Q)$(SWIG) -python -py3 -O -MD -MP -MF swig/python/libtuna.d -o $@ $(INCLUDE_ALL) $(INCLUDE_TGT) $<
 
 # Include dependencies
--include $(DEPS_$(d))
+-include $(deps)
 
 # Make everything depend on this rules file
-$(OBJS_$(d)) $(d)/libtuna_wrap.c: $(SRCDIR)/$(d)/rules.mk
-
-# Pop directory stack
-d := $(dirstack_$(sp))
-sp := $(basename $(sp))
+$(objs) $(d)/libtuna_wrap.c: $(SRCDIR)/$(d)/rules.mk
