@@ -75,9 +75,8 @@ class tunaTOLTests(tunaTestCase):
             self.assertSuccess(libtuna.tol_get_coeffs(tol, i, w))
 
             # All coeffs must be between 0 and 1 inclusive.
-            for j in range(len(w)):
-                self.assertGreaterEqual(w[j], 0)
-                self.assertLessEqual(w[j], 1)
+            self.assertGreaterEqual(min(w), 0)
+            self.assertLessEqual(max(w), 1)
 
         libtuna.tol_exit(tol)
         self.assertNoErrors()
