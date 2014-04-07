@@ -2,7 +2,7 @@
 #
 #	test-branch.py: 'make check' on each commit on a branch
 #
-#	Copyright (C) 2013 Paul Barker
+#	Copyright (C) 2013, 2014 Paul Barker
 #
 #	This program is free software; you can redistribute it and/or modify it
 #	under the terms of the GNU General Public License as published by the
@@ -48,10 +48,7 @@ def do_checkout(commit):
 def do_test():
 	os.chdir(src_dir)
 	rsh("./configure %s" % TUNA_CONFIGURE_OPTIONS)
-	rsh("make %s" % TUNA_MAKE_OPTIONS)
-	rsh("make check")
-	rsh("make plots")
-	rsh("make DESTDIR=%s install" % install_dir)
+	rsh("make %s DESTDIR=%s all check plots install" % (TUNA_MAKE_OPTIONS, install_dir))
 	print("\n")
 
 TUNA_MASTER = read_env("TUNA_MASTER", "master")
