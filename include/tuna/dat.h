@@ -154,6 +154,11 @@ void dat_close(FILE * dat);
  *
  * \param record_type The record type selected from enum tuna_dat_record_types.
  *
+ * \param data A pointer to the data which will be written as the record
+ * contents.
+ *
+ * \param count The size of the record contents in bytes.
+ *
  * \return >=0 on success, <0 on failure.
  */
 int dat_write_record(FILE * dat, int record_type, void * data, size_t count);
