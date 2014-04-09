@@ -79,7 +79,7 @@ void onset_threshold_exit(struct onset_threshold * onset);
  *
  * \param onset The onset threshold tracker to use.
  *
- * \param env The next envelope estimate to be provessed by the given onset
+ * \param next The next envelope estimate to be provessed by the given onset
  * threshold tracker.
  *
  * \param threshold The location in which to store the next onset threshold
