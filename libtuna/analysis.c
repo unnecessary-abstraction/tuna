@@ -115,7 +115,7 @@ int analysis_init(struct consumer * consumer, const char * pulse_csv_name,
 	int r;
 
 	struct analysis * a = (struct analysis *)
-		malloc(sizeof(struct analysis));
+		calloc(sizeof(struct analysis), 1);
 	if (!a) {
 		error("analysis: Failed to allocate memory");
 		r = -ENOMEM;
