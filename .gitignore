@@ -10,7 +10,7 @@ fftw.wisdom
 *.log
 *.swp
 *.a
-.ycm*
+.ycm_extra_conf.pyc
 __pycache__
 *.swo
 doxy/html
