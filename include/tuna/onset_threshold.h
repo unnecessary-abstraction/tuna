@@ -38,8 +38,6 @@
  * within a given time period. Therefore a moving minimum filter is applied to
  * the envelope estimates and the output of this filter is multiplied by the
  * desired ratio to give the detection threshold.
- *
- * See <tuna/minima.h> for the moving minimum filter interface.
  */
 struct onset_threshold;
 
