@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <malloc.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -145,7 +146,7 @@ static inline void update_stats(struct time_slice * t, float x)
 	assert(t);
 
 	float * m = t->results->moments;
-	float e = x * x;
+	float e = fabsf(x);
 	float e2 = e * e;
 
 	m[0] += e;
