@@ -60,13 +60,6 @@ struct pulse_params {
 	float					pulse_max_duration;
 
 	/**
-	 * Minimum duration of the decay period of a pulse in seconds. This must
-	 * be at least equal to Td so that the delay line is filled before we
-	 * begin checking for pulse end.
-	 */
-	float					pulse_min_decay;
-
-	/**
 	 * Increase as a ratio which must be exceeded within the duration Tw to
 	 * cause detection of a pulse.
 	 */

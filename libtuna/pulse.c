@@ -124,11 +124,6 @@ struct pulse_processor {
 	 */
 	uint					pulse_max_duration_w;
 
-	/* Minimum decay duration in samples, calculated from
-	 * params->pulse_min_decay.
-	 */
-	uint					pulse_min_decay_w;
-
 	/* Current detection threshold for pulse onset detection.
 	 *
 	 * TODO: Compute this only when the minimum changes, not every sample.
@@ -393,18 +388,11 @@ static int check_pulse_end(struct pulse_processor * p, env_t env)
 {
 	assert(p);
 
-	int r;
-
-	r = offset_threshold_next(p->offset, env);
-
-	/* Check for min/max pulse duration. */
+	/* Check for max pulse duration. */
 	if (p->index >= p->pulse_max_duration_w)
 		return 1;
-	else if ((p->index - p->results->peak_positive_offset) < p->pulse_min_decay_w)
-		/* TODO: Do we still need to update delayed_min in this case? */
-		return 0;
 
-	return r;
+	return offset_threshold_next(p->offset, env);
 }
 
 static void detect_data(struct pulse_processor * p, sample_t * data,
@@ -571,7 +559,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	p->write_counter = 0;
 
 	/* Convert parameters. */
-	p->pulse_min_decay_w = (uint) floor(p->params->pulse_min_decay * sample_rate);
 	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
 
 	p->env = env_estimate_init(p->params->Tc, sample_rate);
