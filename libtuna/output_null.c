@@ -36,6 +36,7 @@ void output_null_exit(struct consumer * consumer)
 	assert(consumer);
 
 	/* Nothing to do. */
+	__unused consumer;
 }
 
 int output_null_write(struct consumer * consumer, sample_t * buf, uint count)
@@ -43,6 +44,8 @@ int output_null_write(struct consumer * consumer, sample_t * buf, uint count)
 	assert(consumer);
 	assert(buf);
 
+	__unused consumer;
+	__unused buf;
 	__unused count;
 	
 	return 0;
@@ -53,6 +56,8 @@ int output_null_start(struct consumer * consumer, uint sample_rate, struct times
 	assert(consumer);
 	assert(ts);
 
+	__unused consumer;
+	__unused ts;
 	__unused sample_rate;
 
 	return 0;
@@ -62,6 +67,9 @@ int output_null_resync(struct consumer * consumer, struct timespec * ts)
 {
 	assert(consumer);
 	assert(ts);
+
+	__unused consumer;
+	__unused ts;
 
 	return 0;
 }
