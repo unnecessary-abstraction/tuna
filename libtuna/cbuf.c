@@ -45,36 +45,6 @@ struct cbuf * cbuf_init(uint len)
 	return c;
 }
 
-void cbuf_reset(struct cbuf * c)
-{
-	assert(c);
-
-	c->index = 0;
-	memset(c->data, 0, c->len * sizeof(env_t));
-}
-
-env_t cbuf_index(struct cbuf * c, uint i)
-{
-	assert(c);
-
-	return c->data[(c->len + c->index - i) % c->len];
-}
-
-env_t cbuf_get(struct cbuf * c)
-{
-	assert(c);
-
-	return c->data[c->index];
-}
-
-void cbuf_put(struct cbuf * c, env_t s)
-{
-	assert(c);
-
-	c->data[c->index] = s;
-	c->index = (c->index + 1) % c->len;
-}
-
 void cbuf_exit(struct cbuf * c)
 {
 	assert(c);
