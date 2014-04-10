@@ -18,6 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#define __TUNA_OFFSET_THRESHOLD_C__
+
 #include <assert.h>
 #include <malloc.h>
 #include <math.h>
@@ -27,15 +29,6 @@
 #include "log.h"
 #include "offset_threshold.h"
 #include "types.h"
-
-struct offset_threshold {
-	struct cbuf *			delay_line;
-
-	env_t				current_min;
-	env_t				delayed_min;
-	env_t				ratio;
-	env_t				threshold;
-};
 
 struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
 		env_t ratio)
@@ -69,25 +62,6 @@ void offset_threshold_exit(struct offset_threshold * o)
 	if (o->delay_line)
 		cbuf_exit(o->delay_line);
 	free(o);
-}
-
-env_t offset_threshold_next(struct offset_threshold * o, env_t env)
-{
-	assert(o);
-
-	env_t old = cbuf_rotate(o->delay_line, env);
-
-	/* Update delayed minimum. */
-	if (old < o->delayed_min)
-		o->delayed_min = old;
-
-	/* Update current minimum and threshold. */
-	if (env < o->current_min) {
-		o->current_min = env;
-		o->threshold = env * o->ratio;
-	}
-
-	return o->threshold;
 }
 
 void offset_threshold_reset(struct offset_threshold * o, env_t env)

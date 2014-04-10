@@ -21,6 +21,7 @@
 #ifndef __TUNA_OFFSET_THRESHOLD_H_INCLUDED__
 #define __TUNA_OFFSET_THRESHOLD_H_INCLUDED__
 
+#include "compiler.h"
 #include "types.h"
 
 /**
@@ -86,7 +87,7 @@ void offset_threshold_exit(struct offset_threshold * o);
  *
  * \return The next offset threshold value.
  */
-env_t offset_threshold_next(struct offset_threshold * o, env_t env);
+TUNA_INLINE env_t offset_threshold_next(struct offset_threshold * o, env_t env);
 
 /**
  * \brief Reset a pulse offset threshold tracker.
@@ -116,5 +117,7 @@ void offset_threshold_reset(struct offset_threshold * o, env_t env);
  * threshold tracker.
  */
 env_t offset_threshold_delayed_min(struct offset_threshold * o);
+
+#include "tuna_inl/offset_threshold.inl"
 
 #endif /* !__TUNA_OFFSET_THRESHOLD_H_INCLUDED__ */
