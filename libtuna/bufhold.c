@@ -110,7 +110,7 @@ uint bufhold_count(struct held_buffer * h)
 	return h->count;
 }
 
-int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset)
+int bufhold_advance(struct held_buffer * h, uint offset)
 {
 	assert(h);
 
@@ -120,14 +120,13 @@ int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset)
 		return h->count;
 	} else {
 		/* This buffer is no longer needed. */
-		bufhold_release(bh, h);
+		bufhold_release(h);
 		return 0;
 	}
 }
 
-void bufhold_release(struct bufhold * bh, struct held_buffer * h)
+void bufhold_release(struct held_buffer * h)
 {
-	assert(bh);
 	assert(h);
 
 	list_remove(&h->e);

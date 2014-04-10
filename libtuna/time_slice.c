@@ -263,14 +263,14 @@ static int process_time_slice(struct time_slice * t)
 		 * this time slice, if not then we can discard it.
 		 */
 		if (t->index <= t->slice_period) {
-			bufhold_release(t->held_buffers, h);
+			bufhold_release(h);
 		} else {
 			/* Adjust start of buffer if this is the first buffer
 			 * that we need to keep for the next time slice.
 			 */
 			if (start < t->slice_period) {
 				offset = t->slice_period - start;
-				bufhold_advance(t->held_buffers, h, offset);
+				bufhold_advance(h, offset);
 			}
 		}
 		h = next;

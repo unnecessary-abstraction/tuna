@@ -131,8 +131,6 @@ uint bufhold_count(struct held_buffer * h);
  * buffer in question then the buffer will be released from the bufhold queue as
  * if bufhold_release() had been called.
  *
- * \param bh The bufhold queue containing the buffer to advance.
- *
  * \param h The buffer to advance.
  *
  * \param offset The number of samples by which to advance the start of the
@@ -142,19 +140,14 @@ uint bufhold_count(struct held_buffer * h);
  * value is zero, the given held buffer will have been released via a call to
  * bufhold_release().
  */
-int bufhold_advance(struct bufhold * bh, struct held_buffer * h, uint offset);
+int bufhold_advance(struct held_buffer * h, uint offset);
 
 /**
  * \brief Release a single buffer in a given bufhold queue.
  *
- * The given buffer must be held in the given bufhold queue or the resulting
- * behaviour will be undefined.
- *
- * \param bh The bufhold queue to release a buffer from.
- *
  * \param h The held buffer to be released.
  */
-void bufhold_release(struct bufhold * bh, struct held_buffer * h);
+void bufhold_release(struct held_buffer * h);
 
 /**
  * \brief Release all buffers held in a given bufhold queue.

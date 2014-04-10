@@ -85,7 +85,7 @@ class tunaBufholdTests(tunaTestCase):
         self.assertIsNone(libtuna.bufhold_prev(held))
 
         # Now remove our held buffer and ensure that the list is now empty
-        libtuna.bufhold_release(bh, held)
+        libtuna.bufhold_release(held)
         self.assertIsNone(libtuna.bufhold_newest(bh))
         self.assertIsNone(libtuna.bufhold_oldest(bh))
 
@@ -163,7 +163,7 @@ class tunaBufholdTests(tunaTestCase):
         self.assertEqual(libtuna.bufhold_prev(held_3), held_2)
 
         # Release the middle buffer and reassess the whole list
-        libtuna.bufhold_release(bh, held_2)
+        libtuna.bufhold_release(held_2)
         self.assertEqual(libtuna.bufhold_newest(bh), held_3)
         self.assertEqual(libtuna.bufhold_oldest(bh), held_1)
         self.assertEqual(libtuna.bufhold_next(held_1), held_3)
@@ -172,7 +172,7 @@ class tunaBufholdTests(tunaTestCase):
         self.assertEqual(libtuna.bufhold_prev(held_3), held_1)
 
         # Release the oldest buffer and reassess
-        libtuna.bufhold_release(bh, held_1)
+        libtuna.bufhold_release(held_1)
         self.assertEqual(libtuna.bufhold_newest(bh), held_3)
         self.assertEqual(libtuna.bufhold_oldest(bh), held_3)
         self.assertIsNone(libtuna.bufhold_next(held_3))
@@ -190,7 +190,7 @@ class tunaBufholdTests(tunaTestCase):
         self.assertIsNone(libtuna.bufhold_prev(held_3))
         self.assertEqual(libtuna.bufhold_prev(held_1), held_3)
 
-        libtuna.bufhold_release(bh, held_1)
+        libtuna.bufhold_release(held_1)
         self.assertEqual(libtuna.bufhold_newest(bh), held_3)
         self.assertEqual(libtuna.bufhold_oldest(bh), held_3)
         self.assertIsNone(libtuna.bufhold_next(held_3))
@@ -234,7 +234,7 @@ class tunaBufholdTests(tunaTestCase):
         self.assertIsNotNone(held_2)
 
         # Advance the oldest buffer by half its length
-        self.assertEqual(libtuna.bufhold_advance(bh, held_1, 50), 50)
+        self.assertEqual(libtuna.bufhold_advance(held_1, 50), 50)
 
         # We can't assume things about pointer arithmetic or mess with that from
         # Python but we can say that the data pointer of the first held buffer
@@ -247,13 +247,13 @@ class tunaBufholdTests(tunaTestCase):
         # it is now freed. We don't need to check prev/next pointers as the last
         # test case verified their behaviour, we just need to check that
         # bufhold_oldest gives the new correct result.
-        self.assertEqual(libtuna.bufhold_advance(bh, held_1, 50), 0)
+        self.assertEqual(libtuna.bufhold_advance(held_1, 50), 0)
         self.assertEqual(libtuna.bufhold_oldest(bh), held_2)
         self.assertEqual(libtuna.buffer_refcount(ptr_1), 1)
 
         # Now advance the oldest buffer by its whole length in one go and ensure
         # it is released, leaving the bufhold queue empty.
-        self.assertEqual(libtuna.bufhold_advance(bh, held_2, frames), 0)
+        self.assertEqual(libtuna.bufhold_advance(held_2, frames), 0)
         self.assertIsNone(libtuna.bufhold_oldest(bh))
         self.assertIsNone(libtuna.bufhold_newest(bh))
         self.assertEqual(libtuna.buffer_refcount(ptr_2), 1)

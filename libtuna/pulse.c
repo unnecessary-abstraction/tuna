@@ -349,13 +349,13 @@ static struct held_buffer * discard_leading_data(struct pulse_processor * p, uin
 	/* Line up the first buffer with the given offset and discard any
 	 * previous buffers.
 	 */
-	bufhold_advance(p->held_buffers, h, i - offset);
+	bufhold_advance(h, i - offset);
 
 	h_tmp = bufhold_oldest(p->held_buffers);
 	while (h != h_tmp) {
 		h_release = h_tmp;
 		h_tmp = bufhold_next(h_tmp);
-		bufhold_release(p->held_buffers, h_release);
+		bufhold_release(h_release);
 	}
 
 	return h;
@@ -379,7 +379,7 @@ static void process_leading_data(struct pulse_processor * p, uint offset)
 		process_data(p, bufhold_data(h), bufhold_count(h));
 		h_release = h;
 		h = bufhold_next(h);
-		bufhold_release(p->held_buffers, h_release);
+		bufhold_release(h_release);
 	}
 }
 
