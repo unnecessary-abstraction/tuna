@@ -64,6 +64,7 @@ TUNA_INLINE void onset_threshold_next(struct onset_threshold * onset,
 		env_t next, env_t * threshold)
 {
 	assert(onset);
+	assert(threshold);
 
 	/* Pop from right while highest min > next. */
 	while (onset->len > 1) {
