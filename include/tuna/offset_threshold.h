@@ -85,9 +85,9 @@ void offset_threshold_exit(struct offset_threshold * o);
  * \param env The next envelope estimate to be provessed by the given offset
  * threshold tracker.
  *
- * \return The next offset threshold value.
+ * \return 1 if the end of a pulse has been detected, 0 otherwise.
  */
-TUNA_INLINE env_t offset_threshold_next(struct offset_threshold * o, env_t env);
+TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env);
 
 /**
  * \brief Reset a pulse offset threshold tracker.

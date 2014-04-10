@@ -37,7 +37,7 @@ struct offset_threshold {
 	env_t				threshold;
 };
 
-TUNA_INLINE env_t offset_threshold_next(struct offset_threshold * o, env_t env)
+TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env)
 {
 	assert(o);
 
@@ -53,11 +53,13 @@ TUNA_INLINE env_t offset_threshold_next(struct offset_threshold * o, env_t env)
 		o->threshold = env * o->ratio;
 	}
 
-	return o->threshold;
+	if (o->delayed_min < o->threshold)
+		return 1;
+	return 0;
 }
 
 #if defined(ENABLE_INLINE) && defined(__TUNA_OFFSET_THRESHOLD_C__)
-TUNA_EXTERN_INLINE env_t offset_threshold_next(struct offset_threshold * o,
+TUNA_EXTERN_INLINE int offset_threshold_next(struct offset_threshold * o,
 		env_t env);
 #endif /* ENABLE_INLINE && __TUNA_OFFSET_THRESHOLD_C__ */
 #endif /* ENABLE_INLINE || __TUNA_OFFSET_THRESHOLD_C__ */

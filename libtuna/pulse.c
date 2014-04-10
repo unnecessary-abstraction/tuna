@@ -393,10 +393,9 @@ static int check_pulse_end(struct pulse_processor * p, env_t env)
 {
 	assert(p);
 
-	sample_t decay_threshold, delayed_min;
+	int r;
 
-	decay_threshold = offset_threshold_next(p->offset, env);
-	delayed_min = offset_threshold_delayed_min(p->offset);
+	r = offset_threshold_next(p->offset, env);
 
 	/* Check for min/max pulse duration. */
 	if (p->index >= p->pulse_max_duration_w)
@@ -405,14 +404,7 @@ static int check_pulse_end(struct pulse_processor * p, env_t env)
 		/* TODO: Do we still need to update delayed_min in this case? */
 		return 0;
 
-	/* The delayed minimum should be greater than or equal to the calculated
-	 * threshold if the signal envelope is decaying faster than the desired
-	 * rate.
-	 */
-	if (delayed_min < decay_threshold)
-		return 1;
-
-	return 0;
+	return r;
 }
 
 static void detect_data(struct pulse_processor * p, sample_t * data,
