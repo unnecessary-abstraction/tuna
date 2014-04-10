@@ -18,6 +18,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *******************************************************************************/
 
+#define __TUNA_CBUF_C__
+
 #include <assert.h>
 #include <malloc.h>
 #include <stddef.h>
@@ -26,13 +28,6 @@
 #include "cbuf.h"
 #include "log.h"
 #include "types.h"
-
-struct cbuf {
-	uint index;
-	uint len;
-
-	env_t data[];
-};
 
 struct cbuf * cbuf_init(uint len)
 {
@@ -78,19 +73,6 @@ void cbuf_put(struct cbuf * c, env_t s)
 
 	c->data[c->index] = s;
 	c->index = (c->index + 1) % c->len;
-}
-
-env_t cbuf_rotate(struct cbuf *c, env_t s)
-{
-	assert(c);
-
-	env_t tmp;
-
-	tmp = c->data[c->index];
-	c->data[c->index] = s;
-	c->index = (c->index + 1) % c->len;
-
-	return tmp;
 }
 
 void cbuf_exit(struct cbuf * c)

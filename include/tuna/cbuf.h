@@ -21,6 +21,7 @@
 #ifndef __TUNA_CBUF_H_INCLUDED__
 #define __TUNA_CBUF_H_INCLUDED__
 
+#include "compiler.h"
 #include "types.h"
 
 /**
@@ -103,7 +104,7 @@ void cbuf_put(struct cbuf * c, env_t s);
  *
  * \return The oldest sample in the buffer.
  */
-env_t cbuf_rotate(struct cbuf *c, env_t s);
+TUNA_INLINE env_t cbuf_rotate(struct cbuf *c, env_t s);
 
 /**
  * \brief Destroy a circular buffer that is no longer needed.
@@ -113,5 +114,7 @@ env_t cbuf_rotate(struct cbuf *c, env_t s);
  * \param c The circular buffer to destroy.
  */
 void cbuf_exit(struct cbuf * c);
+
+#include "tuna_inl/cbuf.inl"
 
 #endif /* !__TUNA_CBUF_H_INCLUDED__ */
