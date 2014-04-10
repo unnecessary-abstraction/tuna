@@ -42,7 +42,8 @@ TUNA_INLINE env_t cbuf_rotate(struct cbuf *c, env_t s)
 
 	tmp = c->data[c->index];
 	c->data[c->index] = s;
-	c->index = (c->index + 1) % c->len;
+	if (++c->index == c->len)
+		c->index = 0;
 
 	return tmp;
 }
