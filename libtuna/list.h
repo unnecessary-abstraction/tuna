@@ -137,6 +137,8 @@ static inline int list_init(struct list * li)
 static inline void list_exit(struct list * li)
 {
 	assert(li);
+
+	__unused li;
 }
 
 /*******************************************************************************
