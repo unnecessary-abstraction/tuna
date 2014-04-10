@@ -20,6 +20,18 @@
 
 %module libtuna
 
+/* For all bindings, ignore the log wrappers. The only work properly for native
+ * C code.
+ *
+ * We need to do this rather than just skipping "log.h" as programs which use
+ * libtuna need to be able to call log_init() and log_exit().
+ */
+%ignore log_printf;
+%ignore msg;
+%ignore warn;
+%ignore error;
+%ignore fatal;
+
 %{
         #include "analysis.h"
         #include "buffer.h"
@@ -80,3 +92,14 @@
 %include "tol.h"
 %include "types.h"
 %include "window.h"
+
+/* Incase anyone really needs it, we provide a simple logging wrapper. The
+ * string formatting capabilities of the bound language can be used and so no
+ * formatting is done by this method, the string given is simply logged as-is.
+ */
+%inline %{
+int log_print(int level, const char * s)
+{
+        return log_printf(level, "%s", s);
+}
+%}

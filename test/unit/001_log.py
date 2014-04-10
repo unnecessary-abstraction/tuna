@@ -47,12 +47,9 @@ class tunaLogTests(tunaTestCase):
 
         # Output one message at each log level except fatal (as that would kill
         # the script).
-        #
-        # TODO: FIXME: Function names 'error' and 'warn' seem to clash with some
-        # other library.
-        self.assertSuccess(libtuna.msg("Test"))
-        self.assertSuccess(libtuna.log_printf(libtuna.LOG_WARNING, "Test2"))
-        self.assertSuccess(libtuna.log_printf(libtuna.LOG_ERROR, "Test3"))
+        self.assertSuccess(libtuna.log_print(libtuna.LOG_MESSAGE, "Test"))
+        self.assertSuccess(libtuna.log_print(libtuna.LOG_WARNING, "Test2"))
+        self.assertSuccess(libtuna.log_print(libtuna.LOG_ERROR, "Test3"))
 
         libtuna.log_exit()
 
