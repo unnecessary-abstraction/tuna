@@ -72,10 +72,7 @@ struct time_slice_results {
 	uint				peak_positive_offset;
 	uint				peak_negative_offset;
 
-	float				sum_1;
-	float				sum_2;
-	float				sum_3;
-	float				sum_4;
+	float				moments[4];
 
 	float				tols[];
 };
@@ -111,21 +108,11 @@ static int write_results_csv(struct time_slice * t)
 	if (r < 0)
 		goto error;
 
-	r = csv_write_float(t->out, t->results->sum_1);
-	if (r < 0)
-		goto error;
-
-	r = csv_write_float(t->out, t->results->sum_2);
-	if (r < 0)
-		goto error;
-
-	r = csv_write_float(t->out, t->results->sum_3);
-	if (r < 0)
-		goto error;
-
-	r = csv_write_float(t->out, t->results->sum_4);
-	if (r < 0)
-		goto error;
+	for (i = 0; i < 4; i++) {
+		r = csv_write_float(t->out, t->results->moments[i]);
+		if (r < 0)
+			goto error;
+	}
 
 	for (i = 0; i < t->n_tol; i++) {
 		r = csv_write_float(t->out, t->results->tols[i]);
@@ -153,6 +140,19 @@ static int write_results_dat(struct time_slice * t)
 	return dat_write_record(t->out, TUNA_DAT_TIME_SLICE, t->results, sz);
 }
 
+static inline void update_stats(struct time_slice * t, float x)
+{
+	assert(t);
+
+	float * m = t->results->moments;
+	float e = x * x;
+	float e2 = e * e;
+
+	m[0] += e;
+	m[1] += e2;
+	m[2] += e2 * e;
+	m[3] += e2 * e2;
+}
 
 static void process_buffer(struct time_slice * t, struct held_buffer * h)
 {
@@ -181,7 +181,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	uint avail;	/* Number of available samples remaining. */
 	uint len = t->slice_period * 2;
 	uint i, c;
-	float x, e, e_2;
+	float x;
 	sample_t v;
 	uint offset = 0;
 	sample_t * data;
@@ -207,12 +207,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			x = (float)v;
 
 			/* Calculate intermediate sums for kurtosis. */
-			e = x * x;
-			e_2 = e * e;
-			t->results->sum_1 += e;
-			t->results->sum_2 += e_2;
-			t->results->sum_3 += e_2 * e;
-			t->results->sum_4 += e_2 * e_2;
+			update_stats(t, x);
 
 			/* Detect Peaks */
 			if (v > t->results->peak_positive) {
