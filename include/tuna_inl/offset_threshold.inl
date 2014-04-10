@@ -30,9 +30,10 @@
 
 struct offset_threshold {
 	struct cbuf *			delay_line;
+	uint				delay_len;
+	uint				count;
 
 	env_t				current_min;
-	env_t				delayed_min;
 	env_t				ratio;
 	env_t				threshold;
 };
@@ -41,11 +42,7 @@ TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env)
 {
 	assert(o);
 
-	env_t old = cbuf_rotate(o->delay_line, env);
-
-	/* Update delayed minimum. */
-	if (old < o->delayed_min)
-		o->delayed_min = old;
+	env_t delayed_min;
 
 	/* Update current minimum and threshold. */
 	if (env < o->current_min) {
@@ -53,7 +50,15 @@ TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env)
 		o->threshold = env * o->ratio;
 	}
 
-	if (o->delayed_min < o->threshold)
+	delayed_min = cbuf_rotate(o->delay_line, o->current_min);
+
+	/* Ensure that the delay line has been filled with values before we use
+	 * its output.
+	 */
+	if (o->count++ < o->delay_len)
+		return 0;
+
+	if (delayed_min < o->threshold)
 		return 1;
 	return 0;
 }

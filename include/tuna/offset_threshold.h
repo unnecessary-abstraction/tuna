@@ -103,21 +103,6 @@ TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env);
  */
 void offset_threshold_reset(struct offset_threshold * o, env_t env);
 
-/**
- * \brief Obtain the delayed minimum value tracked by an offset threshold
- * tracker.
- *
- * It is necessary to compare the delayed minimum to the offset detection
- * threshold and this delayed minimum can only be calculated within the offset
- * threshold tracker itself.
- *
- * \param o The pulse offset threshold tracker to use.
- *
- * \return The delayed minimum value calculated by the given pulse offset
- * threshold tracker.
- */
-env_t offset_threshold_delayed_min(struct offset_threshold * o);
-
 #include "tuna_inl/offset_threshold.inl"
 
 #endif /* !__TUNA_OFFSET_THRESHOLD_H_INCLUDED__ */
