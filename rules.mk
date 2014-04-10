@@ -73,6 +73,10 @@ targets: $(TARGETS_ALL)
 	$(Q)$(PYTHON) $(SRCDIR)/scripts/fixdeps.py $*.d $*.d.tmp
 	$(Q)mv $*.d.tmp $*.d
 
+%.s: %.c
+	@echo CC -S $@
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(INCLUDE_ALL) $(INCLUDE_TGT) -o $@ -S $<
+
 # Linker rule
 %: %.o
 	@echo CCLD $@
