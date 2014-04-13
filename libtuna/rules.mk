@@ -20,6 +20,15 @@
 
 d := libtuna
 
+# Library version info
+lib_name := libtuna.so
+lib_major := 0
+lib_minor := 1
+lib_revision := 0
+lib_version := $(lib_major).$(lib_minor).$(lib_revision)
+lib_soname := $(lib_name).$(lib_major)
+lib_fullname := $(lib_name).$(lib_version)
+
 # Targets and intermediates in this directory
 objs := $(d)/analysis.lo \
 	$(d)/buffer.lo \
@@ -54,7 +63,7 @@ endif
 
 deps := $(objs:%.lo=%.d)
 
-tgts := $(d)/libtuna.so $(d)/libtuna.a
+tgts := $(d)/$(lib_name) $(d)/$(lib_soname) $(d)/$(lib_fullname) $(d)/libtuna.a
 
 TARGETS_LIB += $(tgts)
 
@@ -63,8 +72,22 @@ INTERMEDIATES += $(deps) $(objs)
 INSTALL_DEPS += install-libtuna
 
 # Rules for this directory
-$(tgts): $(SRCDIR)/$(d)/rules.mk $(objs)
+$(d)/$(lib_fullname) $(d)/libtuna.a: $(SRCDIR)/$(d)/rules.mk $(objs)
 $(tgts): LDLIBRARIES_TGT :=
+$(d)/$(lib_fullname): LDFLAGS_TGT := -Wl,-soname,$(lib_soname)
+$(d)/$(lib_soname): $(d)/$(lib_fullname)
+	@echo LN $@
+	$(Q)ln -sf `basename $<` $@
+$(d)/$(lib_name): $(d)/$(lib_soname)
+	@echo LN $@
+	$(Q)ln -sf `basename $<` $@
+
+# The generic linker rule doesn't work here as the library ends in a version
+# number rather than just '.so'
+$(d)/$(lib_fullname):
+	@echo CCLD $@
+	$(Q)$(CCLD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -shared -o $@ $(filter %.lo,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
+
 
 $(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 

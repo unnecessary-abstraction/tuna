@@ -17,6 +17,7 @@ doxy/html
 doxy/latex
 doxy/libtuna.pdf
 *.so
+*.so.*
 *.lo
 swig/python/libtuna.py
 swig/python/libtuna_wrap.c
