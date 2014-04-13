@@ -77,10 +77,10 @@ $(tgts): LDLIBRARIES_TGT :=
 $(d)/$(lib_fullname): LDFLAGS_TGT := -Wl,-soname,$(lib_soname)
 $(d)/$(lib_soname): $(d)/$(lib_fullname)
 	@echo LN $@
-	$(Q)ln -sf `basename $<` $@
+	$(Q)ln -sf $(lib_fullname) $@
 $(d)/$(lib_name): $(d)/$(lib_soname)
 	@echo LN $@
-	$(Q)ln -sf `basename $<` $@
+	$(Q)ln -sf $(lib_soname) $@
 
 # The generic linker rule doesn't work here as the library ends in a version
 # number rather than just '.so'
@@ -92,10 +92,12 @@ $(d)/$(lib_fullname):
 $(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
 .PHONY: install-libtuna
-install-libtuna: $(tgts)
+install-libtuna: $(d)/libtuna.a $(d)/$(lib_fullname)
 	@echo INSTALL $^
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
 	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(libdir)
+	$(Q)ln -sf $(lib_fullname) $(DESTDIR)$(libdir)/$(lib_soname)
+	$(Q)ln -sf $(lib_soname) $(DESTDIR)$(libdir)/$(lib_name)
 
 # Include dependencies
 -include $(deps)
