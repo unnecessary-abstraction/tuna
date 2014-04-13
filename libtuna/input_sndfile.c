@@ -122,23 +122,27 @@ static int convert_frames(struct input_sndfile * snd, sample_t * buf, uint frame
 	assert(buf);
 
 	uint i;
-	sample_t divisor = 1;
 
 	switch (snd->sf_info.format & 0x7) {
 	case 1: /* int8 */
-		divisor = 1<<24;
-		break;
-	case 2: /* int16 */
-		divisor = 1<<16;
-		break;
-	case 3: /* int24 */
-		divisor = 1<<8;
-		break;
-
-	case 5: /* uint8 */
-		/* We need to shift rather than divide */
 		for (i = 0; i < frames; i++)
 			buf[i] >>= 24;
+		return 0;
+	case 2: /* int16 */
+		for (i = 0; i < frames; i++)
+			buf[i] >>= 16;
+		return 0;
+	case 3: /* int24 */
+		for (i = 0; i < frames; i++)
+			buf[i] >>= 8;
+		return 0;
+
+	case 5: /* uint8 */
+		for (i = 0; i < frames; i++) {
+			uint32_t tmp = buf[i];
+			tmp >>= 24;
+			buf[i] = tmp;
+		}
 		return 0;
 
 	case 4: /* int32 */
@@ -151,14 +155,6 @@ static int convert_frames(struct input_sndfile * snd, sample_t * buf, uint frame
 		error("input_sndfile: Unknown sample type");
 		return -1;
 	}
-
-	/* For signed sample types, we divide rather than shift so that the sign
-	 * bit is preserved.
-	 */
-	for (i = 0; i < frames; i++)
-		buf[i] /= divisor;
-
-	return 0;
 }
 
 int run_single_channel(struct input_sndfile * snd)
