@@ -52,7 +52,7 @@ struct fft * fft_init(uint length)
 	}
 
 	fft->length = length;
-	fft->data = (float *)malloc((length + 4) * sizeof(float));
+	fft->data = (float *)fftwf_malloc((length + 4) * sizeof(float));
 	if (!fft->data) {
 		error("fft: Failed to allocate memory");
 		free(fft);
@@ -79,7 +79,7 @@ void fft_exit(struct fft * fft)
 {
 	assert(fft);
 
-	free(fft->data);
+	fftwf_free(fft->data);
 	free(fft);
 }
 
