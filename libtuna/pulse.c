@@ -264,7 +264,7 @@ static void process_end_pulse(struct pulse_processor * p)
 		memset(&p->fft_data[p->results->duration], 0,
 				(p->fft_length - p->results->duration) * sizeof(float));
 	fft_transform(p->fft);
-	tol_calculate(p->tol, p->fft_data, p->results->tols);
+	tol_calculate(p->tol, fft_get_cdata(p->fft), p->results->tols);
 
 	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
 		write_results_csv(p);

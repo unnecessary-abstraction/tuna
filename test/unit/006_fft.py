@@ -61,6 +61,7 @@ class tunaFFTTests(tunaTestCase):
         # Check length and data pointer
         self.assertEqual(length, libtuna.fft_get_length(fft))
         self.assertIsNotNone(libtuna.fft_get_data(fft))
+        self.assertIsNotNone(libtuna.fft_get_cdata(fft))
 
         # Close down the fft context
         libtuna.fft_exit(fft)
@@ -77,15 +78,18 @@ class tunaFFTTests(tunaTestCase):
         # Fill the fft data buffer with zeros and transform
         data = libtuna.fft_get_data(fft)
         self.assertIsNotNone(data)
+        cdata = libtuna.fft_get_cdata(fft)
+        self.assertIsNotNone(cdata)
 
         for i in range(length):
             data[i] = 0
 
         self.assertSuccess(libtuna.fft_transform(fft))
+        psd = libtuna.fft_power_spectrum(cdata, length//2)
 
         # Ensure the output data is all zeros
         for i in range(length//2):
-            self.assertEqual(data[i], 0)
+            self.assertEqual(psd[i], 0)
 
         self.assertNoErrors()
 
@@ -99,16 +103,19 @@ class tunaFFTTests(tunaTestCase):
         # Fill the fft data buffer with zeros and transform
         data = libtuna.fft_get_data(fft)
         self.assertIsNotNone(data)
+        cdata = libtuna.fft_get_cdata(fft)
+        self.assertIsNotNone(cdata)
 
         for i in range(length):
             data[i] = 1
 
         self.assertSuccess(libtuna.fft_transform(fft))
+        psd = libtuna.fft_power_spectrum(cdata, length//2)
 
         # Ensure the output data is all zeros except for the dc term
-        self.assertEqual(data[0], 8000)
+        self.assertEqual(psd[0], 8000)
         for i in range(1, length//2):
-            self.assertEqual(data[i], 0)
+            self.assertEqual(psd[i], 0)
 
         self.assertNoErrors()
 
@@ -122,18 +129,21 @@ class tunaFFTTests(tunaTestCase):
         # Fill the fft data buffer with zeros and transform
         data = libtuna.fft_get_data(fft)
         self.assertIsNotNone(data)
+        cdata = libtuna.fft_get_cdata(fft)
+        self.assertIsNotNone(cdata)
 
         for i in range(length):
             data[i] = math.sin(math.pi * i / 4)
 
         self.assertSuccess(libtuna.fft_transform(fft))
+        psd = libtuna.fft_power_spectrum(cdata, length//2)
 
         # Ensure the output data is all zeros except for the 1 kHz term
         for i in range(1000):
-            self.assertAlmostEqual(data[i], 0, msg="data[%d]" % i)
-        self.assertEqual(data[1000], 2000, msg="data[%d]" % 1000)
+            self.assertAlmostEqual(psd[i], 0, msg="psd[%d]" % i)
+        self.assertEqual(psd[1000], 2000, msg="psd[%d]" % 1000)
         for i in range(1001, length//2):
-            self.assertAlmostEqual(data[i], 0, msg="data[%d]" % i)
+            self.assertAlmostEqual(psd[i], 0, msg="psd[%d]" % i)
 
         self.assertNoErrors()
 

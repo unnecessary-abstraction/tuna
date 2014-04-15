@@ -90,6 +90,13 @@ float * fft_get_data(struct fft * fft)
 	return fft->data;
 }
 
+float complex * fft_get_cdata(struct fft * fft)
+{
+	assert(fft);
+
+	return fft->cdata;
+}
+
 uint fft_get_length(struct fft * fft)
 {
 	assert(fft);
@@ -101,22 +108,22 @@ int fft_transform(struct fft * fft)
 {
 	assert(fft);
 
-	uint i;
-	double re, im;
-
 	fftwf_execute(fft->plan);
 
-	/* Find the magnitude of each complex frequency sample. */
-	for (i = 0; i < fft->length / 2; i++) {
-		/* Read in a complex value. */
-		re = crealf(fft->cdata[i]);
-		im = cimagf(fft->cdata[i]);
-
-		/* Write out a single float. The output will take up half the
-		 * space that the input did.
-		 */
-		fft->data[i] = (re * re + im * im) / fft->length;
-	}
-
 	return 0;
+}
+
+void fft_power_spectrum(float complex * cdata, float * data, uint n)
+{
+	assert(cdata);
+	assert(data);
+
+	uint i;
+
+	for (i = 0; i < n; i++) {
+		float re = crealf(cdata[i]);
+		float im = cimagf(cdata[i]);
+
+		data[i] = (re * re + im * im) / (2 * n);
+	}
 }

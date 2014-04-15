@@ -29,6 +29,11 @@
  */
 %apply (float *INOUT) {(env_t * threshold)}
 
+/* Mapping for 'psd = fft_power_spectrum(cdata)' where psd is to be returned as
+ * a numpy array.
+ */
+%apply (float * ARGOUT_ARRAY1, unsigned int DIM1) {(float * data, uint n)}
+
 /* Ignore fft_get_data so that we can later add a wrapper with an identical
  * signature.
  */
@@ -39,13 +44,13 @@
 /* Wrapper for `tol_calculate(t, data, results)` where both data and results are
  * pre-allocated numpy arrays.
  */
-%apply (float * IN_ARRAY1, unsigned int DIM1) {(float *data, uint data_length)}
+%apply (float * IN_ARRAY1, unsigned int DIM1) {(float complex *data, uint data_length)}
 %apply (float * INPLACE_ARRAY1, unsigned int DIM1) {(float *results,
                                                     uint results_length)}
 %rename (tol_calculate) tol_calculate_wrapper;
 
 %inline %{
-void tol_calculate_wrapper(struct tol * t, float * data, uint data_length,
+void tol_calculate_wrapper(struct tol * t, float complex * data, uint data_length,
                            float * results, uint results_length)
 {
         /* Ignore array lengths. */

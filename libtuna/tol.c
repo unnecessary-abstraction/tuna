@@ -19,6 +19,7 @@
 *******************************************************************************/
 
 #include <assert.h>
+#include <complex.h>
 #include <errno.h>
 #include <malloc.h>
 #include <math.h>
@@ -146,8 +147,8 @@ static const float band_edges[MAX_THIRD_OCTAVE_LEVELS + 1] = {
 	Private functions
 *******************************************************************************/
 
-/* Unweighted sum. */
-static inline float sum(float *x, uint N)
+/* Unweighted power sum. */
+static inline float psum(float complex *x, uint N)
 {
 	assert(x);
 
@@ -156,15 +157,18 @@ static inline float sum(float *x, uint N)
 
 	sum = 0;
 
-	for (i = 0; i < N; i++)
-		sum += x[i];
+	for (i = 0; i < N; i++) {
+		float re = crealf(x[i]);
+		float im = cimagf(x[i]);
+		sum += re * re + im * im;
+	}
 
 	return sum;
 }
 
-/* Dual band weighted sum. */
+/* Dual band weighted power sum. */
 /* Weighting coefficients are interleaved to speed up memory loads. */
-static inline void wsum2(float *x, float *w, uint N, float *e)
+static inline void wpsum2(float complex *x, float *w, uint N, float *e)
 {
 	assert(x);
 	assert(w);
@@ -176,8 +180,11 @@ static inline void wsum2(float *x, float *w, uint N, float *e)
 	sum0 = sum1 = 0;
 
 	for (i = 0; i < N; i++) {
-		sum0 += x[i] * w[2 * i];
-		sum1 += x[i] * w[(2 * i) + 1];
+		float re = crealf(x[i]);
+		float im = cimagf(x[i]);
+		float v = re * re + im * im;
+		sum0 += v * w[2 * i];
+		sum1 += v * w[(2 * i) + 1];
 	}
 
 	/* Write back results. */
@@ -203,10 +210,10 @@ static inline float phi(float p, uint l)
 /* We assume the the results array has already been zero'd by the caller. This
  * allows slightly optimised performance.
  */
-void tol_calculate(struct tol * t, float * data, float * results)
+void tol_calculate(struct tol * t, float complex * cdata, float * results)
 {
 	assert(t);
-	assert(data);
+	assert(cdata);
 
 	uint i, j;
 	
@@ -214,10 +221,10 @@ void tol_calculate(struct tol * t, float * data, float * results)
 
 	for (i = 0; i < t->n_tol; i++) {
 		/* Unweighted sum from current position to start of transition, this is added to band i. */
-		results[i] += sum(&data[j], (t->desc[i].t_onset - j));
+		results[i] += psum(&cdata[j], (t->desc[i].t_onset - j));
 
 		/* Weighted sum over the transition, added to bands i and i+1. */
-		wsum2(&data[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &results[i]);
+		wpsum2(&cdata[t->desc[i].t_onset], t->desc[i].coeffs, t->desc[i].t_width, &results[i]);
 
 		/* Update j to end of transition. */
 		j = t->desc[i].t_onset + t->desc[i].t_width;

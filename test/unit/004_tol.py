@@ -120,7 +120,7 @@ class tunaTOLTests(tunaTestCase):
         w = np.zeros([analysis_length,], dtype=np.float32)
         for i in range(n_tol):
             results = np.zeros([n_tol + 1,], dtype=np.float32)
-            index = round(libtuna.tol_get_band_centre(i))
+            index = 2 * round(libtuna.tol_get_band_centre(i))
             w[index] = 1
 
             libtuna.tol_calculate(tol, w, results)
@@ -154,7 +154,7 @@ class tunaTOLTests(tunaTestCase):
         w = np.zeros([analysis_length,], dtype=np.float32)
         for i in range(n_tol - 1):
             results = np.zeros([n_tol + 1,], dtype=np.float32)
-            index = round(libtuna.tol_get_band_edge(i))
+            index = 2 * round(libtuna.tol_get_band_edge(i))
             w[index] = 1
 
             libtuna.tol_calculate(tol, w, results)

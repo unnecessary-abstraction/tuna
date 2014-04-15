@@ -21,6 +21,8 @@
 #ifndef __TUNA_TOL_H_INCLUDED__
 #define __TUNA_TOL_H_INCLUDED__
 
+#include <complex.h>
+
 #include "types.h"
 
 /**
@@ -135,15 +137,15 @@ int tol_get_coeffs(struct tol * t, uint level, float * dest, uint length);
  *
  * \param t The third octave level calculation context to use.
  *
- * \param data A pointer to an array of frequency domain samples in floating
- * point format on which to perform the calculation. This array must be of the
- * length given to tol_init().
+ * \param cdata A pointer to an array of complex frequency domain samples in
+ * floating point format on which to perform the calculation. This array must be
+ * of half the length given to tol_init().
  *
  * \param results A pointer to which an array of third octave levels will be
  * written. The length of this array can be obtained by calling
  * tol_get_num_levels() and the given buffer must be large enough to store this
  * number of floating point values.
  */
-void tol_calculate(struct tol * t, float * data, float * results);
+void tol_calculate(struct tol * t, float complex * cdata, float * results);
 
 #endif /* !__TUNA_TOL_H_INCLUDED__ */

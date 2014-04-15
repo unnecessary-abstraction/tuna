@@ -21,6 +21,8 @@
 #ifndef __TUNA_FFT_H_INCLUDED__
 #define __TUNA_FFT_H_INCLUDED__
 
+#include <complex.h>
+
 #include "types.h"
 
 /**
@@ -29,12 +31,12 @@
  * \brief Fast Fourier Transform.
  *
  * The exact transformation performed by these interfaces is from a sequence of
- * N time domain samples to a sequence of N/2 frequency domain power spectral
- * density samples. Both the input and output data are arrays of float rather
- * than arrays of sample_t as are used elsewhere as the FFT implementation used
- * cannot operate on integers. It would be possible to use arrays of type double
- * but it would significantly slow down the transformation as well as further
- * analysis of the output data. So float is a good compromise.
+ * N time domain samples to a sequence of N/2 complex frequency domain samples.
+ * Both the input and output data are arrays of float rather than arrays of
+ * sample_t as are used elsewhere as the FFT implementation used cannot operate
+ * on integers. It would be possible to use arrays of type double but it would
+ * significantly slow down the transformation as well as further analysis of the
+ * output data. So float is a good compromise.
  *
  * The transformation is performed in-place used an internal buffer allocated
  * during fft_init(). A pointer to this buffer is obtained using fft_get_data()
@@ -59,7 +61,8 @@ struct fft {};
  *
  * \param length The length of the FFT analysis window in samples. Every
  * transform performed by this FFT context will operate on this number of time
- * domain samples and produce half this number of frequency domain samples.
+ * domain samples and produce half this number of complex frequency domain
+ * samples.
  *
  * \return A pointer to a new FFT context or NULL on error.
  */
@@ -73,16 +76,24 @@ struct fft * fft_init(uint length);
 void fft_exit(struct fft * fft);
 
 /**
- * Get a pointer to the data buffer used by an FFT context. The caller is
- * assumed to keep track of what it is doing and to know whether the buffer
- * contains time domain samples, frequency domain samples or junk data at any
- * given time.
+ * Get a pointer to the input data buffer used by an FFT context. This is the
+ * buffer that contains real time domain samples.
  *
  * \param fft The FFT context to get the data pointer from.
  *
- * \return A pointer to the data buffer used by the given FFT context.
+ * \return A pointer to the input data buffer used by the given FFT context.
  */
 float * fft_get_data(struct fft * fft);
+
+/**
+ * Get a pointer to the output data buffer used by an FFT context. This is the
+ * buffer that contains complex frequency domain samples.
+ *
+ * \param fft The FFT context to get the data pointer from.
+ *
+ * \return A pointer to the output data buffer used by the given FFT context.
+ */
+float complex * fft_get_cdata(struct fft * fft);
 
 /**
  * Get the length of an FFT context, that is the number of time domain samples
@@ -109,5 +120,18 @@ uint fft_get_length(struct fft * fft);
  * \return >=0 on success, <0 on error.
  */
 int fft_transform(struct fft * fft);
+
+/**
+ * Convert complex frequency domain samples into power spectral density values
+ * following an FFT.
+ *
+ * \param cdata Input array of complex frequency domain samples.
+ *
+ * \param data Output array of power spectral density samples.
+ *
+ * \param n Length of the array to transform. Both cdata and data must contain
+ * this number of samples.
+ */
+void fft_power_spectrum(float complex * cdata, float * data, uint n);
 
 #endif /* !__TUNA_FFT_H_INCLUDED__ */

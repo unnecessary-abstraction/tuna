@@ -277,7 +277,7 @@ static int process_time_slice(struct time_slice * t)
 	}
 
 	fft_transform(t->fft);
-	tol_calculate(t->tol, t->fft_data, t->results->tols);
+	tol_calculate(t->tol, fft_get_cdata(t->fft), t->results->tols);
 
 	if (t->out_mode == TUNA_OUT_MODE_CSV)
 		return write_results_csv(t);
