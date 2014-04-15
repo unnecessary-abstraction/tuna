@@ -28,7 +28,7 @@ import math
 sample_rate = 400000
 
 tuna_plot.init()
-tol = libtuna.tol_init(sample_rate, sample_rate//2, 0.4, 3)
+tol = libtuna.tol_init(sample_rate, sample_rate, 0.4, 3)
 if not tol:
     print("ERROR: Failed to create tol object")
     os.exit(-1)

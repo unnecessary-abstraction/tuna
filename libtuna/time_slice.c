@@ -371,7 +371,7 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	}
 	t->fft_data = fft_get_data(t->fft);
 
-	t->tol = tol_init(sample_rate, sample_rate/2, 0.4, 3);
+	t->tol = tol_init(sample_rate, sample_rate, 0.4, 3);
 	if (!t->tol) {
 		error("time_slice: Failed to initialise third octave level calculation");
 		return -1;

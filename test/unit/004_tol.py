@@ -52,7 +52,7 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_00_init(self):
         sample_rate = 400000
-        analysis_length = sample_rate//2
+        analysis_length = sample_rate
 
         tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
@@ -62,7 +62,7 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_01_coefficient_values(self):
         sample_rate = 400000
-        analysis_length = sample_rate//2
+        analysis_length = sample_rate
 
         tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
@@ -83,7 +83,7 @@ class tunaTOLTests(tunaTestCase):
 
     def test_tol_02_coefficient_sum(self):
         sample_rate = 400000
-        analysis_length = sample_rate//2
+        analysis_length = sample_rate
 
         tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
@@ -109,7 +109,7 @@ class tunaTOLTests(tunaTestCase):
         # Place a single sample at the centre of a third-octave band and ensure
         # that the third octave level analysis shows a value in the correct band
         sample_rate = 400000
-        analysis_length = sample_rate//2
+        analysis_length = sample_rate
 
         tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)
@@ -143,7 +143,7 @@ class tunaTOLTests(tunaTestCase):
         # band centres and ensure that the third octave level analysis shows a
         # value in each of the adjacent bands only.
         sample_rate = 400000
-        analysis_length = sample_rate//2
+        analysis_length = sample_rate
 
         tol = libtuna.tol_init(sample_rate, analysis_length, 0.4, 3)
         self.assertIsNotNone(tol)

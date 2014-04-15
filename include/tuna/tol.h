@@ -56,9 +56,9 @@ struct tol {};
  *
  * \param sample_rate The sampling frequency of the data which will be analysed.
  *
- * \param analysis_length The length of the array of frequency samples which
+ * \param analysis_length The length of the array of time domain samples which
  * will be analysed. Every third octave analysis performed with this context
- * will operate on the same number of frequency samples.
+ * will operate on the same number of samples.
  *
  * \param overlap The ratio by which each third octave band overlaps with the
  * next one. This value must be less than 0.5 to ensure that a band only
