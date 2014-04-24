@@ -15,6 +15,9 @@
 #   General Public License for more details.
 ################################################################################
 
+import matplotlib
+matplotlib.use('PDF')
+
 import libtuna
 import matplotlib.pyplot as plt
 import numpy as np
