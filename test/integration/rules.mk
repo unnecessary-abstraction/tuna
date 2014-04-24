@@ -30,7 +30,7 @@ run-i%.py: $(d)/%.py libtuna/libtuna.so swig/python/libtuna.py swig/python/_libt
 	$(Q)$(PYTHON) $<
 
 # Set paths when running python scripts
-run-i%.py: export PYTHONPATH := swig/python:test
+run-i%.py: export PYTHONPATH := swig/python:$(SRCDIR)/test
 run-i%.py: export LD_LIBRARY_PATH := libtuna
 
 CHECK_DEPS += $(run_tests)
