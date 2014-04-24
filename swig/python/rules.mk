@@ -46,7 +46,7 @@ install-python-bindings: $(tgts)
 
 $(d)/libtuna_wrap.c: $(d)/libtuna.i
 	@echo SWIG $<
-	$(Q)$(SWIG) -python -py3 -O -MD -MP -MF swig/python/libtuna.d -o $@ $(INCLUDE_ALL) $(INCLUDE_TGT) $<
+	$(Q)$(SWIG) -python -py3 -O -MD -MP -MF swig/python/libtuna.d -I$(SRCDIR) -o $@ $(INCLUDE_ALL) $(INCLUDE_TGT) $<
 
 # Include dependencies
 -include $(deps)
