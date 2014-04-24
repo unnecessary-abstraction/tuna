@@ -20,19 +20,22 @@
 
 d := doxy
 
-DOXYFILE := $(d)/doxygen.conf
-
 tgts := $(d)/html $(d)/libtuna.pdf
 
 TARGETS_DOCS += $(tgts)
 
-INTERMEDIATES += $(d)/doxygen.log $(d)/latex.log $(d)/latex
+INTERMEDIATES += $(d)/doxygen.log $(d)/latex.log $(d)/latex $(d)/doxygen.conf
 
 # Rules for this directory
 #
 # Use doxygen.log as a marker of whether doxygen has been executed. Also pick up
 # $(TUNA_HEADERS) as a dependency list, defined in include/rules.mk
-$(d)/doxygen.log: $(DOXYFILE) $(TUNA_HEADERS)
+$(d)/doxygen.conf: $(d)/doxygen.conf.in
+	@echo DOXYFILE $@
+	@cat $< > $@
+	@echo "INPUT = " $(TUNA_HEADERS) >> $@
+
+$(d)/doxygen.log: $(d)/doxygen.conf $(TUNA_HEADERS)
 	@echo DOXYGEN $<
 	@doxygen $< > $@
 

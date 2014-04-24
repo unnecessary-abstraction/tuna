@@ -654,32 +654,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = include/tuna/analysis.h \
-			 include/tuna/buffer.h \
-			 include/tuna/bufhold.h \
-			 include/tuna/bufq.h \
-			 include/tuna/cbuf.h \
-			 include/tuna/consumer.h \
-			 include/tuna/counter.h \
-			 include/tuna/csv.h \
-			 include/tuna/dat.h \
-			 include/tuna/env_estimate.h \
-			 include/tuna/fft.h \
-			 include/tuna/input_ads1672.h \
-			 include/tuna/input_alsa.h \
-			 include/tuna/input_sndfile.h \
-			 include/tuna/input_zero.h \
-			 include/tuna/log.h \
-			 include/tuna/offset_threshold.h \
-			 include/tuna/onset_threshold.h \
-			 include/tuna/output_null.h \
-			 include/tuna/output_sndfile.h \
-			 include/tuna/producer.h \
-			 include/tuna/pulse.h \
-			 include/tuna/time_slice.h \
-			 include/tuna/timespec.h \
-			 include/tuna/tol.h \
-			 include/tuna/window.h
+# INPUT is unset
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
