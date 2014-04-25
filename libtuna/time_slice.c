@@ -59,6 +59,7 @@ struct time_slice {
 	struct time_slice_results *	results;
 	float *				window;
 	uint				sample_rate;
+	uint				slice_length;
 	uint				slice_period;
 	uint				available;
 	uint				n_tol;
@@ -329,7 +330,7 @@ int time_slice_write(struct consumer * consumer, sample_t * buf, uint count)
 		return r;
 	}
 
-	while (t->available >= (t->slice_period * 2)) {
+	while (t->available >= t->slice_length) {
 		r = process_time_slice(t);
 		if (r < 0) {
 			error("time_slice: Failed to process time slice");
@@ -352,26 +353,27 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 		consumer_get_data(consumer);
 
 	t->sample_rate = sample_rate;
-	t->slice_period = sample_rate / 2;
+	t->slice_length = t->sample_rate;
+	t->slice_period = t->slice_length / 2;
 	t->available = 0;
 
 	/* Create window function. */
-	t->window = (float *)malloc(sizeof(float) * sample_rate);
+	t->window = (float *)malloc(sizeof(float) * t->slice_length);
 	if (!t->window) {
 		error("time_slice: Failed to allocate memory for window function");
 		return -ENOMEM;
 	}
 
-	window_init_sine(t->window, t->slice_period * 2);
+	window_init_sine(t->window, t->slice_length);
 
-	t->fft = fft_init(sample_rate);
+	t->fft = fft_init(t->slice_length);
 	if (!t->fft) {
 		error("time_slice: Failed to initialise FFT");
 		return -1;
 	}
 	t->fft_data = fft_get_data(t->fft);
 
-	t->tol = tol_init(sample_rate, sample_rate, 0.4, 3);
+	t->tol = tol_init(sample_rate, t->slice_length, 0.4, 3);
 	if (!t->tol) {
 		error("time_slice: Failed to initialise third octave level calculation");
 		return -1;
