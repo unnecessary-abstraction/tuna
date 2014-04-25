@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 ################################################################################
-#   tol-coeffs.py: Plot graph of third-octave level coefficients
+#   tol-white-noise.py: Plot graph of third-octave level coefficients
 #
 #   Copyright (C) 2014 Paul Barker
 #
