@@ -348,12 +348,17 @@ int time_slice_start(struct consumer * consumer, uint sample_rate, struct timesp
 	assert(ts);
 
 	int r;
+	int rate_pow2;
 
 	struct time_slice * t = (struct time_slice *)
 		consumer_get_data(consumer);
 
 	t->sample_rate = sample_rate;
-	t->slice_length = t->sample_rate;
+
+	/* We can assume sample_rate > 0. */
+	rate_pow2 = 31 - __builtin_clz(sample_rate);
+	t->slice_length = 1<<rate_pow2;
+
 	t->slice_period = t->slice_length / 2;
 	t->available = 0;
 

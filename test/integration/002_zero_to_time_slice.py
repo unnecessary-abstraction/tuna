@@ -54,8 +54,8 @@ class tunaZeroTimeSliceTests(tunaTestCase):
             for elem in line:
                 self.assertEqual(float(elem), 0)
 
-        # We should see 3 time slices: 2 per second with the first one skipped
-        self.assertEqual(count, 3)
+        # We should see 5 time slices
+        self.assertEqual(count, 5)
 
         # Close CSV file
         f.close()
@@ -77,7 +77,7 @@ class tunaZeroTimeSliceTests(tunaTestCase):
         self.assertEqual(len(line1), 1)
         self.assertTrue(line1[0].startswith("START"))
 
-        # Lines 2-4 should contain 37 zeros each
+        # Lines 2-4 should contain 33 zeros each
         count = 0
         for line in csvf:
             count += 1
@@ -87,8 +87,8 @@ class tunaZeroTimeSliceTests(tunaTestCase):
             for elem in line:
                 self.assertEqual(float(elem), 0)
 
-        # We should see 29 time slices: 2 per second with the first one skipped
-        self.assertEqual(count, 29)
+        # We should see 57 time slices
+        self.assertEqual(count, 57)
 
         # Close CSV file
         f.close()
