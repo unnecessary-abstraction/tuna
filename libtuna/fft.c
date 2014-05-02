@@ -31,10 +31,8 @@
 struct fft {
 	fftwf_plan			plan;
 	uint				length;
-	union {
-		float *			data;
-		float complex *		cdata;
-	};
+	float *				data;
+	float complex *			cdata;
 };
 
 /*******************************************************************************
@@ -58,6 +56,7 @@ struct fft * fft_init(uint length)
 		free(fft);
 		return NULL;
 	}
+	fft->cdata = (float complex *)fft->data;
 
 	/* Ignore errors in reading or writing fftw wisdom as it is only a time
 	 * saving mechanism.
@@ -79,6 +78,8 @@ void fft_exit(struct fft * fft)
 {
 	assert(fft);
 
+	if ((void*)fft->cdata != (void*)fft->data)
+		fftwf_free(fft->cdata);
 	fftwf_free(fft->data);
 	free(fft);
 }
