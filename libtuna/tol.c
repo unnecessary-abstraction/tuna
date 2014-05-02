@@ -313,7 +313,7 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 		return NULL;
 	}
 
-	step = sample_rate / analysis_length;
+	step = (float)sample_rate / (float)analysis_length;
 
 	/* Prepare each transition region. */
 	for (i = 0; i < MAX_THIRD_OCTAVE_LEVELS; i++) {
