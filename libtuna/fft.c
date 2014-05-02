@@ -52,11 +52,17 @@ struct fft * fft_init(uint length)
 	fft->length = length;
 	fft->data = (float *)fftwf_malloc((length + 4) * sizeof(float));
 	if (!fft->data) {
-		error("fft: Failed to allocate memory");
+		error("fft: Failed to allocate memory for input data");
 		free(fft);
 		return NULL;
 	}
-	fft->cdata = (float complex *)fft->data;
+	fft->cdata = (complex float *)fftwf_malloc((length + 4) * sizeof(complex float) / 2);
+	if (!fft->cdata) {
+		error("fft: Failed to allocate memory for output data");
+		free(fft->data);
+		free(fft);
+		return NULL;
+	}
 
 	/* Ignore errors in reading or writing fftw wisdom as it is only a time
 	 * saving mechanism.
@@ -65,6 +71,7 @@ struct fft * fft_init(uint length)
 	fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
 	if (fft->plan == NULL) {
 		error("fft: Failed to plan FFT");
+		free(fft->cdata);
 		free(fft->data);
 		free(fft);
 		return NULL;
