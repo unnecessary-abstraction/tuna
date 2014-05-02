@@ -68,7 +68,7 @@ struct fft * fft_init(uint length)
 	 * saving mechanism.
 	 */
 	fftwf_import_wisdom_from_filename("fftw.wisdom");
-	fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_MEASURE);
+	fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_PATIENT);
 	if (fft->plan == NULL) {
 		error("fft: Failed to plan FFT");
 		free(fft->cdata);
