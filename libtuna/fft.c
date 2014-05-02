@@ -23,6 +23,7 @@
 #include <fftw3.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "fft.h"
 #include "log.h"
@@ -42,6 +43,8 @@ struct fft {
 struct fft * fft_init(uint length)
 {
 	struct fft * fft;
+	int r;
+	size_t align;
 
 	fft = (struct fft *) malloc(sizeof(struct fft));
 	if (!fft) {
@@ -50,13 +53,17 @@ struct fft * fft_init(uint length)
 	}
 
 	fft->length = length;
-	fft->data = (float *)fftwf_malloc((length + 4) * sizeof(float));
-	if (!fft->data) {
+
+	/* Align memory to 16-byte boundary */
+	align = 16;
+
+	r = posix_memalign((void**)&fft->data, align, (length + 4) * sizeof(float));
+	if (r != 0) {
 		error("fft: Failed to allocate memory for input data");
 		free(fft);
 		return NULL;
 	}
-	fft->cdata = (complex float *)fftwf_malloc((length + 4) * sizeof(complex float) / 2);
+	r = posix_memalign((void**)&fft->cdata, align, (length + 4) * sizeof(complex float) / 2);
 	if (!fft->cdata) {
 		error("fft: Failed to allocate memory for output data");
 		free(fft->data);
@@ -86,8 +93,8 @@ void fft_exit(struct fft * fft)
 	assert(fft);
 
 	if ((void*)fft->cdata != (void*)fft->data)
-		fftwf_free(fft->cdata);
-	fftwf_free(fft->data);
+		free(fft->cdata);
+	free(fft->data);
 	free(fft);
 }
 
