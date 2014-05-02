@@ -51,7 +51,10 @@ read_envs(env_list)
 require(configure_cc())
 require(configure_ccld())
 require(configure_ar())
-require(configure_pkg("fftw3f"))
+if var_get("enable-ffts"):
+	require(configure_pkg("ffts"))
+else:
+	require(configure_pkg("fftw3f"))
 require(configure_pkg("sndfile"))
 require(configure_pkg("alsa"))
 if var_get("enable-python-bindings"):
@@ -73,6 +76,10 @@ if var_get("enable-inline"):
 # Enable TOLs for pulses if requested
 if var_get("enable-pulse-tol"):
 	var_append("CFLAGS", "-DENABLE_PULSE_TOL")
+
+# Enable FFTS if requested, otherwise FFTW will be used
+if var_get("enable-ffts"):
+	var_append("CFLAGS", "-DENABLE_FFTS")
 
 # Append other flags
 var_append("CFLAGS", "-Wall -Wextra -pthread")

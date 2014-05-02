@@ -1,5 +1,5 @@
 /*******************************************************************************
-	fft.c: Fast Fourier Transform implementation using fftw.
+	fft.c: Fast Fourier Transform implementation using fftw or ffts.
 
 	Copyright (C) 2013, 2014 Paul Barker, Loughborough University
 	
@@ -20,7 +20,6 @@
 
 #include <assert.h>
 #include <complex.h>
-#include <fftw3.h>
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
@@ -29,8 +28,18 @@
 #include "log.h"
 #include "types.h"
 
+#ifdef ENABLE_FFTS
+#include <ffts/ffts.h>
+#else
+#include <fftw3.h>
+#endif
+
 struct fft {
+#ifdef ENABLE_FFTS
+	ffts_plan_t *			plan;
+#else
 	fftwf_plan			plan;
+#endif
 	uint				length;
 	float *				data;
 	float complex *			cdata;
@@ -71,11 +80,12 @@ struct fft * fft_init(uint length)
 		return NULL;
 	}
 
-	/* Ignore errors in reading or writing fftw wisdom as it is only a time
-	 * saving mechanism.
-	 */
+#ifdef ENABLE_FFTS
+	fft->plan = ffts_init_1d_real(length, -1);
+#else
 	fftwf_import_wisdom_from_filename("fftw.wisdom");
 	fft->plan = fftwf_plan_dft_r2c_1d(length, fft->data, fft->cdata, FFTW_PATIENT);
+#endif
 	if (fft->plan == NULL) {
 		error("fft: Failed to plan FFT");
 		free(fft->cdata);
@@ -83,7 +93,9 @@ struct fft * fft_init(uint length)
 		free(fft);
 		return NULL;
 	}
+#ifndef ENABLE_FFTS
 	fftwf_export_wisdom_to_filename("fftw.wisdom");
+#endif
 
 	return fft;
 }
@@ -95,6 +107,9 @@ void fft_exit(struct fft * fft)
 	if ((void*)fft->cdata != (void*)fft->data)
 		free(fft->cdata);
 	free(fft->data);
+#ifdef ENABLE_FFTS
+	ffts_free(fft->plan);
+#endif
 	free(fft);
 }
 
@@ -123,7 +138,11 @@ int fft_transform(struct fft * fft)
 {
 	assert(fft);
 
+#ifdef ENABLE_FFTS
+	ffts_execute(fft->plan, fft->data, fft->cdata);
+#else
 	fftwf_execute(fft->plan);
+#endif
 
 	return 0;
 }
