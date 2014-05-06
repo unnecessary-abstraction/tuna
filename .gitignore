@@ -16,6 +16,7 @@ __pycache__
 doxy/html
 doxy/latex
 doxy/libtuna.pdf
+doxy/doxygen.conf
 *.so
 *.so.*
 *.lo
