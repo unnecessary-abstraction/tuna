@@ -22,12 +22,13 @@ d := bin
 
 # Targets and intermediates in this directory
 objs_tuna := $(d)/tuna.o
+objs_tuna_fft_test := $(d)/tuna_fft_test.o
 
-objs := $(objs_tuna)
+objs := $(objs_tuna) $(objs_tuna_fft_test)
 
 deps := $(objs:%.o=%.d)
 
-tgts := $(d)/tuna
+tgts := $(d)/tuna $(d)/tuna_fft_test
 
 TARGETS_BIN += $(tgts)
 
@@ -41,7 +42,9 @@ $(tgts): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so
 
 $(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
-$(d)/tuna: $(OBJS_tuna)
+$(d)/tuna: $(objs_tuna)
+
+$(d)/tuna_fft_test: $(objs_tuna_fft_test)
 
 .PHONY: install-bin
 install-bin: $(tgts)
