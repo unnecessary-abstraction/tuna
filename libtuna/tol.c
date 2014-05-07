@@ -324,7 +324,7 @@ struct tol * tol_init(uint sample_rate, uint analysis_length, float overlap, uin
 		t_end = (uint) floorf((band_edges[i] + delta) / step);
 		t->desc[i].t_width = 1 + t_end - t->desc[i].t_onset;
 
-		if (t_end > sample_rate / 2) {
+		if (t_end > analysis_length / 2) {
 			/* The current third octave band does not fit within half the sampling rate. */
 			t->n_tol = i - 1;
 
