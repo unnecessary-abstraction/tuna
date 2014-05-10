@@ -70,6 +70,10 @@ if var_get("enable-ads1672"):
 if var_get("enable-inline"):
 	var_append("CFLAGS", "-DENABLE_INLINE")
 
+# Enable TOLs for pulses if requested
+if var_get("enable-pulse-tol"):
+	var_append("CFLAGS", "-DENABLE_PULSE_TOL")
+
 # Append other flags
 var_append("CFLAGS", "-Wall -Wextra -pthread")
 var_append("CFLAGS", "-std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700")

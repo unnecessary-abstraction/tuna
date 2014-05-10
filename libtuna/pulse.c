@@ -60,8 +60,6 @@ struct pulse_results {
 	uint					offset_5;
 	uint					offset_95;
 
-	float					energy;
-
 	/* attack_duration = peak_positive_offset - offset_5;
 	 * decay_duration = offset_95 - peak_positive_offset;
 	 * duration_90 = offset_95 - offset_5;
@@ -97,6 +95,9 @@ struct pulse_processor {
 	/* Pointer to FFT data buffer, when open. */
 	float *					fft_data;
 
+	/* A buffer to store squared sample values. */
+	float *					sq_data;
+
 	/* Onset threshold tracker. */
 	struct onset_threshold *		onset;
 
@@ -105,6 +106,11 @@ struct pulse_processor {
 
 	/* Envelope estimation. */
 	struct env_estimate *			env;
+
+	/* Cumulative energy observed so far in the current pulse - may be
+	 * considered an additional result if ENABLE_PULSE_TOL is not defined.
+	 */
+	float					energy;
 
 	/* Current state: See enum above. */
 	enum pulse_state			state;
@@ -210,33 +216,29 @@ void calc_offsets(struct pulse_processor * p)
 {
 	assert(p);
 
-	float e, f;
+	float e;
 	float energy_5perc;
 
 	/* This looks hideously inefficient - there must be a faster way to find
 	 * these offsets.
 	 */
 
-	energy_5perc = p->results->energy / 20.0f;
+	energy_5perc = p->energy / 20.0f;
 
 	/* Find 5% offset. */
 	p->results->offset_5 = 0;
-	f = p->fft_data[0];
-	e = f * f;
+	e = p->sq_data[0];
 	while (e <= energy_5perc) {
 		p->results->offset_5++;
-		f = p->fft_data[p->results->offset_5];
-		e += f * f;
+		e += p->sq_data[p->results->offset_5];
 	}
 
 	/* Find 5% offset from end. */
 	p->results->offset_95 = p->index - 1;
-	f = p->fft_data[p->results->offset_95];
-	e = f * f;
+	e = p->sq_data[p->results->offset_95];
 	while (e < energy_5perc) {
 		p->results->offset_95--;
-		f = p->fft_data[p->results->offset_95];
-		e += f * f;
+		e += p->sq_data[p->results->offset_95];
 	}
 }
 
@@ -258,12 +260,17 @@ static void process_end_pulse(struct pulse_processor * p)
 
 	calc_offsets(p);
 
+#ifdef ENABLE_PULSE_TOL
 	/* Add padding, perform FFT and third octave analysis. */
 	if (p->results->duration < p->fft_length)
 		memset(&p->fft_data[p->results->duration], 0,
 				(p->fft_length - p->results->duration) * sizeof(float));
 	fft_transform(p->fft);
 	tol_calculate(p->tol, fft_get_cdata(p->fft), p->results->tols);
+#else
+	/* Copy the pulse energy to the results. */
+	p->results->tols[0] = p->energy;
+#endif
 
 	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
 		write_results_csv(p);
@@ -284,12 +291,18 @@ static int process_sample(struct pulse_processor * p, sample_t x)
 	assert(p);
 	int r = 0;
 	float f = (float)x;
+	float f2 = f * f;
 
 	/* Track energy */
-	p->results->energy += f * f;
+	p->energy += f2;
 
+#ifdef ENABLE_PULSE_TOL
 	/* Copy into fft buffer. */
 	p->fft_data[p->index] = f;
+#endif
+
+	/* Copy sample energy into squared data buffer. */
+	p->sq_data[p->index] = f2;
 
 	/* Detect Peaks */
 	if (x > p->results->peak_positive) {
@@ -495,14 +508,18 @@ void pulse_exit(struct consumer * consumer)
 	if (p->results)
 		free(p->results);
 
+#ifdef ENABLE_PULSE_TOL
 	if (p->tol)
 		tol_exit(p->tol);
 
-	if (p->env)
-		env_estimate_exit(p->env);
-
 	if (p->fft)
 		fft_exit(p->fft);
+#endif
+	if (p->sq_data)
+		free(p->sq_data);
+
+	if (p->env)
+		env_estimate_exit(p->env);
 
 	if (p->params->out_mode == TUNA_OUT_MODE_CSV)
 		csv_close(p->out);
@@ -582,6 +599,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -1;
 	}
 
+#ifdef ENABLE_PULSE_TOL
 	p->fft_length = p->pulse_max_duration_w; /* 1 s long FFT. */
 	p->fft = fft_init(p->fft_length);
 	if (!p->fft) {
@@ -597,6 +615,20 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	}
 
 	p->n_tol = tol_get_num_levels(p->tol);
+#else
+	/* Instead of third octave levels we have a single energy value. This is
+	 * copied into the memory where third octave levels would be so that it
+	 * ends up in the results file. Therefore we need to allocate one space
+	 * for it.
+	 */
+	p->n_tol = 1;
+#endif
+
+	p->sq_data = (float *) malloc(p->pulse_max_duration_w * sizeof(float));
+	if (!p->sq_data) {
+		error("pulse: Failed to allocate memory");
+		return -1;
+	}
 
 	p->results = (struct pulse_results *)
 		malloc(sizeof(struct pulse_results) + (p->n_tol + 1) *
@@ -701,7 +733,9 @@ int pulse_init(struct consumer * consumer, const char * out_name,
 	p->onset = NULL;
 	p->offset = NULL;
 	p->fft = NULL;
+	p->tol = NULL;
 	p->fft_data = NULL;
+	p->sq_data = NULL;
 
 	consumer_set_module(consumer, pulse_write, pulse_start, pulse_resync,
 			pulse_exit, p);
