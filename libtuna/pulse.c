@@ -60,6 +60,8 @@ struct pulse_results {
 	uint					offset_5;
 	uint					offset_95;
 
+	float					energy;
+
 	/* attack_duration = peak_positive_offset - offset_5;
 	 * decay_duration = offset_95 - peak_positive_offset;
 	 * duration_90 = offset_95 - offset_5;
@@ -208,36 +210,33 @@ void calc_offsets(struct pulse_processor * p)
 {
 	assert(p);
 
-	uint i;
-	float energy = 0.0f;
+	float e, f;
 	float energy_5perc;
 
 	/* This looks hideously inefficient - there must be a faster way to find
 	 * these offsets.
 	 */
 
-	for (i = 0; i < p->index; i++)
-		energy += p->fft_data[i] * p->fft_data[i];
-
-	energy_5perc = energy / 20.0f;
+	energy_5perc = p->results->energy / 20.0f;
 
 	/* Find 5% offset. */
 	p->results->offset_5 = 0;
-	energy = p->fft_data[0] * p->fft_data[0];
-	while (energy <= energy_5perc) {
+	f = p->fft_data[0];
+	e = f * f;
+	while (e <= energy_5perc) {
 		p->results->offset_5++;
-		energy += p->fft_data[p->results->offset_5] *
-			p->fft_data[p->results->offset_5];
+		f = p->fft_data[p->results->offset_5];
+		e += f * f;
 	}
 
 	/* Find 5% offset from end. */
 	p->results->offset_95 = p->index - 1;
-	energy = p->fft_data[p->results->offset_95] *
-		p->fft_data[p->results->offset_95];
-	while (energy < energy_5perc) {
+	f = p->fft_data[p->results->offset_95];
+	e = f * f;
+	while (e < energy_5perc) {
 		p->results->offset_95--;
-		energy += p->fft_data[p->results->offset_95] *
-			p->fft_data[p->results->offset_95];
+		f = p->fft_data[p->results->offset_95];
+		e += f * f;
 	}
 }
 
@@ -284,9 +283,13 @@ static int process_sample(struct pulse_processor * p, sample_t x)
 {
 	assert(p);
 	int r = 0;
+	float f = (float)x;
+
+	/* Track energy */
+	p->results->energy += f * f;
 
 	/* Copy into fft buffer. */
-	p->fft_data[p->index] = (float)x;
+	p->fft_data[p->index] = f;
 
 	/* Detect Peaks */
 	if (x > p->results->peak_positive) {
