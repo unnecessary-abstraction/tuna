@@ -30,49 +30,52 @@ lib_soname := $(lib_name).$(lib_major)
 lib_fullname := $(lib_name).$(lib_version)
 
 # Targets and intermediates in this directory
-objs := $(d)/analysis.lo \
-	$(d)/buffer.lo \
-	$(d)/bufhold.lo \
-	$(d)/bufq.lo \
-	$(d)/cbuf.lo \
-	$(d)/consumer.lo \
-	$(d)/counter.lo \
-	$(d)/csv.lo \
-	$(d)/dat.lo \
-	$(d)/env_estimate.lo \
-	$(d)/fft.lo \
-	$(d)/input_alsa.lo \
-	$(d)/input_sndfile.lo \
-	$(d)/input_zero.lo \
-	$(d)/log.lo \
-	$(d)/onset_threshold.lo \
-	$(d)/offset_threshold.lo \
-	$(d)/output_null.lo \
-	$(d)/output_sndfile.lo \
-	$(d)/producer.lo \
-	$(d)/pulse.lo \
-	$(d)/time_slice.lo \
-	$(d)/timespec.lo \
-	$(d)/tol.lo \
-	$(d)/window.lo
+srcs := $(d)/analysis.c \
+	$(d)/buffer.c \
+	$(d)/bufhold.c \
+	$(d)/bufq.c \
+	$(d)/cbuf.c \
+	$(d)/consumer.c \
+	$(d)/counter.c \
+	$(d)/csv.c \
+	$(d)/dat.c \
+	$(d)/env_estimate.c \
+	$(d)/fft.c \
+	$(d)/input_alsa.c \
+	$(d)/input_sndfile.c \
+	$(d)/input_zero.c \
+	$(d)/log.c \
+	$(d)/onset_threshold.c \
+	$(d)/offset_threshold.c \
+	$(d)/output_null.c \
+	$(d)/output_sndfile.c \
+	$(d)/producer.c \
+	$(d)/pulse.c \
+	$(d)/time_slice.c \
+	$(d)/timespec.c \
+	$(d)/tol.c \
+	$(d)/window.c
 
 # Only include ADS1672 input module if it was enabled by 'configure'
 ifdef enable-ads1672
-objs += $(d)/input_ads1672.lo
+srcs += $(d)/input_ads1672.c
 endif
 
-deps := $(objs:%.lo=%.d)
+objs_shared := $(srcs:%.c=%.lo)
+objs_static := $(srcs:%.c=%.o)
+objs_all := $(objs_shared) $(objs_static)
+deps := $(srcs:%.c=%.d)
 
 tgts := $(d)/$(lib_name) $(d)/$(lib_soname) $(d)/$(lib_fullname) $(d)/libtuna.a
 
 TARGETS_LIB += $(tgts)
 
-INTERMEDIATES += $(deps) $(objs)
+INTERMEDIATES += $(deps) $(objs_all)
 
 INSTALL_DEPS += install-libtuna
 
 # Rules for this directory
-$(d)/$(lib_fullname) $(d)/libtuna.a: $(SRCDIR)/$(d)/rules.mk $(objs)
+$(d)/$(lib_fullname) $(d)/libtuna.a: $(SRCDIR)/$(d)/rules.mk $(objs_shared)
 $(tgts): LDLIBRARIES_TGT :=
 $(d)/$(lib_fullname): LDFLAGS_TGT := -Wl,-soname,$(lib_soname)
 $(d)/$(lib_soname): $(d)/$(lib_fullname)
@@ -89,7 +92,7 @@ $(d)/$(lib_fullname):
 	$(Q)$(CCLD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -shared -o $@ $(filter %.lo,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
 
 
-$(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
+$(objs_all): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 
 .PHONY: install-libtuna
 install-libtuna: $(d)/libtuna.a $(d)/$(lib_fullname)
@@ -103,4 +106,4 @@ install-libtuna: $(d)/libtuna.a $(d)/$(lib_fullname)
 -include $(deps)
 
 # Make everything depend on this rules file
-$(objs): $(SRCDIR)/$(d)/rules.mk
+$(objs_all): $(SRCDIR)/$(d)/rules.mk
