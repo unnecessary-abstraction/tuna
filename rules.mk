@@ -89,7 +89,7 @@ targets: $(TARGETS_ALL)
 # Archiver rule
 %.a:
 	@echo AR $@
-	$(Q)$(AR) rcs $@ $(filter %.lo,$^)
+	$(Q)$(AR) rcs $@ $(filter %.lo,$^) $(filter %.o,$^)
 
 # Clean rules
 .PHONY: clean clean-intermediates

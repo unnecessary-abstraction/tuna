@@ -37,8 +37,15 @@ INTERMEDIATES += $(deps) $(objs)
 INSTALL_DEPS += install-bin
 
 # Rules for this directory
+$(tgts): $(SRCDIR)/$(d)/rules.mk
+
+ifdef enable-shared
 $(tgts): LDLIBRARIES_TGT := -Llibtuna -ltuna
-$(tgts): $(SRCDIR)/$(d)/rules.mk libtuna/libtuna.so
+$(tgts): libtuna/libtuna.so
+else
+$(tgts): LDLIBRARIES_TGT := libtuna/libtuna.a
+$(tgts): libtuna/libtuna.a
+endif
 
 $(objs): INCLUDE_TGT := -I$(SRCDIR)/$(d)
 

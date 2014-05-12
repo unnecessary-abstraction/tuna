@@ -75,8 +75,33 @@ INTERMEDIATES += $(deps) $(objs_all)
 INSTALL_DEPS += install-libtuna
 
 # Rules for this directory
-$(d)/$(lib_fullname) $(d)/libtuna.a: $(SRCDIR)/$(d)/rules.mk $(objs_shared)
+$(d)/libtuna.a: $(SRCDIR)/$(d)/rules.mk
+ifdef enable-shared
+$(d)/libtuna.a: $(objs_shared)
+else
+$(d)/libtuna.a: $(objs_static)
+endif
+
 $(tgts): LDLIBRARIES_TGT :=
+
+$(objs_all): INCLUDE_TGT := -I$(SRCDIR)/$(d)
+
+.PHONY: install-libtuna
+install-libtuna: $(d)/libtuna.a
+	@echo INSTALL $^
+	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
+	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(libdir)
+
+# Include dependencies
+-include $(deps)
+
+# Make everything depend on this rules file
+$(objs_all): $(SRCDIR)/$(d)/rules.mk
+
+################################################################################
+# Shared library support
+ifdef enable-shared
+$(d)/$(lib_fullname): $(SRCDIR)/$(d)/rules.mk $(objs_shared)
 $(d)/$(lib_fullname): LDFLAGS_TGT := -Wl,-soname,$(lib_soname)
 $(d)/$(lib_soname): $(d)/$(lib_fullname)
 	@echo LN $@
@@ -91,19 +116,12 @@ $(d)/$(lib_fullname):
 	@echo CCLD $@
 	$(Q)$(CCLD) $(LDFLAGS) $(LDFLAGS_ALL) $(LDFLAGS_TGT) -shared -o $@ $(filter %.lo,$^) $(LDLIBRARIES_TGT) $(LDLIBRARIES_ALL) $(LDLIBRARIES)
 
-
-$(objs_all): INCLUDE_TGT := -I$(SRCDIR)/$(d)
-
-.PHONY: install-libtuna
-install-libtuna: $(d)/libtuna.a $(d)/$(lib_fullname)
+.PHONY: install-libtuna-shared
+install-libtuna-shared: $(d)/$(lib_fullname)
 	@echo INSTALL $^
 	$(Q)$(INSTALL) -m 0755 -d $(DESTDIR)$(libdir)
 	$(Q)$(INSTALL) -m 0644 $^ $(DESTDIR)$(libdir)
 	$(Q)ln -sf $(lib_fullname) $(DESTDIR)$(libdir)/$(lib_soname)
 	$(Q)ln -sf $(lib_fullname) $(DESTDIR)$(libdir)/$(lib_name)
-
-# Include dependencies
--include $(deps)
-
-# Make everything depend on this rules file
-$(objs_all): $(SRCDIR)/$(d)/rules.mk
+INSTALL_DEPS += install-libtuna-shared
+endif
