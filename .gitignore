@@ -6,6 +6,7 @@
 *.orig
 ChangeLog
 bin/tuna
+bin/tuna_fft_test
 fftw.wisdom
 *.log
 *.swp
