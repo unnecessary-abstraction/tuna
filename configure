@@ -86,6 +86,10 @@ if var_get("enable-ffts"):
 if var_get("enable-ndebug"):
 	var_append("CFLAGS", "-DNDEBUG")
 
+# Enable ARM NEON vectorisation if requested
+if var_get("enable-arm-neon"):
+	var_append("CFLAGS", "-DENABLE_ARM_NEON")
+
 # Append other flags
 var_append("CFLAGS", "-Wall -Wextra -pthread")
 var_append("CFLAGS", "-std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700")
