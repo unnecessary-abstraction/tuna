@@ -75,7 +75,7 @@ targets: $(TARGETS_ALL)
 
 %.s: %.c
 	@echo CC -S $@
-	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(INCLUDE_ALL) $(INCLUDE_TGT) -o $@ -S $<
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_ALL) $(CFLAGS_TGT) $(INCLUDE_ALL) $(INCLUDE_TGT) -fverbose-asm -o $@ -S $<
 
 # Linker rule
 %: %.o
