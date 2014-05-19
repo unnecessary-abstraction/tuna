@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <malloc.h>
+#include <stdlib.h>
 
 #include "buffer.h"
 #include "compiler.h"
@@ -27,7 +28,7 @@
 
 struct buffer_head {
 	uint		refs;
-	sample_t	data;
+	sample_t	data		__attribute__ ((aligned(16)));
 };
 
 /* Acquire a buffer of at least (*frames) samples. The actual number of samples
@@ -40,12 +41,13 @@ sample_t * buffer_acquire(uint * frames)
 {
 	size_t sz;
 	struct buffer_head * h;
+	int r;
 
 	assert(frames);
 	sz = sizeof(struct buffer_head) + (*frames) * sizeof(sample_t);
 
-	h = (struct buffer_head *)malloc(sz);
-	if (!h)
+	r = posix_memalign((void **)&h, 16, sz);
+	if (r)
 		return NULL;
 
 	h->refs = 1;
