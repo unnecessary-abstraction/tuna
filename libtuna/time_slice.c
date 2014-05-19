@@ -142,7 +142,19 @@ static int write_results_dat(struct time_slice * t)
 	return dat_write_record(t->out, TUNA_DAT_TIME_SLICE, t->results, sz);
 }
 
-static inline void update_stats(struct time_slice * t, float x)
+static inline float process_common_sca(struct time_slice * t, int32_t * p_data)
+{
+	assert(t);
+	assert(p_data);
+
+	float x = (float) *p_data;
+
+	t->fft_data[t->index] = x * t->window[t->index];
+
+	return x;
+}
+
+static inline void update_stats_sca(struct time_slice * t, float x)
 {
 	assert(t);
 
@@ -154,6 +166,19 @@ static inline void update_stats(struct time_slice * t, float x)
 	m[1] += e2;
 	m[2] += e2 * e;
 	m[3] += e2 * e2;
+}
+
+static inline void detect_peaks_sca(struct time_slice * t, float v, uint offset)
+{
+	assert(t);
+
+	if (v > t->results->peak_positive) {
+		t->results->peak_positive = v;
+		t->results->peak_positive_offset = offset;
+	} else if (v < t->results->peak_negative) {
+		t->results->peak_negative = v;
+		t->results->peak_negative_offset = offset;
+	}
 }
 
 static void process_buffer(struct time_slice * t, struct held_buffer * h)
@@ -183,8 +208,6 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	uint avail;	/* Number of available samples remaining. */
 	uint len = t->slice_period * 2;
 	uint i, c;
-	float x;
-	sample_t v;
 	uint offset = 0;
 	sample_t * data;
 	
@@ -192,36 +215,25 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	data = bufhold_data(h);
 	if (avail && t->index < len/4) {
 		c = min(len/4 - t->index, avail);
-		for (i = 0; i < c; i++) {
-			v = data[i];
-			x = (float)v;
-
-			t->fft_data[t->index] = x * t->window[t->index];
+		i = 0;
+		while (i < c) {
+			process_common_sca(t, (int32_t *) &data[i]);
 			t->index++;
+			i++;
 		}
 		avail -= c;
 		offset = c;
 	}
 	if (avail && t->index < len*3/4) {
 		c = min(len*3/4 - t->index, avail);
-		for (i = 0; i < c; i++) {
-			v = data[offset + i];
-			x = (float)v;
-
-			/* Calculate intermediate sums for kurtosis. */
-			update_stats(t, x);
-
-			/* Detect Peaks */
-			if (v > t->results->peak_positive) {
-				t->results->peak_positive = v;
-				t->results->peak_positive_offset = t->index - len/4;
-			} else if (v < t->results->peak_negative) {
-				t->results->peak_negative = v;
-				t->results->peak_negative_offset = t->index - len/4;
-			}
-			
-			t->fft_data[t->index] = x * t->window[t->index];
+		i = 0;
+		while (i < c) {
+			float v;
+			v = process_common_sca(t, (int32_t *) &data[offset + i]);
+			update_stats_sca(t, v);
+			detect_peaks_sca(t, v, t->index - len/4);
 			t->index++;
+			i++;
 		}
 		avail -= c;
 		offset += c;
@@ -232,12 +244,11 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	 */
 	if (avail) {
 		c = min(len - t->index, avail);
-		for (i = 0; i < c; i++) {
-			v = data[offset + i];
-			x = (float)v;
-
-			t->fft_data[t->index] = x * t->window[t->index];
+		i = 0;
+		while (i < c) {
+			process_common_sca(t, (int32_t *) &data[i]);
 			t->index++;
+			i++;
 		}
 	}
 }
