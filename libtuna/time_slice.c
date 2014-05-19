@@ -39,6 +39,10 @@
 #include "types.h"
 #include "window.h"
 
+#ifdef ENABLE_ARM_NEON
+#include <arm_neon.h>
+#endif
+
 /*******************************************************************************
 	Private declarations and functions
 *******************************************************************************/
@@ -46,6 +50,10 @@
 #define MAX_TIME_SLICE_RESULTS (6 + MAX_THIRD_OCTAVE_LEVELS)
 
 struct time_slice {
+#ifdef ENABLE_ARM_NEON
+	float32x4x4_t			moments_vec;
+#endif
+
 	/* The following fields are initialised in time_slice_init(). */
 	struct bufhold *		held_buffers;
 	FILE *				out;
@@ -181,6 +189,94 @@ static inline void detect_peaks_sca(struct time_slice * t, float v, uint offset)
 	}
 }
 
+#ifdef ENABLE_ARM_NEON
+static inline float32x4_t process_common_vec(struct time_slice * t, int32_t * p_data)
+{
+	assert(t);
+	assert(p_data);
+
+	/* Prefetch next element. */
+	__builtin_prefetch(p_data + 4);
+
+	float32_t * p_coeffs = (float32_t *) &t->window[t->index];
+	float32_t * p_dest = (float32_t *) &t->fft_data[t->index];
+
+	int32x4_t data_i32 = vld1q_s32(p_data);
+	float32x4_t coeffs = vld1q_f32(p_coeffs);
+
+	float32x4_t data_f32 = vcvtq_f32_s32(data_i32);
+
+	float32x4_t dest = vmulq_f32(data_f32, coeffs);
+
+	vst1q_f32(p_dest, dest);
+
+	return data_f32;
+}
+
+static inline void update_stats_vec(struct time_slice * t, float32x4_t x)
+{
+	assert(t);
+
+	float32x4x4_t m = t->moments_vec;
+
+	float32x4_t e = vabsq_f32(x);
+	m.val[0] = vaddq_f32(m.val[0], e);
+
+	float32x4_t e2 = vmulq_f32(x, x);
+	m.val[1] = vaddq_f32(m.val[1], e2);
+
+	float32x4_t e3 = vmulq_f32(e2, x);
+	m.val[2] = vaddq_f32(m.val[2], e3);
+
+	float32x4_t e4 = vmulq_f32(e2, e2);
+	m.val[3] = vaddq_f32(m.val[3], e4);
+
+	t->moments_vec = m;
+}
+
+static inline void detect_peaks_vec(struct time_slice * t, float32x4_t vec, uint offset)
+{
+	/* We can't vectorise this */
+	assert(t);
+
+	detect_peaks_sca(t, vec[0], offset);
+	detect_peaks_sca(t, vec[1], offset + 1);
+	detect_peaks_sca(t, vec[2], offset + 2);
+	detect_peaks_sca(t, vec[3], offset + 3);
+}
+
+static inline void update_stats_finish(struct time_slice * t)
+{
+	assert(t);
+
+	float32x4x4_t m_vec = t->moments_vec;
+	float32x4_t m = vld1q_f32(t->results->moments);
+
+	float32x2_t m0_lo = vget_low_f32(m_vec.val[0]);
+	float32x2_t m0_hi = vget_high_f32(m_vec.val[0]);
+	float32x2_t m0_pair = vpadd_f32(m0_lo, m0_hi);
+
+	float32x2_t m1_lo = vget_low_f32(m_vec.val[1]);
+	float32x2_t m1_hi = vget_high_f32(m_vec.val[1]);
+	float32x2_t m1_pair = vpadd_f32(m1_lo, m1_hi);
+
+	float32x2_t m2_lo = vget_low_f32(m_vec.val[2]);
+	float32x2_t m2_hi = vget_high_f32(m_vec.val[2]);
+	float32x2_t m2_pair = vpadd_f32(m2_lo, m2_hi);
+
+	float32x2_t m3_lo = vget_low_f32(m_vec.val[3]);
+	float32x2_t m3_hi = vget_high_f32(m_vec.val[3]);
+	float32x2_t m3_pair = vpadd_f32(m3_lo, m3_hi);
+
+	float32x2_t m0m1_pair = vpadd_f32(m0_pair, m1_pair);
+	float32x2_t m2m3_pair = vpadd_f32(m2_pair, m3_pair);
+
+	float32x4_t m_summed = vcombine_f32(m0m1_pair, m2m3_pair);
+	m = vaddq_f32(m, m_summed);
+	vst1q_f32(t->results->moments, m);
+}
+#endif
+
 static void process_buffer(struct time_slice * t, struct held_buffer * h)
 {
 	assert(t);
@@ -216,6 +312,13 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	if (avail && t->index < len/4) {
 		c = min(len/4 - t->index, avail);
 		i = 0;
+#ifdef ENABLE_ARM_NEON
+		do {
+			process_common_vec(t, (int32_t *) &data[i]);
+			t->index += 4;
+			i += 4;
+		} while (i < c - 3);
+#endif
 		while (i < c) {
 			process_common_sca(t, (int32_t *) &data[i]);
 			t->index++;
@@ -227,6 +330,16 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	if (avail && t->index < len*3/4) {
 		c = min(len*3/4 - t->index, avail);
 		i = 0;
+#ifdef ENABLE_ARM_NEON
+		do {
+			float32x4_t vec;
+			vec = process_common_vec(t, (int32_t *) &data[offset + i]);
+			update_stats_vec(t, vec);
+			detect_peaks_vec(t, vec, t->index - len/4);
+			t->index += 4;
+			i += 4;
+		} while (i < c - 3);
+#endif
 		while (i < c) {
 			float v;
 			v = process_common_sca(t, (int32_t *) &data[offset + i]);
@@ -245,6 +358,13 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 	if (avail) {
 		c = min(len - t->index, avail);
 		i = 0;
+#ifdef ENABLE_ARM_NEON
+		do {
+			process_common_vec(t, (int32_t *) &data[i]);
+			t->index += 4;
+			i += 4;
+		} while (i < c - 3);
+#endif
 		while (i < c) {
 			process_common_sca(t, (int32_t *) &data[i]);
 			t->index++;
@@ -262,6 +382,10 @@ static int process_time_slice(struct time_slice * t)
 
 	memset(t->results, 0,
 		sizeof(struct time_slice_results) + t->n_tol * sizeof(float));
+
+#ifdef ENABLE_ARM_NEON
+	memset(&t->moments_vec, 0, sizeof(t->moments_vec));
+#endif
 
 	t->index = 0;
 
@@ -290,6 +414,10 @@ static int process_time_slice(struct time_slice * t)
 
 	fft_transform(t->fft);
 	tol_calculate(t->tol, fft_get_cdata(t->fft), t->results->tols);
+
+#ifdef ENABLE_ARM_NEON
+	update_stats_finish(t);
+#endif
 
 	if (t->out_mode == TUNA_OUT_MODE_CSV)
 		return write_results_csv(t);
