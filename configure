@@ -82,6 +82,10 @@ if var_get("enable-pulse-tol"):
 if var_get("enable-ffts"):
 	var_append("CFLAGS", "-DENABLE_FFTS")
 
+# Define NDEBUG if requested
+if var_get("enable-ndebug"):
+	var_append("CFLAGS", "-DNDEBUG")
+
 # Append other flags
 var_append("CFLAGS", "-Wall -Wextra -pthread")
 var_append("CFLAGS", "-std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700")
