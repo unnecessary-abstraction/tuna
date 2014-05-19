@@ -23,6 +23,7 @@
 #include <malloc.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -582,14 +583,18 @@ int time_slice_init(struct consumer * consumer, const char * out_name,
 {
 	assert(out_name);
 	int r;
+	struct time_slice * t;
 
-	struct time_slice * t = (struct time_slice *)
-		calloc(1, sizeof(struct time_slice));
-	if (!t) {
+	/* If we are using neon vectorisation, we want the first element of
+	 * struct time_slice ('moments_vec') to be correctly aligned.
+	 */
+	r = posix_memalign((void **)&t, 16, sizeof(struct time_slice));
+	if (r) {
 		error("time_slice: Failed to allocate memory");
 		r = -ENOMEM;
 		goto err;
 	}
+	memset(t, 0, sizeof(struct time_slice));
 
 	t->held_buffers = bufhold_init();
 	if (!t->held_buffers) {
