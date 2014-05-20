@@ -359,7 +359,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			process_common_vec(t, (int32_t *) &data[i]);
 			t->index += 4;
 			i += 4;
-		} while (i < c - 3);
+		} while ((i + 3) < c);
 #endif
 		while (i < c) {
 			process_common_sca(t, (int32_t *) &data[i]);
@@ -377,7 +377,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			process_middle_vec(t, (int32_t *) &data[offset + i]);
 			t->index += 4;
 			i += 4;
-		} while (i < c - 3);
+		} while ((i + 3) < c);
 #endif
 		while (i < c) {
 			process_middle_sca(t, (int32_t *) &data[offset + i]);
@@ -399,7 +399,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			process_common_vec(t, (int32_t *) &data[i]);
 			t->index += 4;
 			i += 4;
-		} while (i < c - 3);
+		} while ((i + 3) < c);
 #endif
 		while (i < c) {
 			process_common_sca(t, (int32_t *) &data[i]);
