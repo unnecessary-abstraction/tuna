@@ -29,6 +29,10 @@
 #include "tol.h"
 #include "types.h"
 
+#ifdef ENABLE_ARM_NEON
+#include <arm_neon.h>
+#endif
+
 struct tol_transition {
 	uint				t_onset;
 	uint				t_width;
@@ -152,6 +156,36 @@ static inline float psum(float complex *x, uint N)
 {
 	assert(x);
 
+#ifdef ENABLE_ARM_NEON
+	uint i;
+	float32_t * data = (float32_t *) x;
+	float32x4_t sum_vec = {0, 0, 0, 0};
+	uint n_floats = N * 2;
+
+	for (i = 0; (i + 3) < n_floats; i += 4) {
+		/* Preload next set of data. */
+		__builtin_prefetch(data + i + 4);
+
+		/* Load data, square and accumulate. */
+		float32x4_t f = vld1q_f32(data + i);
+		sum_vec = vmlaq_f32(sum_vec, f, f);
+	}
+
+	float32x2_t sum_lo = vget_low_f32(sum_vec);
+	float32x2_t sum_hi = vget_high_f32(sum_vec);
+
+	/* Add in remaining elements - we know than n_floats cannot be odd and
+	 * the above loop can leave behind only zero or two floats.
+	 */
+	if (i < n_floats) {
+		float32x2_t f = vld1_f32(data + i);
+		sum_lo = vmla_f32(sum_lo, f, f);
+	}
+
+	/* Combine sums. */
+	float32x2_t sum_pair = vpadd_f32(sum_lo, sum_hi);
+	return sum_pair[0] + sum_pair[1];
+#else
 	float sum;
 	uint i;
 
@@ -164,6 +198,7 @@ static inline float psum(float complex *x, uint N)
 	}
 
 	return sum;
+#endif
 }
 
 /* Dual band weighted power sum. */
@@ -174,6 +209,94 @@ static inline void wpsum2(float complex *x, float *w, uint N, float *e)
 	assert(w);
 	assert(e);
 
+#ifdef ENABLE_ARM_NEON
+	uint i;
+	float32_t * data = (float32_t *) x;
+	float32x4_t sum_vec = {0, 0, 0, 0};
+	uint n_floats = N * 2;
+
+	for (i = 0; (i + 3) < n_floats; i += 4) {
+		/* Preload next set of data and coefficients. */
+		__builtin_prefetch(data + i + 4);
+		__builtin_prefetch(w + i + 4);
+
+		/* Equivalent operation of this sequence:
+		 *
+		 * sum_vec[0] += ((f[0] * f[0]) + (f[1] * f[1])) * w_vec[0];
+		 * sum_vec[1] += ((f[0] * f[0]) + (f[1] * f[1])) * w_vec[1];
+		 * sum_vec[2] += ((f[2] * f[2]) + (f[3] * f[3])) * w_vec[2];
+		 * sum_vec[3] += ((f[2] * f[2]) + (f[3] * f[3])) * w_vec[3];
+		 */
+
+		/* Load data and coefficients. */
+		float32x4_t f = vld1q_f32(data + i);
+		float32x4_t w_vec = vld1q_f32(w + i);
+
+		/* Squared vector.
+		 * q = f^2.
+		 */
+		float32x4_t q = vmulq_f32(f, f);
+
+		/* Squared vector with elements reversed within pairs.
+		 * [q0, q1, q2, q3] -> [q1, q0, q3, q2]
+		 */
+		float32x4_t q_rev = vrev64q_f32(q);
+
+		/* Intermediate vector laid out in preparation for
+		 * multiplication by coefficients.
+		 * i_vec = [q0 + q1, q0 + q1, q2 + q3, q2 + q3]
+		 */
+		float32x4_t i_vec = vaddq_f32(q, q_rev);
+
+		/* sum_vec += i_vec * w_vec */
+		sum_vec = vmlaq_f32(sum_vec, i_vec, w_vec);
+	}
+
+	/* We're going to need the previous values of the sums at the end of the
+	 * function, so we preload it here and hope that gives it time to get
+	 * into the cache before we need it.
+	 */
+	__builtin_prefetch(e);
+
+	float32x2_t sum_lo = vget_low_f32(sum_vec);
+	float32x2_t sum_hi = vget_high_f32(sum_vec);
+
+	/* Add in remaining elements - we know than n_floats cannot be odd and
+	 * the above loop can leave behind only zero or two floats.
+	 */
+	if (i < n_floats) {
+		/* Equivalent operation of this sequence:
+		 *
+		 * sum_vec[0] += ((f[0] * f[0]) + (f[1] * f[1])) * w_vec[0];
+		 * sum_vec[1] += ((f[0] * f[0]) + (f[1] * f[1])) * w_vec[1];
+		 */
+
+		/* Load data and coefficients. */
+		float32x2_t f = vld1_f32(data + i);
+		float32x2_t w_vec = vld1_f32(w + i);
+
+		/* Squared vector. */
+		float32x2_t q = vmul_f32(f, f);
+
+		/* Duplicate and pairwise add
+		 * i_vec = [q0 + q1, q0 + q1]
+		 */
+		float32x2_t i_vec = vpadd_f32(q, q);
+
+		/* sum_lo += i_vec * w_vec */
+		sum_lo = vmla_f32(sum_lo, i_vec, w_vec);
+	}
+
+	/* We need to output two sums, one for odd positions and one for even
+	 * positions. To get this we do a non pairwise add.
+	 */
+	float32x2_t sum_pair = vadd_f32(sum_lo, sum_hi);
+
+	/* Combine new sums with previous sums and write back. */
+	float32x2_t sums = vld1_f32(e);
+	sums = vadd_f32(sums, sum_pair);
+	vst1_f32(e, sums);
+#else
 	float sum0, sum1;
 	uint i;
 
@@ -190,6 +313,7 @@ static inline void wpsum2(float complex *x, float *w, uint N, float *e)
 	/* Write back results. */
 	e[0] += sum0;
 	e[1] += sum1;
+#endif
 }
 
 static inline float phi(float p, uint l)
