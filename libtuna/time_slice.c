@@ -80,8 +80,6 @@ struct time_slice {
 struct time_slice_results {
 	sample_t			peak_positive;
 	sample_t			peak_negative;
-	uint				peak_positive_offset;
-	uint				peak_negative_offset;
 
 	float				moments[4];
 
@@ -108,14 +106,6 @@ static int write_results_csv(struct time_slice * t)
 		goto error;
 
 	r = csv_write_sample(t->out, t->results->peak_negative);
-	if (r < 0)
-		goto error;
-
-	r = csv_write_uint(t->out, t->results->peak_positive_offset);
-	if (r < 0)
-		goto error;
-
-	r = csv_write_uint(t->out, t->results->peak_negative_offset);
 	if (r < 0)
 		goto error;
 
@@ -177,16 +167,14 @@ static inline void update_stats_sca(struct time_slice * t, float x)
 	m[3] += e2 * e2;
 }
 
-static inline void detect_peaks_sca(struct time_slice * t, float v, uint offset)
+static inline void detect_peaks_sca(struct time_slice * t, float v)
 {
 	assert(t);
 
 	if (v > t->results->peak_positive) {
 		t->results->peak_positive = v;
-		t->results->peak_positive_offset = offset;
 	} else if (v < t->results->peak_negative) {
 		t->results->peak_negative = v;
-		t->results->peak_negative_offset = offset;
 	}
 }
 
@@ -235,15 +223,15 @@ static inline void update_stats_vec(struct time_slice * t, float32x4_t x)
 	t->moments_vec = m;
 }
 
-static inline void detect_peaks_vec(struct time_slice * t, float32x4_t vec, uint offset)
+static inline void detect_peaks_vec(struct time_slice * t, float32x4_t vec)
 {
 	/* We can't vectorise this */
 	assert(t);
 
-	detect_peaks_sca(t, vec[0], offset);
-	detect_peaks_sca(t, vec[1], offset + 1);
-	detect_peaks_sca(t, vec[2], offset + 2);
-	detect_peaks_sca(t, vec[3], offset + 3);
+	detect_peaks_sca(t, vec[0]);
+	detect_peaks_sca(t, vec[1]);
+	detect_peaks_sca(t, vec[2]);
+	detect_peaks_sca(t, vec[3]);
 }
 
 static inline void update_stats_finish(struct time_slice * t)
@@ -336,7 +324,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			float32x4_t vec;
 			vec = process_common_vec(t, (int32_t *) &data[offset + i]);
 			update_stats_vec(t, vec);
-			detect_peaks_vec(t, vec, t->index - len/4);
+			detect_peaks_vec(t, vec);
 			t->index += 4;
 			i += 4;
 		} while (i < c - 3);
@@ -345,7 +333,7 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 			float v;
 			v = process_common_sca(t, (int32_t *) &data[offset + i]);
 			update_stats_sca(t, v);
-			detect_peaks_sca(t, v, t->index - len/4);
+			detect_peaks_sca(t, v);
 			t->index++;
 			i++;
 		}

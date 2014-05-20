@@ -44,13 +44,13 @@ class tunaZeroTimeSliceTests(tunaTestCase):
         self.assertEqual(len(line1), 1)
         self.assertTrue(line1[0].startswith("START"))
 
-        # Lines 2-4 should contain 51 zeros each
+        # Lines 2-4 should contain 49 zeros each
         count = 0
         for line in csvf:
             count += 1
-            self.assertEqual(len(line), 52)
+            self.assertEqual(len(line), 50)
             # Trim off final empty element
-            line = line[:51]
+            line = line[:49]
             for elem in line:
                 self.assertEqual(float(elem), 0)
 
@@ -77,13 +77,13 @@ class tunaZeroTimeSliceTests(tunaTestCase):
         self.assertEqual(len(line1), 1)
         self.assertTrue(line1[0].startswith("START"))
 
-        # Lines 2-4 should contain 33 zeros each
+        # Lines 2-4 should contain 31 zeros each
         count = 0
         for line in csvf:
             count += 1
-            self.assertEqual(len(line), 34)
+            self.assertEqual(len(line), 32)
             # Trim off final empty element
-            line = line[:33]
+            line = line[:31]
             for elem in line:
                 self.assertEqual(float(elem), 0)
 
