@@ -232,11 +232,9 @@ static inline void update_stats_vec(struct time_slice * t, float32x4_t x)
 	float32x4_t e2 = vmulq_f32(x, x);
 	m.val[1] = vaddq_f32(m.val[1], e2);
 
-	float32x4_t e3 = vmulq_f32(e2, x);
-	m.val[2] = vaddq_f32(m.val[2], e3);
+	m.val[2] = vmlaq_f32(m.val[2], e2, e);
 
-	float32x4_t e4 = vmulq_f32(e2, e2);
-	m.val[3] = vaddq_f32(m.val[3], e4);
+	m.val[3] = vmlaq_f32(m.val[3], e2, e2);
 
 	t->moments_vec = m;
 }
