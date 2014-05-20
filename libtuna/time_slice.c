@@ -141,24 +141,26 @@ static int write_results_dat(struct time_slice * t)
 	return dat_write_record(t->out, TUNA_DAT_TIME_SLICE, t->results, sz);
 }
 
-static inline float process_common_sca(struct time_slice * t, int32_t * p_data)
+static inline void copy_to_fft_sca(struct time_slice * t, float v)
+{
+	t->fft_data[t->index] = v * t->window[t->index];
+}
+
+static inline void process_common_sca(struct time_slice * t, int32_t * p_data)
 {
 	assert(t);
 	assert(p_data);
 
-	float x = (float) *p_data;
-
-	t->fft_data[t->index] = x * t->window[t->index];
-
-	return x;
+	float data_f32 = (float) *p_data;
+	copy_to_fft_sca(t, data_f32);
 }
 
-static inline void update_stats_sca(struct time_slice * t, float x)
+static inline void update_stats_sca(struct time_slice * t, float v)
 {
 	assert(t);
 
 	float * m = t->results->moments;
-	float e = fabsf(x);
+	float e = fabsf(v);
 	float e2 = e * e;
 
 	m[0] += e;
@@ -167,7 +169,7 @@ static inline void update_stats_sca(struct time_slice * t, float x)
 	m[3] += e2 * e2;
 }
 
-static inline void detect_peaks_sca(struct time_slice * t, float v)
+static inline void detect_peaks_sca(struct time_slice * t, int32_t v)
 {
 	assert(t);
 
@@ -178,8 +180,34 @@ static inline void detect_peaks_sca(struct time_slice * t, float v)
 	}
 }
 
+static inline void process_middle_sca(struct time_slice * t, int32_t * p_data)
+{
+	assert(t);
+	assert(p_data);
+
+	int32_t data_i32 = *p_data;
+
+	detect_peaks_sca(t, data_i32);
+
+	float data_f32 = (float) data_i32;
+
+	copy_to_fft_sca(t, data_f32);
+	update_stats_sca(t, data_f32);
+}
+
 #ifdef ENABLE_ARM_NEON
-static inline float32x4_t process_common_vec(struct time_slice * t, int32_t * p_data)
+static inline void copy_to_fft_vec(struct time_slice * t, float32x4_t vec)
+{
+	float32_t * p_coeffs = (float32_t *) &t->window[t->index];
+	float32x4_t coeffs = vld1q_f32(p_coeffs);
+
+	float32x4_t dest = vmulq_f32(vec, coeffs);
+
+	float32_t * p_dest = (float32_t *) &t->fft_data[t->index];
+	vst1q_f32(p_dest, dest);
+}
+
+static inline void process_common_vec(struct time_slice * t, int32_t * p_data)
 {
 	assert(t);
 	assert(p_data);
@@ -187,19 +215,9 @@ static inline float32x4_t process_common_vec(struct time_slice * t, int32_t * p_
 	/* Prefetch next element. */
 	__builtin_prefetch(p_data + 4);
 
-	float32_t * p_coeffs = (float32_t *) &t->window[t->index];
-	float32_t * p_dest = (float32_t *) &t->fft_data[t->index];
-
 	int32x4_t data_i32 = vld1q_s32(p_data);
-	float32x4_t coeffs = vld1q_f32(p_coeffs);
-
 	float32x4_t data_f32 = vcvtq_f32_s32(data_i32);
-
-	float32x4_t dest = vmulq_f32(data_f32, coeffs);
-
-	vst1q_f32(p_dest, dest);
-
-	return data_f32;
+	copy_to_fft_vec(t, data_f32);
 }
 
 static inline void update_stats_vec(struct time_slice * t, float32x4_t x)
@@ -223,15 +241,34 @@ static inline void update_stats_vec(struct time_slice * t, float32x4_t x)
 	t->moments_vec = m;
 }
 
-static inline void detect_peaks_vec(struct time_slice * t, float32x4_t vec)
+static inline void detect_peaks_vec(struct time_slice * t, int32x4_t vec)
 {
-	/* We can't vectorise this */
 	assert(t);
 
 	detect_peaks_sca(t, vec[0]);
 	detect_peaks_sca(t, vec[1]);
 	detect_peaks_sca(t, vec[2]);
 	detect_peaks_sca(t, vec[3]);
+}
+
+static inline void process_middle_vec(struct time_slice * t, int32_t * p_data)
+{
+	assert(t);
+	assert(p_data);
+
+	/* Prefetch next element. */
+	__builtin_prefetch(p_data + 4);
+
+	int32x4_t data_i32 = vld1q_s32(p_data);
+
+	/* Perform integer calculations. */
+	detect_peaks_vec(t, data_i32);
+
+	float32x4_t data_f32 = vcvtq_f32_s32(data_i32);
+
+	/* Perform float calculations. */
+	copy_to_fft_vec(t, data_f32);
+	update_stats_vec(t, data_f32);
 }
 
 static inline void update_stats_finish(struct time_slice * t)
@@ -321,19 +358,13 @@ static void process_buffer(struct time_slice * t, struct held_buffer * h)
 		i = 0;
 #ifdef ENABLE_ARM_NEON
 		do {
-			float32x4_t vec;
-			vec = process_common_vec(t, (int32_t *) &data[offset + i]);
-			update_stats_vec(t, vec);
-			detect_peaks_vec(t, vec);
+			process_middle_vec(t, (int32_t *) &data[offset + i]);
 			t->index += 4;
 			i += 4;
 		} while (i < c - 3);
 #endif
 		while (i < c) {
-			float v;
-			v = process_common_sca(t, (int32_t *) &data[offset + i]);
-			update_stats_sca(t, v);
-			detect_peaks_sca(t, v);
+			process_middle_sca(t, (int32_t *) &data[offset + i]);
 			t->index++;
 			i++;
 		}
