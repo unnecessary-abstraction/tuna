@@ -94,6 +94,16 @@ static inline uint min(uint a, uint b)
 	return b;
 }
 
+static inline sample_t sample_max(sample_t a, sample_t b)
+{
+	return (a > b) ? a : b;
+}
+
+static inline sample_t sample_min(sample_t a, sample_t b)
+{
+	return (a < b) ? a : b;
+}
+
 static int write_results_csv(struct time_slice * t)
 {
 	int r;
@@ -243,10 +253,18 @@ static inline void detect_peaks_vec(struct time_slice * t, int32x4_t vec)
 {
 	assert(t);
 
-	detect_peaks_sca(t, vec[0]);
-	detect_peaks_sca(t, vec[1]);
-	detect_peaks_sca(t, vec[2]);
-	detect_peaks_sca(t, vec[3]);
+	int32x2_t vec_lo = vget_low_s32(vec);
+	int32x2_t vec_hi = vget_high_s32(vec);
+
+	/* Find and check max. */
+	int32x2_t max_pair = vpmax_s32(vec_lo, vec_hi);
+	sample_t max = sample_max(max_pair[0], max_pair[1]);
+	t->results->peak_positive = sample_max(max, t->results->peak_positive);
+
+	/* Find and check min. */
+	int32x2_t min_pair = vpmin_s32(vec_lo, vec_hi);
+	sample_t min = sample_min(min_pair[0], min_pair[1]);
+	t->results->peak_negative = sample_min(min, t->results->peak_negative);
 }
 
 static inline void process_middle_vec(struct time_slice * t, int32_t * p_data)
