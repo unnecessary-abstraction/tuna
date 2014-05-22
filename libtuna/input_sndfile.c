@@ -30,6 +30,10 @@
 #include "log.h"
 #include "producer.h"
 
+#ifdef ENABLE_ARM_NEON
+#include <arm_neon.h>
+#endif
+
 /*******************************************************************************
 	Private declarations
 *******************************************************************************/
@@ -125,25 +129,100 @@ static int convert_frames(struct input_sndfile * snd, sample_t * buf, uint frame
 
 	switch (snd->sf_info.format & 0x7) {
 	case 1: /* int8 */
+#ifdef ENABLE_ARM_NEON
+		for (i = 0; (i + 3) < frames; i += 4) {
+			__builtin_prefetch(&buf[i+4]);
+			int32x4_t v = vld1q_s32(&buf[i]);
+			v = vshrq_n_s32(v, 24);
+			vst1q_s32(&buf[i], v);
+		}
+		if ((i+1) < frames) {
+			int32x2_t v = vld1_s32(&buf[i]);
+			v = vshr_n_s32(v, 24);
+			vst1_s32(&buf[i], v);
+			i += 2;
+		}
+		if (i < frames)
+			buf[i] >>= 24;
+		return 0;
+#else
 		for (i = 0; i < frames; i++)
 			buf[i] >>= 24;
 		return 0;
+#endif
 	case 2: /* int16 */
+#ifdef ENABLE_ARM_NEON
+		for (i = 0; (i + 3) < frames; i += 4) {
+			__builtin_prefetch(&buf[i+4]);
+			int32x4_t v = vld1q_s32(&buf[i]);
+			v = vshrq_n_s32(v, 16);
+			vst1q_s32(&buf[i], v);
+		}
+		if ((i+1) < frames) {
+			int32x2_t v = vld1_s32(&buf[i]);
+			v = vshr_n_s32(v, 16);
+			vst1_s32(&buf[i], v);
+			i += 2;
+		}
+		if (i < frames)
+			buf[i] >>= 16;
+		return 0;
+#else
 		for (i = 0; i < frames; i++)
 			buf[i] >>= 16;
 		return 0;
+#endif
 	case 3: /* int24 */
+#ifdef ENABLE_ARM_NEON
+		for (i = 0; (i + 3) < frames; i += 4) {
+			__builtin_prefetch(&buf[i+4]);
+			int32x4_t v = vld1q_s32(&buf[i]);
+			v = vshrq_n_s32(v, 8);
+			vst1q_s32(&buf[i], v);
+		}
+		if ((i+1) < frames) {
+			int32x2_t v = vld1_s32(&buf[i]);
+			v = vshr_n_s32(v, 8);
+			vst1_s32(&buf[i], v);
+			i += 2;
+		}
+		if (i < frames)
+			buf[i] >>= 8;
+		return 0;
+#else
 		for (i = 0; i < frames; i++)
 			buf[i] >>= 8;
 		return 0;
+#endif
 
 	case 5: /* uint8 */
+#ifdef ENABLE_ARM_NEON
+		for (i = 0; (i + 3) < frames; i += 4) {
+			__builtin_prefetch(&buf[i+4]);
+			uint32x4_t v = vld1q_u32(&buf[i]);
+			v = vshrq_n_u32(v, 24);
+			vst1q_u32(&buf[i], v);
+		}
+		if ((i+1) < frames) {
+			uint32x2_t v = vld1_u32(&buf[i]);
+			v = vshr_n_u32(v, 24);
+			vst1_u32(&buf[i], v);
+			i += 2;
+		}
+		if (i < frames) {
+			uint32_t tmp = buf[i];
+			tmp >>= 24;
+			buf[i] = tmp;
+		}
+		return 0;
+#else
 		for (i = 0; i < frames; i++) {
 			uint32_t tmp = buf[i];
 			tmp >>= 24;
 			buf[i] = tmp;
 		}
 		return 0;
+#endif
 
 	case 4: /* int32 */
 	case 6: /* float */
