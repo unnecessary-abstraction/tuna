@@ -209,6 +209,9 @@ static inline void process_middle_sca(struct time_slice * t, int32_t * p_data)
 static inline void copy_to_fft_vec(struct time_slice * t, float32x4_t vec)
 {
 	float32_t * p_coeffs = (float32_t *) &t->window[t->index];
+
+	/* Prefetch next set of coeffs the fetch the current set. */
+	__builtin_prefetch(p_coeffs + 4);
 	float32x4_t coeffs = vld1q_f32(p_coeffs);
 
 	float32x4_t dest = vmulq_f32(vec, coeffs);
