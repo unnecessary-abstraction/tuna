@@ -570,6 +570,8 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	assert(ts);
 
 	int r;
+	uint duration;
+	int duration_pow2;
 	struct pulse_processor * p;
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
@@ -579,7 +581,11 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 	p->write_counter = 0;
 
 	/* Convert parameters. */
-	p->pulse_max_duration_w = (uint) floor(p->params->pulse_max_duration * sample_rate);
+	duration = (uint) floor(p->params->pulse_max_duration * sample_rate);
+
+	/* Round pulse_max_duration_w down to a power of 2. */
+	duration_pow2 = 31 - __builtin_clz(duration);
+	p->pulse_max_duration_w = 1<<duration_pow2;
 
 	p->env = env_estimate_init(p->params->Tc, sample_rate);
 	if (!p->env) {
