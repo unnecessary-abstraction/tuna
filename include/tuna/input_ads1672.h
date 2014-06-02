@@ -23,6 +23,7 @@
 
 #include "consumer.h"
 #include "producer.h"
+#include "types.h"
 
 /**
  * \file <tuna/input_ads1672.h>
@@ -44,6 +45,7 @@
  *
  * \return >=0 on success, <0 on failure.
  */
-int input_ads1672_init(struct producer * producer, struct consumer * consumer);
+int input_ads1672_init(struct producer * producer, struct consumer * consumer,
+	uint sample_rate);
 
 #endif /* !__TUNA_INPUT_ADS1672_H_INCLUDED__ */

@@ -298,7 +298,8 @@ int input_ads1672_stop(struct producer * producer, int condition)
 	Public functions
 *******************************************************************************/
 
-int input_ads1672_init(struct producer * producer, struct consumer * consumer)
+int input_ads1672_init(struct producer * producer, struct consumer * consumer,
+	uint sample_rate)
 {
 	int r;
 
@@ -318,8 +319,12 @@ int input_ads1672_init(struct producer * producer, struct consumer * consumer)
 	a->stop = 0;
 	a->consumer = consumer;
 
-	/* For now, the sample rate is always 625 kHz. */
-	a->sample_rate = 625000;
+	/* Sadly we can't check if this matches the sample rate configured via
+	 * the DIP switches on the ADS1672 EVM. We could check that the value is
+	 * at least one of the possible sample rates which the ADS1672 supports,
+	 * but that probably isn't worth the effort.
+	 */
+	a->sample_rate = sample_rate;
 
 	r = prep(a);
 	if (r < 0) {

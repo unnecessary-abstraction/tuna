@@ -348,7 +348,7 @@ int input_init(struct arguments * args)
 		r = input_zero_init(in, target, args->sample_rate);
 #ifdef ENABLE_ADS1672
 	else if (strcmp(args->input, "ads1672") == 0)
-		r = input_ads1672_init(in, target);
+		r = input_ads1672_init(in, target, args->sample_rate);
 #endif
 	else {
 		error("tuna: Unknown input module %s", args->input);
