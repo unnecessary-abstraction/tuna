@@ -26,3 +26,4 @@ swig/python/libtuna_wrap.c
 test/plot/*.pdf
 callgrind.*
 *.s
+*.out
