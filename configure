@@ -29,7 +29,7 @@ version = "0.1-pre1"
 init(name, version)
 
 # Set default variables
-var_set("CFLAGS", "-O2")
+var_set("CFLAGS", "")
 var_set("VERBOSITY", "0")
 var_set("DEPFLAGS", "-MD")
 var_set("PYTHON", "python")
@@ -41,6 +41,7 @@ var_set("enable-unit-tests", "1")
 var_set("enable-integration-tests", "1")
 var_set("enable-inline", "1")
 var_set("enable-shared", "1")
+var_set("enable-optimisation", "1")
 
 parse_cmdline()
 
@@ -64,6 +65,10 @@ if var_get("enable-python-bindings"):
 if var_get("enable-docs"):
 	require(configure_doxygen())
 configure_install_dirs()
+
+# Enable compiler optimisation if requested
+if var_get("enable-optimisation"):
+	var_append("CFLAGS", "-O3")
 
 # Check whether ADS1672 input module has been enabled and if so set a flag so
 # that this is known within the C source.
