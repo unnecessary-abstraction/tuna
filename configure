@@ -70,6 +70,11 @@ configure_install_dirs()
 if var_get("enable-optimisation"):
 	var_append("CFLAGS", "-O3")
 
+# Enable gprof profiling if requested
+if var_get("enable-gprof"):
+	var_append("CFLAGS", "-pg")
+	var_append("LDFLAGS", "-pg")
+
 # Check whether ADS1672 input module has been enabled and if so set a flag so
 # that this is known within the C source.
 if var_get("enable-ads1672"):
