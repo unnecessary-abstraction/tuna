@@ -29,6 +29,7 @@
 #include "input_sndfile.h"
 #include "log.h"
 #include "producer.h"
+#include "timespec.h"
 
 #ifdef ENABLE_ARM_NEON
 #include <arm_neon.h>
@@ -362,6 +363,7 @@ int input_sndfile_run(struct producer * producer)
 
 	int r;
 	struct timespec ts;
+	char ts_str[100];
 	struct input_sndfile * snd = (struct input_sndfile *)
 		producer_get_data(producer);
 
@@ -371,6 +373,22 @@ int input_sndfile_run(struct producer * producer)
 		error("input_sndfile: Failed to start consumer");
 		return r;
 	}
+
+	/* Print a timestamp to the log file now so that we can measure the
+	 * runtime of the main signal pipeline, excluding the time taken to
+	 * initialise everything.
+	 */
+	r = clock_gettime(CLOCK_REALTIME, &ts);
+	if (r < 0) {
+		error("input_sndfile: Failed to get timestamp");
+		return r;
+	}
+	r = timespec_snprint(&ts, ts_str, sizeof(ts_str));
+	if (r < 0) {
+		error("input_sndfile: Failed to prepare timestamp for printing");
+		return r;
+	}
+	msg("input_sndfile: Started at %s", ts_str);
 
 	if (snd->sf_info.channels > 1)
 		r = run_multi_channel(snd);
@@ -382,7 +400,22 @@ int input_sndfile_run(struct producer * producer)
 		error("input_sndfile: Unrecoverable error reading frames");
 	else
 		msg("input_sndfile: EOF");
-	
+
+	/* Print a timestamp again so that we can exclude the time taken to
+	 * cleanup and exit from measurements.
+	 */
+	r = clock_gettime(CLOCK_REALTIME, &ts);
+	if (r < 0) {
+		error("input_sndfile: Failed to get timestamp");
+		return r;
+	}
+	r = timespec_snprint(&ts, ts_str, sizeof(ts_str));
+	if (r < 0) {
+		error("input_sndfile: Failed to prepare timestamp for printing");
+		return r;
+	}
+	msg("input_sndfile: Finished at %s", ts_str);
+
 	return r;
 }
 
