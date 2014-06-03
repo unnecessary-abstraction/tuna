@@ -242,15 +242,7 @@ int run_single_channel(struct input_sndfile * snd)
 
 	int		r;
 	uint		frames;
-	struct timespec ts;
 	sample_t *	buf;
-
-	memset(&ts, 0, sizeof(struct timespec));
-	r = consumer_start(snd->consumer, snd->sf_info.samplerate, &ts);
-	if (r < 0) {
-		error("input_sndfile: Failed to start consumer");
-		return r;
-	}
 
 	while (1) {
 		/* Check for termination signal. */
@@ -305,19 +297,11 @@ int run_multi_channel(struct input_sndfile * snd)
 	uint		i;
 	uint		channels;
 	uint		selected_channel;
-	struct timespec ts;
 	sample_t *	buf;
 
 	channels = snd->sf_info.channels;
 	selected_channel = 0;	/* zero-based. TODO: Make configurable. */
 
-	memset(&ts, 0, sizeof(struct timespec));
-	r = consumer_start(snd->consumer, snd->sf_info.samplerate, &ts);
-	if (r < 0) {
-		error("input_sndfile: Failed to start consumer");
-		return r;
-	}
-	
 	/*
 		Read into multi-channel buffer and strip out just the channel we
 		want into the front of the buffer.
@@ -377,8 +361,16 @@ int input_sndfile_run(struct producer * producer)
 	assert(producer);
 
 	int r;
+	struct timespec ts;
 	struct input_sndfile * snd = (struct input_sndfile *)
 		producer_get_data(producer);
+
+	memset(&ts, 0, sizeof(struct timespec));
+	r = consumer_start(snd->consumer, snd->sf_info.samplerate, &ts);
+	if (r < 0) {
+		error("input_sndfile: Failed to start consumer");
+		return r;
+	}
 
 	if (snd->sf_info.channels > 1)
 		r = run_multi_channel(snd);
