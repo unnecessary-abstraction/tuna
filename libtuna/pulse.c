@@ -250,6 +250,7 @@ void process_start_pulse(struct pulse_processor * p, uint onset)
 	p->results->onset = onset;
 
 	p->index = 0;
+	p->energy = 0;
 }
 
 static void process_end_pulse(struct pulse_processor * p)
