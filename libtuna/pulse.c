@@ -599,7 +599,7 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -1;
 	}
 
-	p->offset = offset_threshold_init(p->params->Td, sample_rate, p->params->decay_threshold_ratio);
+	p->offset = offset_threshold_init(p->params->decay_threshold_ratio);
 	if (!p->offset) {
 		error("pulse: Failed to initialise offset threshold tracking");
 		return -1;

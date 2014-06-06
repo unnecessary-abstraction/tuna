@@ -29,18 +29,9 @@
  *
  * \brief Pulse offset threshold tracking.
  *
- * An offset detection threshold is calculated from a series of estimates of the
- * envelope of a signal. A delayed minimum envelope estimate may then be
- * compared to the detection threshold and if it is below this threshold then an
- * offset detection occurs.
- *
- * After a pulse has been detected and the peak envelope estimate within the
- * pulse has been achieved, the aim is to track the decay of the minimum
- * envelope estimate observed since that peak. In order to remain within the
- * current pulse, the minimum envelope estimate should decrease by a given
- * ratio within a given time period. If over the specified time period the
- * minimum envelope estimate does not decrease by at least the given ratio then
- * the pulse is determined to have ended.
+ * The end of a pulse is considered to be the point in time where the envelope
+ * estimate of the signal drops below a given fraction of the highest peak level
+ * during that pulse. Typically, the fraction used is -10 dB (1/10th power).
  */
 
 struct offset_threshold;
@@ -55,20 +46,12 @@ struct offset_threshold {};
 /**
  * \brief Initialise a pulse offset threshold tracker.
  *
- * \param Td The time duration over which decreases in the envelope estimate
- * will be considered.
- *
- * \param sample_rate The sampling frequency of the signal which is to be
- * processed through this offset detector.
- *
- * \param ratio The ratio by which the envelope estimate must decrease within
- * the given time duration in order to prevent the end of a pulse from being
- * detected.
+ * \param ratio The ratio by which the envelope estimate must decrease from the
+ * highest observed peak during a pulse to signal the end of that pulse.
  *
  * \return The new offset threshold tracker or NULL on error.
  */
-struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
-		env_t ratio);
+struct offset_threshold * offset_threshold_init(env_t ratio);
 
 /**
  * \brief Destroy a pulse offset threshold tracker which is no longer needed.
@@ -95,6 +78,9 @@ TUNA_INLINE int offset_threshold_next(struct offset_threshold * o, env_t env);
  * As the offset threshold is dependent on previous envelope estimates, the
  * tracker must be reset when there is a gap in the data being processed (such
  * as after a resynchronisation with the input).
+ *
+ * The tracker must also be reset when a new highest peak is observed during a
+ * pulse as the internal threshold will need to be updated.
  *
  * \param o The pulse offset threshold tracker to reset.
  *

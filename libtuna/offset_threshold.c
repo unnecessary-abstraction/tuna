@@ -30,8 +30,7 @@
 #include "offset_threshold.h"
 #include "types.h"
 
-struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
-		env_t ratio)
+struct offset_threshold * offset_threshold_init(env_t ratio)
 {
 	struct offset_threshold * o = (struct offset_threshold *)
 		malloc(sizeof(struct offset_threshold));
@@ -40,16 +39,7 @@ struct offset_threshold * offset_threshold_init(float Td, uint sample_rate,
 		return NULL;
 	}
 
-	o->delay_len = (uint) floor(Td * sample_rate);
-	o->delay_line = cbuf_init(o->delay_len);
-	if (!o->delay_line) {
-		error("offset_threshold: Failed to initialise delay line");
-		free(o);
-		return NULL;
-	}
-
 	o->ratio = ratio;
-	o->count = 0;
 
 	return o;
 }
@@ -58,17 +48,12 @@ void offset_threshold_exit(struct offset_threshold * o)
 {
 	assert(o);
 
-	if (o->delay_line)
-		cbuf_exit(o->delay_line);
 	free(o);
 }
 
 void offset_threshold_reset(struct offset_threshold * o, env_t env)
 {
 	assert(o);
-
-	o->current_min = env;
-	o->count = 0;
 
 	o->threshold = env * o->ratio;
 }

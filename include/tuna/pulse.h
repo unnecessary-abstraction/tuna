@@ -49,11 +49,6 @@ struct pulse_params {
 	float					Tc;
 
 	/**
-	 * Length of delay line used to determine when a pulse has ended.
-	 */
-	float					Td;
-
-	/**
 	 * Maximum duration of a pulse in seconds. Pulses which exceed this
 	 * duration will be cut short.
 	 */
@@ -66,11 +61,10 @@ struct pulse_params {
 	sample_t				threshold_ratio;
 
 	/**
-	 * Decrease as a ratio which must be exceeded over the duration Td to
-	 * remain within a pulse once detected. A pulse is determined to end
-	 * when the decrease drops below this ratio.
+	 * The ratio of the highest peak level observed during a pulse that the
+         * envelope estimate must drop below to determine the end of the pulse.
 	 */
-	sample_t				decay_threshold_ratio;
+	env_t					decay_threshold_ratio;
 
 	/**
 	 * Output mode - controls whether the output is in CSV or DAT format.

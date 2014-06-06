@@ -237,10 +237,9 @@ int output_init(struct arguments * args)
 		/* TODO: Make configurable. */
 		params->Tw = 0.1;
 		params->Tc = 0.1;
-		params->Td = 0.1;
 		params->pulse_max_duration = 1.0;
 		params->threshold_ratio = 4;
-		params->decay_threshold_ratio = 2;
+		params->decay_threshold_ratio = 0.1;
 		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = pulse_init(out, sink, params);
@@ -262,7 +261,6 @@ int output_init(struct arguments * args)
 		/* TODO: Make configurable. */
 		params->Tw = 0.1;
 		params->Tc = 0.1;
-		params->Td = 0.1;
 		params->pulse_max_duration = 1.0;
 		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 2;
