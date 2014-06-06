@@ -600,12 +600,6 @@ int pulse_start(struct consumer * consumer, uint sample_rate,
 		return -1;
 	}
 
-	p->offset = offset_threshold_init(p->params->decay_threshold_ratio);
-	if (!p->offset) {
-		error("pulse: Failed to initialise offset threshold tracking");
-		return -1;
-	}
-
 #ifdef ENABLE_PULSE_TOL
 	p->fft_length = p->pulse_max_duration_w; /* 1 s long FFT. */
 	p->fft = fft_init(p->fft_length);
@@ -716,6 +710,12 @@ int pulse_init(struct consumer * consumer, const char * out_name,
 		goto err;
 	}
 
+	p->offset = offset_threshold_init(params->decay_threshold_ratio);
+	if (!p->offset) {
+		error("pulse: Failed to initialise offset threshold tracking");
+		return -1;
+	}
+
 	/* Initialize output file. */
 	p->out_name = strdup(out_name);
 	if (!p->out_name) {
@@ -738,7 +738,6 @@ int pulse_init(struct consumer * consumer, const char * out_name,
 	p->params = params;
 	p->env = NULL;
 	p->onset = NULL;
-	p->offset = NULL;
 	p->fft = NULL;
 	p->tol = NULL;
 	p->fft_data = NULL;
