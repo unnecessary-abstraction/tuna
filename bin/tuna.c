@@ -223,7 +223,7 @@ struct pulse_params * pulse_params_init()
 	params->Tc = 0.085;
 	params->pulse_max_duration = 1.0;
 	params->threshold_ratio = 3.16;
-	params->decay_threshold_ratio = 0.1;
+	params->decay_threshold_ratio = 0.316;
 	params->out_mode = TUNA_OUT_MODE_CSV;
 
 	return params;
