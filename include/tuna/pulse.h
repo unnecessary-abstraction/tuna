@@ -58,7 +58,7 @@ struct pulse_params {
 	 * Increase as a ratio which must be exceeded within the duration Tw to
 	 * cause detection of a pulse.
 	 */
-	sample_t				threshold_ratio;
+	env_t					threshold_ratio;
 
 	/**
 	 * The ratio of the highest peak level observed during a pulse that the
