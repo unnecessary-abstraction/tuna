@@ -263,7 +263,7 @@ int output_init(struct arguments * args)
 		params->Tc = 0.1;
 		params->pulse_max_duration = 1.0;
 		params->threshold_ratio = 4;
-		params->decay_threshold_ratio = 2;
+		params->decay_threshold_ratio = 0.1;
 		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = analysis_init(out, pulse_sink, time_slice_sink, params);
