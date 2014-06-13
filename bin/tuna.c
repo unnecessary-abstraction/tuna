@@ -236,7 +236,7 @@ int output_init(struct arguments * args)
 
 		/* TODO: Make configurable. */
 		params->Tw = 0.1;
-		params->Tc = 0.1;
+		params->Tc = 0.085;
 		params->pulse_max_duration = 1.0;
 		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 0.1;
@@ -260,7 +260,7 @@ int output_init(struct arguments * args)
 
 		/* TODO: Make configurable. */
 		params->Tw = 0.1;
-		params->Tc = 0.1;
+		params->Tc = 0.085;
 		params->pulse_max_duration = 1.0;
 		params->threshold_ratio = 4;
 		params->decay_threshold_ratio = 0.1;
