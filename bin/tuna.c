@@ -207,6 +207,28 @@ int count_callback(void * arg)
 	return 1;
 }
 
+struct pulse_params * pulse_params_init()
+{
+	struct pulse_params * params;
+
+	params = (struct pulse_params *)
+		malloc(sizeof(struct pulse_params));
+	if (!params) {
+		error("tuna: Failed to allocate memory for pulse processor parameters");
+		return NULL;
+	}
+
+	/* TODO: Make configurable. */
+	params->Tw = 0.1;
+	params->Tc = 0.085;
+	params->pulse_max_duration = 1.0;
+	params->threshold_ratio = 3.16;
+	params->decay_threshold_ratio = 0.1;
+	params->out_mode = TUNA_OUT_MODE_CSV;
+
+	return params;
+}
+
 int output_init(struct arguments * args)
 {
 	assert(args);
@@ -227,44 +249,23 @@ int output_init(struct arguments * args)
 	} else if (strcmp(args->output, "pulse") == 0) {
 		struct pulse_params * params;
 
-		params = (struct pulse_params *)
-			malloc(sizeof(struct pulse_params));
-		if (!params) {
-			error("tuna: Failed to allocate memory for pulse processor parameters");
+		params = pulse_params_init();
+		if (!params)
 			return -1;
-		}
-
-		/* TODO: Make configurable. */
-		params->Tw = 0.1;
-		params->Tc = 0.085;
-		params->pulse_max_duration = 1.0;
-		params->threshold_ratio = 3.16;
-		params->decay_threshold_ratio = 0.1;
-		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = pulse_init(out, sink, params);
 	} else if (strcmp(args->output, "analysis") == 0) {
 		struct pulse_params * params;
 		char * pulse_sink, * time_slice_sink;
 
+		params = pulse_params_init();
+		if (!params)
+			return -1;
+
+
 		/* Split parameter again to get two sink files. */
 		pulse_sink = sink;
 		time_slice_sink = split_param(sink);
-
-		params = (struct pulse_params *)
-			malloc(sizeof(struct pulse_params));
-		if (!params) {
-			error("tuna: Failed to allocate memory for pulse processor parameters");
-			return -1;
-		}
-
-		/* TODO: Make configurable. */
-		params->Tw = 0.1;
-		params->Tc = 0.085;
-		params->pulse_max_duration = 1.0;
-		params->threshold_ratio = 3.16;
-		params->decay_threshold_ratio = 0.1;
-		params->out_mode = TUNA_OUT_MODE_CSV;
 
 		r = analysis_init(out, pulse_sink, time_slice_sink, params);
 	} else if (strcmp(args->output, "sndfile") == 0) {
