@@ -451,6 +451,12 @@ state_nonpulse:
 					start_offset = 0;
 				}
 
+				/* Advance i so that the current sample is
+				 * processed in the process_data call below and
+				 * the next sample is processed in state_pulse.
+				 */
+				i++;
+
 				/* Process the data in the buffer passed to this
 				 * function between the minimum point and the current
 				 * sample.
@@ -460,7 +466,6 @@ state_nonpulse:
 				/* Setup the pulse end detector. */
 				offset_threshold_reset(p->offset, e);
 
-				i++;
 				goto state_pulse;
 			}
 
