@@ -2,7 +2,11 @@
 
 set -e
 
-branch=$1
+if [[ "$#" -eq 1 ]]; then
+	branch=$1
+else
+	branch=master-next
+fi
 
 git fetch staging --prune
 git review staging/$branch
