@@ -231,8 +231,10 @@ int input_ads1672_run(struct producer * producer)
 			return a->stop_condition;
 		}
 
-		/* Life is easiest if we try to read blocks of length 1 s. */
-		frames = a->sample_rate;
+		/* Life is easiest if we read with the same period size used
+		 * within the ADS1672 driver.
+		 */
+		frames = ADS1672_PERIOD_LENGTH;
 		buf = buffer_acquire(&frames);
 		if (!buf) {
 			error("input_ads1672: Failed to acquire buffer");
