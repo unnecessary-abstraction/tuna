@@ -261,6 +261,9 @@ int input_ads1672_run(struct producer * producer)
 				return r;
 			}
 		} else {
+			/* Calculate how many frames we actually read. */
+			frames = r / sizeof(sample_t);
+
 			r = consumer_write(a->consumer, buf, frames);
 			if (r < 0) {
 				error("input_ads1672: Failed to write to consumer");
