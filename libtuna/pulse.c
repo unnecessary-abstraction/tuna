@@ -350,6 +350,8 @@ static struct held_buffer * discard_leading_data(struct pulse_processor * p, uin
 	uint i;
 
 	h = bufhold_newest(p->held_buffers);
+	if (!h)
+		return;
 	i = bufhold_count(h);
 
 	while (i < offset) {
