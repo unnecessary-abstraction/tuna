@@ -545,6 +545,7 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 
 	int r;
 	struct pulse_processor * p;
+	uint age, offset;
 	
 	p = (struct pulse_processor *)consumer_get_data(consumer);
 
@@ -553,9 +554,12 @@ int pulse_write(struct consumer * consumer, sample_t * buf, uint count)
 	/* Discard all data before the current minimum if we are not currently
 	 * in a pulse as it will not be needed.
 	 */
-	int start_offset = count - onset_threshold_age(p->onset);
-	if (start_offset < 0)
-		discard_leading_data(p, -start_offset);
+	age = onset_threshold_age(p->onset);
+	if (age > count)
+		offset = age - count;
+	else
+		offset = 0;
+	discard_leading_data(p, offset);
 
 	r = bufhold_add(p->held_buffers, buf, count);
 	if (r < 0) {
