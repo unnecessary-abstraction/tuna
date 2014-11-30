@@ -81,7 +81,7 @@ def configure_pkg(name, minver=None):
 	if pkg:
 		print("Found: %s %s" % (pkg["NAME"], pkg["VERSION"]))
 		if minver:
-			print("Checking version >= %s", minver)
+			print("Checking version >= %s" % minver)
 			if pkg_atleast(pkg, minver):
 				print("Version is good")
 			else:
