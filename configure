@@ -62,6 +62,7 @@ require(configure_pkg("alsa"))
 if var_get("enable-python-bindings"):
 	require(configure_pkg("python3"))
 	require(configure_swig())
+	require(configure_numpy())
 if var_get("enable-docs"):
 	require(configure_doxygen())
 configure_install_dirs()

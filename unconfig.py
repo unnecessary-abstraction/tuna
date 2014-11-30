@@ -102,6 +102,18 @@ def finalize_pkgs():
 		if p["LDLIBRARIES"]:
 			var_append("LDLIBRARIES", p["LDLIBRARIES"])
 
+def configure_numpy():
+	print("Finding numpy include directory")
+	try:
+		import numpy
+		path = numpy.get_include()
+		print("Found: %s" % path)
+		var_append("CFLAGS", "-I%s" % path)
+		return True
+	except:
+		print("Not found!")
+		return False
+
 ################################################################################
 # Install directories
 ################################################################################
